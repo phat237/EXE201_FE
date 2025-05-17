@@ -237,7 +237,7 @@ export default function HomePage() {
       </Box>
       <section className="footer-home hidden">
         <div className="footer-box">
-          <h2 className="footer-title">Bắt đầu đánh giá ngay hôm nay</h2>
+          <h2 className="footer-title">Bắt đầu đánh giá ngay</h2>
           <p className="footer-text">
             Tham gia cộng đồng ReviewAnon để chia sẻ trải nghiệm của bạn và giúp
             người khác đưa ra quyết định mua sắm tốt hơn.
