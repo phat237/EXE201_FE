@@ -8,6 +8,9 @@ import HomePage from "../pages/Home/HomePage/HomePage";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import { useRoutes } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
+import ReviewPage from "../pages/Home/ReviewPage/ReviewPage";
+import FormReview from "../pages/Home/ReviewPage/FormReview";
+
 
 export default function useRouterElements() {
   const element = useRoutes([
@@ -35,6 +38,15 @@ export default function useRouterElements() {
           index: true,
           element: <HomePage />,
         },
+        {
+          path: PATH.REVIEW,
+          element: <ReviewPage />,
+        },
+          {
+          path: PATH.CREATERVIEW,
+          element: <FormReview />,
+        },
+
       ],
     },
 
