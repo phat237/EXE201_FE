@@ -7,7 +7,8 @@ export const PATH = {
 
     // HOME
     HOME:"/",
-
+    REVIEW:"/danh-gia",
+    CREATERVIEW:"/tao-danh-gia",
     // ADMIN
     ADMIN:"/admin",
     DASHBOARD: "/admin/dashboard"
