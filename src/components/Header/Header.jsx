@@ -66,7 +66,7 @@ export default function Header() {
 
             <div className="auth-buttons">
               <Button variant="outlined" className="header-login">
-                <Link to="/dang-nhap" className="no-underline">
+                <Link to="/auth/login" className="no-underline">
                   Đăng Nhập
                 </Link>
               </Button>

@@ -10,7 +10,9 @@ import { useRoutes } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ReviewPage from "../pages/Home/ReviewPage/ReviewPage";
 import FormReview from "../pages/Home/ReviewPage/FormReview";
-
+import ProductPaege from "../pages/Home/ProductPage/ProductPage";
+import ProductDetailPage from "../pages/Home/ProductPage/ProductDetailPage";
+import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 
 export default function useRouterElements() {
   const element = useRoutes([
@@ -42,11 +44,22 @@ export default function useRouterElements() {
           path: PATH.REVIEW,
           element: <ReviewPage />,
         },
-          {
+        {
           path: PATH.CREATERVIEW,
           element: <FormReview />,
         },
-
+        {
+          path: PATH.PRODUCT,
+          element: <ProductPaege />,
+        },
+        {
+          path: PATH.PRODUCT_DETAIL,
+          element: <ProductDetailPage />,
+        },
+        {
+          path: PATH.BUSINESS,
+          element:<BusinessPage />,
+        }
       ],
     },
 

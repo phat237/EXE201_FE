@@ -9,6 +9,9 @@ export const PATH = {
     HOME:"/",
     REVIEW:"/danh-gia",
     CREATERVIEW:"/tao-danh-gia",
+    PRODUCT:"/san-pham",
+    PRODUCT_DETAIL:"/san-pham/:id",
+    BUSINESS:"/doanh-nghiep",
     // ADMIN
     ADMIN:"/admin",
     DASHBOARD: "/admin/dashboard"
