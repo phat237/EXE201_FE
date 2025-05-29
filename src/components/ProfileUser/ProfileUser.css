@@ -1,0 +1,399 @@
+/* Root container to prevent overlap with header and footer */
+.profile-user-container {
+  padding-top: 80px; /* Adjust based on header height */
+  padding-bottom: 80px; /* Adjust based on footer height */
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(
+    135deg,
+    #f5f7fa 0%,
+    #e5e7eb 100%
+  ); /* Subtle gradient background */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+}
+
+/* Header section with gradient and shadow */
+.profile-user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: linear-gradient(90deg, #7e22cd 0%, #414eea 100%);
+  color: #fff;
+  border-radius: 12px;
+  margin: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.profile-user-header:hover {
+  transform: translateY(-2px);
+}
+
+.profile-user-header .MuiTypography-h4 {
+  font-weight: 700;
+  font-size: 1.75rem;
+}
+
+.profile-user-header .MuiTypography-body2 {
+  opacity: 0.85;
+}
+
+/* Button styling */
+.profile-user-header .MuiButton-root {
+  background-color: #fff;
+  color: #7e22cd;
+  font-weight: 600;
+  border-radius: 8px;
+  text-transform: none;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+}
+
+.profile-user-header .MuiButton-root:hover {
+  background-color: #f1f5f9;
+  transform: scale(1.05);
+}
+
+/* Tabs styling */
+.MuiTabs-root {
+  background-color: #fff;
+  border-radius: 12px;
+  margin: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.MuiTab-root {
+  color: #414eea;
+  font-weight: 500;
+  text-transform: none;
+  transition: color 0.3s ease;
+}
+
+.MuiTab-root.Mui-selected {
+  color: #7e22cd;
+  font-weight: 600;
+}
+
+.MuiTabs-indicator {
+  background-color: #7e22cd;
+  height: 3px;
+}
+
+/* Overview grid layout */
+.profile-user-overview-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  padding: 0 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Personal info card */
+.profile-user-personal-info {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  transition: transform 0.3s ease;
+}
+
+.profile-user-personal-info:hover {
+  transform: translateY(-4px);
+}
+
+/* Avatar section */
+.profile-user-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.profile-user-avatar {
+  width: 120px;
+  height: 120px;
+  border: 3px solid #7e22cd;
+  border-radius: 50%;
+  transition: border-color 0.3s ease;
+}
+
+.profile-user-avatar-container {
+  position: relative;
+}
+
+.profile-user-avatar-edit {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: #414eea;
+  color: #fff;
+  border-radius: 50%;
+  padding: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.profile-user-avatar-edit:hover {
+  background: #7e22cd;
+}
+
+/* Info fields */
+.profile-user-info {
+  flex: 1;
+}
+
+.profile-user-edit-fields .MuiTextField-root {
+  margin-bottom: 16px;
+}
+
+.profile-user-edit-fields .MuiTextField-root .MuiInputBase-root {
+  border-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.profile-user-edit-fields .MuiTextField-root .MuiInputLabel-root {
+  color: #414eea;
+}
+
+.profile-user-edit-fields .MuiTextField-root .Mui-focused .MuiInputLabel-root {
+  color: #7e22cd;
+}
+
+/* Info grid */
+.profile-user-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.profile-user-info-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1f2937;
+}
+
+.profile-user-info-icon {
+  color: #414eea;
+  font-size: 20px;
+}
+
+/* Edit actions */
+.profile-user-edit-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.profile-user-edit-actions .MuiButton-root {
+  border-radius: 8px;
+  text-transform: none;
+  padding: 10px 20px;
+}
+
+.profile-user-edit-actions .MuiButton-contained {
+  background: #7e22cd;
+  color: #fff;
+}
+
+.profile-user-edit-actions .MuiButton-contained:hover {
+  background: #6b21a8;
+}
+
+.profile-user-edit-actions .MuiButton-outlined {
+  border-color: #414eea;
+  color: #414eea;
+}
+
+.profile-user-edit-actions .MuiButton-outlined:hover {
+  background: #f1f5f9;
+}
+
+/* Stats card */
+.profile-user-stats-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  transition: transform 0.3s ease;
+}
+
+.profile-user-stats-card:hover {
+  transform: translateY(-4px);
+}
+
+.profile-user-stats-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.profile-user-stats-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-user-stats-icon {
+  color: #7e22cd;
+  font-size: 22px;
+}
+
+/* Reviews tab */
+.profile-user-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.profile-user-review-item {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.profile-user-review-item:hover {
+  transform: translateY(-4px);
+}
+
+.profile-user-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.profile-user-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-user-review-content {
+  margin: 12px 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.profile-user-review-helpful {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #414eea;
+  font-weight: 500;
+}
+
+.profile-user-helpful-icon {
+  font-size: 18px;
+  color: #414eea;
+}
+
+/* Settings tab */
+.profile-user-settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.profile-user-settings-item .MuiSwitch-root .MuiSwitch-track {
+  background-color: #d1d5db;
+}
+
+.profile-user-settings-item .MuiSwitch-root .Mui-checked + .MuiSwitch-track {
+  background-color: #7e22cd;
+}
+
+.profile-user-settings-item .MuiSwitch-root .MuiSwitch-thumb {
+  background-color: #fff;
+}
+
+/* Security tab */
+.profile-user-security-section {
+  margin-bottom: 24px;
+}
+
+.profile-user-security-section .MuiTextField-root {
+  margin-bottom: 16px;
+}
+
+.profile-user-security-section .MuiTextField-root .MuiInputBase-root {
+  border-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.profile-user-security-section .MuiTextField-root .MuiInputLabel-root {
+  color: #414eea;
+}
+
+.profile-user-security-section .MuiButton-root {
+  border-radius: 8px;
+  text-transform: none;
+  padding: 10px 20px;
+  margin-top: 12px;
+}
+
+.profile-user-security-section .MuiButton-contained {
+  background: #7e22cd;
+}
+
+.profile-user-security-section .MuiButton-contained:hover {
+  background: #6b21a8;
+}
+
+.profile-user-security-section .MuiButton-contained[color="error"] {
+  background: #dc2626;
+}
+
+.profile-user-security-section .MuiButton-contained[color="error"]:hover {
+  background: #b91c1c;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-user-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-user-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-user-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    margin: 16px;
+  }
+
+  .profile-user-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-user-tab-content {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-user-header .MuiTypography-h4 {
+    font-size: 1.5rem;
+  }
+
+  .profile-user-reviews-list,
+  .profile-user-overview-grid {
+    padding: 0 12px;
+  }
+}

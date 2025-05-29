@@ -13,17 +13,21 @@ import FormReview from "../pages/Home/ReviewPage/FormReview";
 import ProductPaege from "../pages/Home/ProductPage/ProductPage";
 import ProductDetailPage from "../pages/Home/ProductPage/ProductDetailPage";
 import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
+import ProfileUser from "../components/ProfileUser/ProfileUser";
 
 export default function useRouterElements() {
   const element = useRoutes([
     {
-      // auth
       path: PATH.AUTH,
       element: <AuthLayout />,
       children: [
         {
           path: PATH.LOGIN,
-          element: <Login />,
+          element: (
+            <ProtectedRoute redirectTo={PATH.LOGIN}>
+              <Login />
+            </ProtectedRoute>
+          ),
         },
         {
           path: PATH.REGISTER,
@@ -32,7 +36,6 @@ export default function useRouterElements() {
       ],
     },
     {
-      // Home
       path: PATH.HOME,
       element: <MainLayout />,
       children: [
@@ -58,20 +61,31 @@ export default function useRouterElements() {
         },
         {
           path: PATH.BUSINESS,
-          element:<BusinessPage />,
-        }
+          element: <BusinessPage />,
+        },
+        {
+          path: PATH.BUSINESS,
+          element: <BusinessPage />,
+        },
+        {
+          path: PATH.PROFILEUSER,
+          element: <ProfileUser />,
+        },
       ],
     },
-
     {
-      // Admin
       path: PATH.ADMIN,
       element: (
         <ProtectedRoute allowedRoles={["admin"]}>
           <AdminLayout />
         </ProtectedRoute>
       ),
-      children: [{ index: true, element: <Dashboard /> }],
+      children: [
+        {
+          index: true,
+          element: <Dashboard />,
+        },
+      ],
     },
   ]);
   return element;

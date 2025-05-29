@@ -177,7 +177,10 @@ export default function ProductsPage() {
           <Card className="products-filter-card">
             <CardContent className="products-filter-content">
               <Box className="products-filter-section">
-                <Typography variant="subtitle1" className="products-filter-title">
+                <Typography
+                  variant="subtitle1"
+                  className="products-filter-title"
+                >
                   Danh Mục
                 </Typography>
                 <Box className="products-filter-categories">
@@ -193,7 +196,10 @@ export default function ProductsPage() {
               </Box>
 
               <Box className="products-filter-section">
-                <Typography variant="subtitle1" className="products-filter-title">
+                <Typography
+                  variant="subtitle1"
+                  className="products-filter-title"
+                >
                   Đánh Giá
                 </Typography>
                 <Box className="products-filter-ratings">
@@ -206,7 +212,9 @@ export default function ProductsPage() {
                           value={rating}
                           readOnly
                           icon={<StarIcon className="products-star-icon" />}
-                          emptyIcon={<StarIcon className="products-star-icon-empty" />}
+                          emptyIcon={
+                            <StarIcon className="products-star-icon-empty" />
+                          }
                         />
                       }
                       className="products-filter-checkbox"
@@ -216,7 +224,10 @@ export default function ProductsPage() {
               </Box>
 
               <Box className="products-filter-section">
-                <Typography variant="subtitle1" className="products-filter-title">
+                <Typography
+                  variant="subtitle1"
+                  className="products-filter-title"
+                >
                   Giá
                 </Typography>
                 <Box className="products-filter-price">
@@ -258,10 +269,7 @@ export default function ProductsPage() {
               <Typography variant="caption" className="products-sort-label">
                 Sắp xếp theo:
               </Typography>
-              <Select
-                defaultValue="popular"
-                className="products-sort-select"
-              >
+              <Select defaultValue="popular" className="products-sort-select">
                 <MenuItem value="popular">Phổ biến nhất</MenuItem>
                 <MenuItem value="rating">Đánh giá cao nhất</MenuItem>
                 <MenuItem value="newest">Mới nhất</MenuItem>
@@ -271,7 +279,11 @@ export default function ProductsPage() {
             </Box>
           </Box>
 
-          <Tabs value={tabValue} onChange={handleTabChange} className="products-tabs">
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            className="products-tabs"
+          >
             <Tab label="Tất Cả" value="all" />
             <Tab label="Điện Tử" value="electronics" />
             <Tab label="Thời Trang" value="fashion" />
