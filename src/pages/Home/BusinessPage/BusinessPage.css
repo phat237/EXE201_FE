@@ -137,6 +137,11 @@
 }
 
 .business-pricing-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: stretch !important;
+  min-height: 440px !important;
+  height: 100% !important;
   border: none !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   transition: box-shadow 0.3s !important;
@@ -169,6 +174,7 @@
 }
 
 .business-pricing-content {
+  flex: 1 1 auto !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 16px !important;
@@ -187,6 +193,7 @@
 }
 
 .business-pricing-footer {
+  margin-top: auto !important;
   display: flex !important;
   justify-content: center !important;
   padding: 16px !important;
