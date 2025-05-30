@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { fetcher } from '../../apis/fetcher';
 
 // Đường link API
 const API_URL = 'https://trustreviews.onrender.com/premium-packages';
@@ -7,42 +7,61 @@ const API_URL = 'https://trustreviews.onrender.com/premium-packages';
 // Async thunk để fetch dữ liệu
 export const fetchPremiumPackages = createAsyncThunk(
   'premiumPackages/fetchPremiumPackages',
-  async (_, thunkAPI) => {
-    const token = localStorage.getItem('accessToken');
-    const response = await axios.get(API_URL, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    console.log('API RESPONSE:', response.data);
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(API_URL);
+      console.log('API RESPONSE:', response.data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
   }
 );
 
 // Thunk để tạo mới gói premium
 export const createPremiumPackage = createAsyncThunk(
   'premiumPackages/createPremiumPackage',
-  async (newPackage) => {
-    const response = await axios.post(API_URL, newPackage);
-    return response.data;
+  async (newPackage, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.post(API_URL, newPackage);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
   }
 );
 
 // Thunk để update gói premium
 export const updatePremiumPackage = createAsyncThunk(
   'premiumPackages/updatePremiumPackage',
-  async ({ id, updatedPackage }) => {
-    const response = await axios.put(`${API_URL}/${id}`, updatedPackage);
-    return response.data;
+  async ({ id, updatedPackage }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.put(`${API_URL}/${id}`, updatedPackage);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
   }
 );
 
 // Thunk để xóa gói premium
 export const deletePremiumPackage = createAsyncThunk(
   'premiumPackages/deletePremiumPackage',
-  async (id) => {
-    await axios.delete(`${API_URL}/${id}`);
-    return id; // Trả về id để xóa khỏi state
+  async (id, { rejectWithValue }) => {
+    try {
+      await fetcher.delete(`${API_URL}/${id}`);
+      return id; // Trả về id để xóa khỏi state
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
   }
 );
 
