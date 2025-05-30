@@ -8,6 +8,7 @@ import {
   BarChartOutlined,
   SettingOutlined,
   LogoutOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -36,6 +37,11 @@ const AdminLayout = () => {
       key: '/admin/orders',
       icon: <DollarOutlined />,
       label: 'Orders',
+    },
+    {
+      key: '/admin/upgrade-packages',
+      icon: <StarOutlined />,
+      label: 'Gói nâng cấp',
     },
     {
       key: '/admin/settings',

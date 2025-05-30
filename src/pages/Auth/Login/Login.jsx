@@ -179,7 +179,7 @@ export default function Login() {
           <Box className="auth-footer">
             <Typography variant="caption" className="auth-footer-text">
               Chưa có tài khoản?{" "}
-              <Link to="/dang-ky" className="auth-link">
+              <Link to="/auth/register" className="auth-link">
                 Đăng ký ngay
               </Link>
             </Typography>

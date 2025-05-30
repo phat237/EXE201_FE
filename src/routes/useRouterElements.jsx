@@ -10,6 +10,7 @@ import Users from "../pages/Admin/Users/Users";
 import Products from "../pages/Admin/Products/Products";
 import Orders from "../pages/Admin/Orders/Orders";
 import Settings from "../pages/Admin/Settings/Settings";
+import UpgradePackages from "../pages/Admin/UpgradePackages/UpgradePackages";
 import { useRoutes } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ReviewPage from "../pages/Home/ReviewPage/ReviewPage";
@@ -80,9 +81,9 @@ export default function useRouterElements() {
     {
       path: PATH.ADMIN,
       element: (
-        // <ProtectedRoute allowedRoles={["admin"]}>
+      //  <ProtectedRoute allowedRoles={["admin"]}>
           <AdminLayout />
-        // </ProtectedRoute>
+       // </ProtectedRoute>
       ),
       children: [
         {
@@ -108,6 +109,10 @@ export default function useRouterElements() {
         {
           path: "settings",
           element: <Settings />,
+        },
+        {
+          path: "upgrade-packages",
+          element: <UpgradePackages />,
         },
       ],
     },
