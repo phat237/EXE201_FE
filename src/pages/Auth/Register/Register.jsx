@@ -360,7 +360,7 @@ export default function Register() {
           <Box className="auth-footer">
             <Typography variant="caption" className="auth-footer-text">
               Đã có tài khoản?{" "}
-              <Link to="/dang-nhap" className="auth-link">
+                <Link to="/dang-nhap" className="auth-link">
                 Đăng nhập
               </Link>
             </Typography>

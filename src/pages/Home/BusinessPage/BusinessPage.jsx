@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -20,9 +20,18 @@ import {
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import "./BusinessPage.css";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPremiumPackages } from "../../../store/slices/preniumPackageSlice";
+
 
 export default function BusinessPage() {
   const [tabValue, setTabValue] = useState("1m");
+  const dispatch = useDispatch();
+  const { data: packages, loading, error } = useSelector((state) => state.premiumPackages);
+
+  useEffect(() => {
+    dispatch(fetchPremiumPackages());
+  }, [dispatch]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -97,181 +106,26 @@ export default function BusinessPage() {
         </Tabs>
 
         <Box className="business-tabs-content">
-          {tabValue === "1m" && (
+          {loading ? (
+            <Typography>Đang tải...</Typography>
+          ) : error ? (
+            <Typography color="error">Lỗi: {error}</Typography>
+          ) : (
             <Box className="business-pricing-grid">
-              <PricingCard
-                title="Cơ Bản"
-                price="Miễn phí"
-                description="Dành cho doanh nghiệp nhỏ"
-                features={["Xem đánh giá công khai", "Thống kê cơ bản", "Phản hồi đánh giá"]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="Cao Cấp"
-                price="499.000đ/tháng"
-                description="Dành cho doanh nghiệp vừa"
-                features={[
-                  "Tất cả tính năng Cơ Bản",
-                  "Phân tích AI chuyên sâu",
-                  "Báo cáo xu hướng đánh giá",
-                  "Quảng cáo ưu tiên",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="VIP"
-                price="999.000đ/tháng"
-                description="Dành cho doanh nghiệp lớn"
-                features={[
-                  "Tất cả tính năng Cao Cấp",
-                  "API tích hợp",
-                  "Hỗ trợ 24/7",
-                  "Tư vấn chiến lược",
-                  "Quảng cáo VIP",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-            </Box>
-          )}
-
-          {tabValue === "3m" && (
-            <Box className="business-pricing-grid">
-              <PricingCard
-                title="Cơ Bản"
-                price="Miễn phí"
-                description="Dành cho doanh nghiệp nhỏ"
-                features={["Xem đánh giá công khai", "Thống kê cơ bản", "Phản hồi đánh giá"]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="Cao Cấp"
-                price="1.399.000đ/3 tháng"
-                description="Dành cho doanh nghiệp vừa"
-                features={[
-                  "Tất cả tính năng Cơ Bản",
-                  "Phân tích AI chuyên sâu",
-                  "Báo cáo xu hướng đánh giá",
-                  "Quảng cáo ưu tiên",
-                  "Tiết kiệm 7% so với gói tháng",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="VIP"
-                price="2.799.000đ/3 tháng"
-                description="Dành cho doanh nghiệp lớn"
-                features={[
-                  "Tất cả tính năng Cao Cấp",
-                  "API tích hợp",
-                  "Hỗ trợ 24/7",
-                  "Tư vấn chiến lược",
-                  "Quảng cáo VIP",
-                  "Tiết kiệm 7% so với gói tháng",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-            </Box>
-          )}
-
-          {tabValue === "6m" && (
-            <Box className="business-pricing-grid">
-              <PricingCard
-                title="Cơ Bản"
-                price="Miễn phí"
-                description="Dành cho doanh nghiệp nhỏ"
-                features={["Xem đánh giá công khai", "Thống kê cơ bản", "Phản hồi đánh giá"]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="Cao Cấp"
-                price="2.599.000đ/6 tháng"
-                description="Dành cho doanh nghiệp vừa"
-                features={[
-                  "Tất cả tính năng Cơ Bản",
-                  "Phân tích AI chuyên sâu",
-                  "Báo cáo xu hướng đánh giá",
-                  "Quảng cáo ưu tiên",
-                  "Tiết kiệm 13% so với gói tháng",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="VIP"
-                price="5.199.000đ/6 tháng"
-                description="Dành cho doanh nghiệp lớn"
-                features={[
-                  "Tất cả tính năng Cao Cấp",
-                  "API tích hợp",
-                  "Hỗ trợ 24/7",
-                  "Tư vấn chiến lược",
-                  "Quảng cáo VIP",
-                  "Tiết kiệm 13% so với gói tháng",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-            </Box>
-          )}
-
-          {tabValue === "12m" && (
-            <Box className="business-pricing-grid">
-              <PricingCard
-                title="Cơ Bản"
-                price="Miễn phí"
-                description="Dành cho doanh nghiệp nhỏ"
-                features={["Xem đánh giá công khai", "Thống kê cơ bản", "Phản hồi đánh giá"]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="Cao Cấp"
-                price="4.990.000đ/năm"
-                description="Dành cho doanh nghiệp vừa"
-                features={[
-                  "Tất cả tính năng Cơ Bản",
-                  "Phân tích AI chuyên sâu",
-                  "Báo cáo xu hướng đánh giá",
-                  "Quảng cáo ưu tiên",
-                  "Tiết kiệm 16% so với gói tháng",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
-              <PricingCard
-                title="VIP"
-                price="9.990.000đ/năm"
-                description="Dành cho doanh nghiệp lớn"
-                features={[
-                  "Tất cả tính năng Cao Cấp",
-                  "API tích hợp",
-                  "Hỗ trợ 24/7",
-                  "Tư vấn chiến lược",
-                  "Quảng cáo VIP",
-                  "Tiết kiệm 16% so với gói tháng",
-                ]}
-                buttonText="Nâng Cấp Ngay"
-                buttonLink="/doanh-nghiep/dang-ky"
-                highlighted
-              />
+              {(packages || []).map((pkg) => (
+                <PricingCard
+                  key={pkg.id}
+                  title={pkg.name}
+                  price={pkg.price === 0 ? "Miễn phí" : `${pkg.price.toLocaleString()}đ/${pkg.duration} ngày`}
+                  description={pkg.description}
+                  features={[
+                    "Tính năng 1", "Tính năng 2"
+                  ]}
+                  buttonText="Nâng Cấp Ngay"
+                  buttonLink="/doanh-nghiep/dang-ky"
+                  highlighted
+                />
+              ))}
             </Box>
           )}
         </Box>

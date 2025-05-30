@@ -57,11 +57,15 @@ export const authSlice = createSlice({
     logout: (state) => {
       state.currentUser = null;
       localStorage.removeItem("currentUser");
+      localStorage.removeItem("accessToken");
       toast.success("Đăng xuất thành công");
     },
     login: (state, { payload }) => {
       state.currentUser = payload;
       localStorage.setItem("currentUser", JSON.stringify(payload));
+      if (payload?.accessToken || payload?.token) {
+        localStorage.setItem("accessToken", payload.accessToken || payload.token);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -84,6 +88,9 @@ export const authSlice = createSlice({
       state.isLoading = false;
       state.error = null;
       state.currentUser = payload;
+      if (payload?.accessToken || payload?.token) {
+        localStorage.setItem("accessToken", payload.accessToken || payload.token);
+      }
     });
     builder.addCase(loginApi.rejected, (state, { payload }) => {
       state.isLoading = false;
