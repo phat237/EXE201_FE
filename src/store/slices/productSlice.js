@@ -41,10 +41,28 @@ export const createProductApi = createAsyncThunk(
   }
 );
 
+export const fetchAllProductsPaginated = createAsyncThunk(
+  "product/fetchAllProductsPaginated",
+  async ({ page, size }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `https://trustreviews.onrender.com/products/${page}/{size}/paging?size=${size}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 export const productSlice = createSlice({
   name: "product",
   initialState: {
     product: [],
+    allProducts: [],
+    allProductsPagination: null,
     isLoading: false,
     error: null,
   },
@@ -80,6 +98,40 @@ export const productSlice = createSlice({
       .addCase(createProductApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      .addCase(fetchAllProductsPaginated.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.allProducts = [];
+        state.allProductsPagination = null;
+      })
+      .addCase(fetchAllProductsPaginated.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        if (payload && payload.content && Array.isArray(payload.content)) {
+          state.allProducts = payload.content;
+          state.allProductsPagination = {
+            totalPages: payload.totalPages,
+            totalElements: payload.totalElements,
+            number: payload.number,
+            size: payload.size,
+            first: payload.first,
+            last: payload.last,
+          };
+        } else if (Array.isArray(payload)) {
+          state.allProducts = payload;
+          state.allProductsPagination = null;
+        } else {
+          state.allProducts = [];
+          state.allProductsPagination = null;
+          console.warn("Unexpected payload structure for all products:", payload);
+        }
+      })
+      .addCase(fetchAllProductsPaginated.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        state.allProducts = [];
+        state.allProductsPagination = null;
       });
   },
 });

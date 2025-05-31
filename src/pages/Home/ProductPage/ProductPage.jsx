@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Card,
@@ -21,6 +21,8 @@ import {
   Verified as VerifiedIcon,
 } from "@mui/icons-material";
 import "./ProductPage.css";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 
 // Mock data (same as provided)
 const categories = [
@@ -31,76 +33,13 @@ const categories = [
   { id: 5, name: "Thực phẩm" },
 ];
 
-const products = [
-  {
-    id: 1,
-    name: "Điện thoại XYZ Pro",
-    image: "/placeholder.svg?height=300&width=300",
-    price: "12.990.000đ",
-    rating: 4.5,
-    reviewCount: 128,
-    category: "Điện tử",
-    verified: true,
-  },
-  {
-    id: 2,
-    name: "Laptop ABC Ultra",
-    image: "/placeholder.svg?height=300&width=300",
-    price: "22.490.000đ",
-    rating: 4.2,
-    reviewCount: 85,
-    category: "Điện tử",
-    verified: true,
-  },
-  {
-    id: 3,
-    name: "Tai nghe không dây EarPods",
-    image: "/placeholder.svg?height=300&width=300",
-    price: "2.990.000đ",
-    rating: 3.8,
-    reviewCount: 210,
-    category: "Điện tử",
-    verified: false,
-  },
-  {
-    id: 4,
-    name: "Áo thun nam cao cấp",
-    image: "/placeholder.svg?height=300&width=300",
-    price: "350.000đ",
-    rating: 4.0,
-    reviewCount: 56,
-    category: "Thời trang",
-    verified: true,
-  },
-  {
-    id: 5,
-    name: "Quần jeans nữ dáng suông",
-    image: "/placeholder.svg?height=300&width=300",
-    price: "550.000đ",
-    rating: 4.3,
-    reviewCount: 42,
-    category: "Thời trang",
-    verified: false,
-  },
-  {
-    id: 6,
-    name: "Nồi cơm điện thông minh",
-    image: "/placeholder.svg?height=300&width=300",
-    price: "1.290.000đ",
-    rating: 3.5,
-    reviewCount: 98,
-    category: "Nhà cửa",
-    verified: true,
-  },
-];
-
 function ProductCard({ product }) {
   return (
     <Card className="products-card">
       <a href={`/san-pham/${product.id}`} className="products-card-link">
         <Box className="products-card-image">
           <img
-            src={product.image || "/placeholder.svg"}
+            src={product.imageUrl || "/placeholder.svg"}
             alt={product.name}
             className="products-image"
           />
@@ -110,17 +49,17 @@ function ProductCard({ product }) {
         <Box className="products-card-header">
           <Box className="products-card-rating">
             <Rating
-              value={product.rating}
+              value={product.rating || 0}
               readOnly
               precision={0.5}
               icon={<StarIcon className="products-star-icon" />}
               emptyIcon={<StarIcon className="products-star-icon-empty" />}
             />
             <Typography variant="caption" className="products-review-count">
-              ({product.reviewCount})
+              ({product.reviewCount || 0})
             </Typography>
           </Box>
-          {product.verified && (
+          {product.isVerified && (
             <Box className="products-verified">
               <VerifiedIcon className="products-icon" />
             </Box>
@@ -133,10 +72,10 @@ function ProductCard({ product }) {
         </a>
         <Box className="products-card-footer">
           <Typography variant="body2" className="products-card-price">
-            {product.price}
+            {product.price ? `${product.price.toLocaleString()}đ` : "N/A"}
           </Typography>
           <Typography variant="caption" className="products-card-category">
-            {product.category}
+            {product.category?.name || "Không rõ"}
           </Typography>
         </Box>
         <Button
@@ -154,6 +93,15 @@ function ProductCard({ product }) {
 
 export default function ProductsPage() {
   const [tabValue, setTabValue] = useState("all");
+
+  const dispatch = useDispatch();
+  const { allProducts: products, allProductsPagination: pagination, isLoading, error } = useSelector(
+    (state) => state.product
+  );
+
+  useEffect(() => {
+    dispatch(fetchAllProductsPaginated({ page: 0, size: 10 }));
+  }, [dispatch]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -293,50 +241,48 @@ export default function ProductsPage() {
           <Box className="products-tabs-content">
             {tabValue === "all" && (
               <Box className="products-tab-panel">
-                <Box className="products-grid">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </Box>
-                <Box className="products-load-more">
-                  <Button variant="outlined">Xem Thêm</Button>
-                </Box>
+                {isLoading ? (
+                  <Typography>Đang tải sản phẩm...</Typography>
+                ) : error ? (
+                  <Typography color="error">Lỗi khi tải sản phẩm: {error}</Typography>
+                ) : (
+                  products && products.length > 0 ? (
+                    <Box className="products-grid">
+                      {products.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography>Không tìm thấy sản phẩm nào.</Typography>
+                  )
+                )}
+                {!isLoading && products && pagination && pagination.number < pagination.totalPages - 1 && (
+                  <Box className="products-load-more">
+                    <Button variant="outlined" onClick={() => {
+                      console.log("Load More clicked, pagination state:", pagination);
+                    }}>
+                      Xem Thêm
+                    </Button>
+                  </Box>
+                )}
               </Box>
             )}
 
             {tabValue === "electronics" && (
               <Box className="products-tab-panel">
-                <Box className="products-grid">
-                  {products
-                    .filter((p) => p.category === "Điện tử")
-                    .map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                </Box>
+                <Typography>Nội dung tab Điện tử (chưa kết nối API)</Typography>
               </Box>
             )}
 
             {tabValue === "fashion" && (
               <Box className="products-tab-panel">
-                <Box className="products-grid">
-                  {products
-                    .filter((p) => p.category === "Thời trang")
-                    .map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                </Box>
+                <Typography>Nội dung tab Thời trang (chưa kết nối API)</Typography>
               </Box>
             )}
 
             {tabValue === "home" && (
               <Box className="products-tab-panel">
-                <Box className="products-grid">
-                  {products
-                    .filter((p) => p.category === "Nhà cửa")
-                    .map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                </Box>
+                <Typography>Nội dung tab Nhà Cửa (chưa kết nối API)</Typography>
               </Box>
             )}
           </Box>
