@@ -239,7 +239,7 @@ export default function HomePage() {
         <div className="footer-box">
           <h2 className="footer-title">Bắt đầu đánh giá ngay</h2>
           <p className="footer-text">
-            Tham gia cộng đồng ReviewAnon để chia sẻ trải nghiệm của bạn và giúp
+            Tham gia cộng đồng TrustReview  để chia sẻ trải nghiệm của bạn và giúp
             người khác đưa ra quyết định mua sắm tốt hơn.
           </p>
           <Button className="footer-button">

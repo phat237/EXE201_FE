@@ -48,7 +48,7 @@ export const markReviewHelpful = createAsyncThunk(
       // Cần kiểm tra lại API endpoint chính xác và cách truyền status (query/body).
       // Giả định endpoint là POST /reviews/{reviewId}/helpful và status là query param.
       const response = await fetcher.post(
-        `https://trustreviews.onrender.com/reviews/helpful/${reviewId}/{status}?status=${status}`// Adjusted URL slightly based on common patterns
+                `https://trustreviews.onrender.com/reviews/helpful/${reviewId}/{status}?status=${status}`// Adjusted URL slightly based on common patterns
       );
       // Giả định API trả về object review đã được cập nhật trạng thái helpful
       return response.data;
