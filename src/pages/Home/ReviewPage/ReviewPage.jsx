@@ -181,7 +181,7 @@ export default function ReviewsPage() {
         <Button
           variant="contained"
           className="review-write-button"
-          href={`/tao-danh-gia?product=${''}`}
+          href="/tao-danh-gia"
           component="a"
         >
           Viết Đánh Giá

@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="footer-container">
         <div className="footer-grid">
           <div className="footer-section">
-            <h3>ReviewAnon</h3>
+            <h3>TrustReview </h3>
             <p>
               Nền tảng đánh giá ẩn danh với công nghệ AI tiên tiến, giúp người tiêu dùng và doanh nghiệp kết nối hiệu quả.
             </p>
@@ -96,7 +96,7 @@ const Footer = () => {
             <ul>
               <li className="footer-contact-item">
                 <Mail fontSize="small" className="footer-contact-icon" />
-                <span>@reviewanon.vn</span>
+                <span>@TrustReview .vn</span>
               </li>
               <li className="footer-contact-item">
                 <Phone fontSize="small" className="footer-contact-icon" />
@@ -107,7 +107,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} ReviewAnon. Tất cả quyền được bảo lưu.</p>
+          <p>© {new Date().getFullYear()} TrustReview . Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </footer>

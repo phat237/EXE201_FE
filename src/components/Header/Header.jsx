@@ -40,7 +40,7 @@ export default function Header() {
         <div className="container">
           <div className="header-left">
             <Link to="/" className="logo">
-              <span>ReviewAnon </span>
+              <span>TrustReview  </span>
             </Link>
 
             <nav className="nav-desktop">
