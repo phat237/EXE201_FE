@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchReviewsPaginated, markReviewHelpful } from "../../../store/slices/reviewSlice";
 import {
   Button,
   Card,
@@ -6,7 +8,7 @@ import {
   CardHeader,
   TextField,
   Select,
-  MenuItem,
+  MenuItem, 
   Typography,
   Box,
   Checkbox,
@@ -15,6 +17,7 @@ import {
   Tab,
   Rating,
   Avatar,
+  CircularProgress
 } from "@mui/material";
 import {
   Star as StarIcon,
@@ -25,85 +28,35 @@ import {
 } from "@mui/icons-material";
 import "./ReviewPage.css";
 
-// Dữ liệu mẫu
-const reviews = [
-  {
-    id: 1,
-    product: "Điện thoại XYZ Pro",
-    rating: 5,
-    content:
-      "Sản phẩm tuyệt vời, camera chụp rất đẹp và pin trâu. Tôi đã sử dụng được 2 tháng và rất hài lòng với hiệu năng của máy. Màn hình hiển thị sắc nét, độ phân giải cao. Chơi game không bị giật lag.",
-    verified: true,
-    helpful: 42,
-    date: "15/04/2023",
-    user: "Người dùng ẩn danh",
-    initials: "ND",
-    productImage: "/placeholder.svg?height=100&width=100",
-  },
-  {
-    id: 2,
-    product: "Laptop ABC Ultra",
-    rating: 4,
-    content:
-      "Máy mỏng nhẹ, hiệu năng tốt cho công việc văn phòng và lập trình nhẹ. Tuy nhiên, pin hơi yếu, chỉ dùng được khoảng 4-5 tiếng. Bàn phím gõ êm, touchpad nhạy. Màn hình đẹp nhưng hơi bóng.",
-    verified: true,
-    helpful: 28,
-    date: "03/05/2023",
-    user: "Người dùng ẩn danh",
-    initials: "ND",
-    productImage: "/placeholder.svg?height=100&width=100",
-  },
-  {
-    id: 3,
-    product: "Tai nghe không dây EarPods",
-    rating: 3,
-    content:
-      "Âm thanh tạm ổn, kết nối bluetooth ổn định. Tuy nhiên, chất lượng build hơi kém, dễ bị trầy xước sau một thời gian sử dụng. Pin dùng được khoảng 4 tiếng liên tục.",
-    verified: true,
-    helpful: 15,
-    date: "22/05/2023",
-    user: "Người dùng ẩn danh",
-    initials: "ND",
-    productImage: "/placeholder.svg?height=100&width=100",
-  },
-  {
-    id: 4,
-    product: "Máy ảnh Canon EOS 200D",
-    rating: 5,
-    content:
-      "Máy ảnh tuyệt vời cho người mới bắt đầu. Chất lượng ảnh sắc nét, màu sắc trung thực. Dễ sử dụng với nhiều chế độ tự động. Pin dùng được cả ngày khi đi chụp.",
-    verified: false,
-    helpful: 32,
-    date: "10/06/2023",
-    user: "Người dùng ẩn danh",
-    initials: "ND",
-    productImage: "/placeholder.svg?height=100&width=100",
-  },
-  {
-    id: 5,
-    product: "Nồi cơm điện Sunhouse",
-    rating: 2,
-    content:
-      "Sản phẩm không như quảng cáo. Nấu cơm không chín đều, đôi khi bị cháy đáy. Chức năng giữ ấm chỉ hoạt động tốt trong khoảng 2 giờ. Không đáng tiền.",
-    verified: true,
-    helpful: 45,
-    date: "05/07/2023",
-    user: "Người dùng ẩn danh",
-    initials: "ND",
-    productImage: "/placeholder.svg?height=100&width=100",
-  },
-];
+function ReviewCard({ review, dispatch }) {
+  const [isHelpfulLoading, setIsHelpfulLoading] = useState(false);
 
-function ReviewCard({ review }) {
+  const handleHelpfulClick = async () => {
+    if (isHelpfulLoading) return;
+
+    setIsHelpfulLoading(true);
+
+    const statusToSend = review.likedByCurrentUser ? false : true;
+
+    try {
+      await dispatch(markReviewHelpful({ reviewId: review.id, status: statusToSend }));
+      console.log(`Dispatched markReviewHelpful for review ID: ${review.id} with status: ${statusToSend}`);
+    } catch (error) {
+      console.error("Error marking review helpful:", error);
+    } finally {
+      setIsHelpfulLoading(false);
+    }
+  };
+
   return (
     <Card className="review-card">
       <CardContent className="review-card-content">
         <Box className="review-card-inner">
-          {review.productImage && (
+          {(review.productImage || review.product?.imageUrl) && (
             <Box className="review-product-image">
               <img
-                src={review.productImage}
-                alt={review.product}
+                src={review.productImage || review.product?.imageUrl || "/placeholder.svg"}
+                alt={review.product?.name || "Product Image"}
                 className="review-image"
               />
             </Box>
@@ -112,26 +65,26 @@ function ReviewCard({ review }) {
             <Box className="review-header">
               <Box>
                 <Typography variant="subtitle1" className="review-product-name">
-                  {review.product}
+                  {review.product?.name || "Sản phẩm không rõ"}
                 </Typography>
                 <Box className="review-meta">
                   <Rating
-                    value={review.rating}
+                    value={review.rating || 0}
                     readOnly
                     icon={<StarIcon className="review-star-icon" />}
                     emptyIcon={<StarIcon className="review-star-icon-empty" />}
                   />
                   <Typography variant="caption" className="review-date">
-                    {review.date}
+                    {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : "Ngày không rõ"}
                   </Typography>
                 </Box>
               </Box>
               <Avatar className="review-avatar">
-                <Typography variant="caption">{review.initials}</Typography>
+                <Typography variant="caption">{review.user?.initials || review.user?.name?.charAt(0) || '?'}</Typography>
               </Avatar>
             </Box>
             <Typography variant="body2" className="review-content-text">
-              {review.content}
+              {review.content || "Không có nội dung đánh giá"}
             </Typography>
             <Box className="review-footer">
               <Box className="review-footer-left">
@@ -144,16 +97,19 @@ function ReviewCard({ review }) {
                   </Box>
                 )}
                 <Typography variant="caption" className="review-user">
-                  {review.user}
+                  {review.user?.name || "Người dùng ẩn danh"}
                 </Typography>
               </Box>
               <Box className="review-footer-right">
                 <Button
                   variant="text"
                   className="review-helpful-button"
-                  startIcon={<ThumbUpIcon className="review-icon" />}
+                  style={{ color: review.likedByCurrentUser ? 'blue' : 'inherit' }}
+                  startIcon={isHelpfulLoading ? <CircularProgress size={16} /> : <ThumbUpIcon className="review-icon" />}
+                  onClick={handleHelpfulClick}
+                  disabled={isHelpfulLoading}
                 >
-                  {review.helpful} hữu ích
+                  {review.helpful || 0} hữu ích
                 </Button>
                 <Button
                   variant="text"
@@ -173,10 +129,43 @@ function ReviewCard({ review }) {
 
 export default function ReviewsPage() {
   const [tabValue, setTabValue] = useState("all");
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+
+  const dispatch = useDispatch();
+  const { reviews, pagination, isLoading, error } = useSelector(
+    (state) => state.review
+  );
+
+  useEffect(() => {
+    dispatch(fetchReviewsPaginated({ reviewId: 1, page: currentPage, size: pageSize }));
+  }, [dispatch, currentPage]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  const handleLoadMore = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+  };
+
+  if (isLoading && reviews.length === 0 && currentPage === 0) {
+    return <Typography>Đang tải đánh giá...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">Lỗi khi tải đánh giá: {error.message || JSON.stringify(error)}</Typography>;
+  }
+
+  let filteredAndSortedReviews = reviews;
+
+  if (tabValue === 'verified') {
+    filteredAndSortedReviews = filteredAndSortedReviews.filter(r => r.verified);
+  } else if (tabValue === 'recent') {
+    filteredAndSortedReviews = [...filteredAndSortedReviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } else if (tabValue === 'helpful') {
+    filteredAndSortedReviews = [...filteredAndSortedReviews].sort((a, b) => (b.helpful || 0) - (a.helpful || 0));
+  }
 
   return (
     <Box className="review-container">
@@ -192,7 +181,7 @@ export default function ReviewsPage() {
         <Button
           variant="contained"
           className="review-write-button"
-          href="/tao-danh-gia"
+          href={`/tao-danh-gia?product=${''}`}
           component="a"
         >
           Viết Đánh Giá
@@ -202,9 +191,7 @@ export default function ReviewsPage() {
       <Box className="review-main">
         <Box className="review-filters">
           <Card className="review-filter-card">
-            <CardHeader>
-              <Typography variant="h6">Bộ Lọc</Typography>
-            </CardHeader>
+            <CardHeader title={<Typography variant="h6">Bộ Lọc</Typography>} />
             <CardContent className="review-filter-content">
               <Box className="review-filter-section">
                 <Typography variant="subtitle2">Danh Mục</Typography>
@@ -286,43 +273,28 @@ export default function ReviewsPage() {
             <Tab label="Hữu Ích Nhất" value="helpful" />
           </Tabs>
           <Box className="review-tabs-content">
-            {tabValue === "all" && (
-              <Box className="review-tab-panel">
-                {reviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} />
-                ))}
-                <Box className="review-load-more">
-                  <Button variant="outlined">Xem Thêm</Button>
+            <Box className="review-tab-panel">
+              {filteredAndSortedReviews.length > 0 ? (
+                filteredAndSortedReviews.map((review) => (
+                  <ReviewCard key={review.id} review={review} dispatch={dispatch} />
+                ))
+              ) : (
+                !isLoading && <Typography>Không có đánh giá nào để hiển thị.</Typography>
+              )}
+
+              {isLoading && reviews.length > 0 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  <CircularProgress size={24} />
+                  <Typography sx={{ ml: 1 }}>Đang tải thêm...</Typography>
                 </Box>
-              </Box>
-            )}
-            {tabValue === "verified" && (
-              <Box className="review-tab-panel">
-                {reviews
-                  .filter((r) => r.verified)
-                  .map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-              </Box>
-            )}
-            {tabValue === "recent" && (
-              <Box className="review-tab-panel">
-                {reviews
-                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                  .map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-              </Box>
-            )}
-            {tabValue === "helpful" && (
-              <Box className="review-tab-panel">
-                {reviews
-                  .sort((a, b) => b.helpful - a.helpful)
-                  .map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-              </Box>
-            )}
+              )}
+
+              {!isLoading && pagination && currentPage < pagination.totalPages - 1 && filteredAndSortedReviews.length > 0 && (
+                <Box className="review-load-more" sx={{ mt: 2, textAlign: 'center' }}>
+                  <Button variant="outlined" onClick={handleLoadMore}>Xem Thêm</Button>
+                </Box>
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>

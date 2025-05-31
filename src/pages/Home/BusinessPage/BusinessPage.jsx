@@ -25,7 +25,6 @@ import { fetchPremiumPackages } from "../../../store/slices/preniumPackageSlice"
 
 
 export default function BusinessPage() {
-  const [tabValue, setTabValue] = useState("1m");
   const dispatch = useDispatch();
   const { data: packages, loading, error } = useSelector((state) => state.premiumPackages);
 
@@ -33,9 +32,11 @@ export default function BusinessPage() {
     dispatch(fetchPremiumPackages());
   }, [dispatch]);
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
+  useEffect(() => {
+    console.log("Packages state:", packages);
+    console.log("Is Loading:", loading);
+    console.log("Error:", error);
+  }, [packages, loading, error]);
 
   return (
     <Box className="business-container">
@@ -98,35 +99,32 @@ export default function BusinessPage() {
           </Typography>
         </Box>
 
-        <Tabs value={tabValue} onChange={handleTabChange} className="business-tabs">
-          <Tab label="1 Tháng" value="1m" />
-          <Tab label="3 Tháng" value="3m" />
-          <Tab label="6 Tháng" value="6m" />
-          <Tab label="1 Năm" value="12m" />
-        </Tabs>
-
         <Box className="business-tabs-content">
           {loading ? (
             <Typography>Đang tải...</Typography>
           ) : error ? (
             <Typography color="error">Lỗi: {error}</Typography>
           ) : (
-            <Box className="business-pricing-grid">
-              {(packages || []).map((pkg) => (
-                <PricingCard
-                  key={pkg.id}
-                  title={pkg.name}
-                  price={pkg.price === 0 ? "Miễn phí" : `${pkg.price.toLocaleString()}đ/${pkg.duration} ngày`}
-                  description={pkg.description}
-                  features={[
-                    "Tính năng 1", "Tính năng 2"
-                  ]}
-                  buttonText="Nâng Cấp Ngay"
-                  buttonLink="/doanh-nghiep/dang-ky"
-                  highlighted
-                />
-              ))}
-            </Box>
+            packages && packages.length > 0 ? (
+                <Box className="business-pricing-grid">
+                  {(packages || []).slice().sort((a, b) => a.id - b.id).map((pkg) => (
+                    <PricingCard
+                      key={pkg.id}
+                      title={pkg.name}
+                      price={pkg.price === 0 ? "Miễn phí" : `${pkg.price.toLocaleString()}đ/${pkg.duration} ngày`}
+                      description={pkg.description}
+                      features={[
+                        "Tính năng 1", "Tính năng 2"
+                      ]}
+                      buttonText="Nâng Cấp Ngay"
+                      buttonLink="/doanh-nghiep/dang-ky"
+                      highlighted
+                    />
+                  ))}
+                </Box>
+            ) : (
+                <Typography>Không tìm thấy gói dịch vụ nào.</Typography>
+            )
           )}
         </Box>
       </Box>
@@ -320,18 +318,13 @@ function PricingCard({ title, price, description, features, buttonText, buttonLi
         <Typography variant="h4" className="business-pricing-price">
           {price}
         </Typography>
-        <Typography variant="body2" className="business-pricing-description">
-          {description}
-        </Typography>
       </CardHeader>
       <CardContent className="business-pricing-content">
         <Box className="business-pricing-features">
-          {features.map((feature, index) => (
-            <Box key={index} className="business-pricing-feature">
-              <CheckCircleIcon className="business-icon" />
-              <Typography variant="body2">{feature}</Typography>
-            </Box>
-          ))}
+          <Box className="business-pricing-feature">
+            <CheckCircleIcon className="business-icon" />
+            <Typography variant="body2">{description}</Typography>
+          </Box>
         </Box>
       </CardContent>
       <Box className="business-pricing-footer">

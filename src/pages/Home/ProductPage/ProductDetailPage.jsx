@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProductApiById } from "../../../store/slices/productSlice";
 import {
   Button,
   Card,
@@ -21,6 +23,7 @@ import {
   BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import "./ProductDetailPage.css";
+import { useParams } from 'react-router-dom'; // Import hook
 
 // Mock data (same as provided)
 const products = [
@@ -146,14 +149,37 @@ const relatedProducts = [
   },
 ];
 
-export default function ProductDetailPage({ productId }) {
-  const product = products.find((p) => p.id === productId) || products[0];
+export default function ProductDetailPage() {
+  const { productId } = useParams(); // Lấy productId từ URL
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
+
+  const dispatch = useDispatch();
+  const { product, isLoading, error } = useSelector(
+    (state) => state.product
+  );
+
+  useEffect(() => {
+    if (productId) {
+      dispatch(fetchProductApiById({ id: productId }));
+    }
+  }, [dispatch, productId]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  if (isLoading) {
+    return <Typography>Đang tải chi tiết sản phẩm...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">Lỗi khi tải chi tiết sản phẩm: {error}</Typography>;
+  }
+
+  if (!product) {
+    return <Typography>Không tìm thấy sản phẩm.</Typography>;
+  }
 
   return (
     <Box className="product-container">
@@ -161,27 +187,10 @@ export default function ProductDetailPage({ productId }) {
         <Box className="product-image-section">
           <Box className="product-main-image">
             <img
-              src={product.images[selectedImage] || "/placeholder.svg"}
+              src={product.sourceUrl || "/placeholder.svg"}
               alt={product.name}
               className="product-image"
             />
-          </Box>
-          <Box className="product-image-thumbnails">
-            {product.images.map((image, index) => (
-              <Box
-                key={index}
-                className={`product-thumbnail ${
-                  selectedImage === index ? "product-thumbnail-active" : ""
-                }`}
-                onClick={() => setSelectedImage(index)}
-              >
-                <img
-                  src={image || "/placeholder.svg"}
-                  alt={`${product.name} - Ảnh ${index + 1}`}
-                  className="product-image"
-                />
-              </Box>
-            ))}
           </Box>
         </Box>
 
@@ -189,61 +198,18 @@ export default function ProductDetailPage({ productId }) {
           <Box className="product-header">
             <Box className="product-meta">
               <Typography variant="caption" className="product-category">
-                {product.category}
+                {product.category || "Không rõ"}
               </Typography>
-              {product.verified && (
-                <Box className="product-verified">
-                  <VerifiedIcon className="product-icon" />
-                  <Typography variant="caption">Đã xác minh</Typography>
-                </Box>
-              )}
             </Box>
             <Typography variant="h4" className="product-name">
               {product.name}
             </Typography>
-            <Box className="product-rating">
-              <Rating
-                value={product.rating}
-                readOnly
-                precision={0.5}
-                icon={<StarIcon className="product-star-icon" />}
-                emptyIcon={<StarIcon className="product-star-icon-empty" />}
-              />
-              <Typography variant="caption" className="product-rating-text">
-                {product.rating} ({product.reviewCount} đánh giá)
-              </Typography>
-            </Box>
-          </Box>
-
-          <Typography variant="h5" className="product-price">
-            {product.price}
-          </Typography>
-
-          <Box className="product-description">
-            <Typography variant="subtitle1" className="product-section-title">
-              Mô Tả Sản Phẩm
+            <Typography variant="body2" className="product-brand-name">
+              Thương hiệu: {product.brandName || "Không rõ"}
             </Typography>
-            <Typography variant="body2" className="product-description-text">
-              {product.description}
+            <Typography variant="caption" className="product-created-at">
+              Ngày tạo: {new Date(product.createdAt).toLocaleDateString()}
             </Typography>
-          </Box>
-
-          <Box className="product-specifications">
-            <Typography variant="subtitle1" className="product-section-title">
-              Thông Số Kỹ Thuật
-            </Typography>
-            <Box className="product-specs-grid">
-              {product.specifications.map((spec, index) => (
-                <Box key={index} className="product-spec-item">
-                  <Typography variant="body2" className="product-spec-name">
-                    {spec.name}
-                  </Typography>
-                  <Typography variant="body2" className="product-spec-value">
-                    {spec.value}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
           </Box>
 
           <Box className="product-actions">
@@ -263,7 +229,7 @@ export default function ProductDetailPage({ productId }) {
       </Box>
 
       <Tabs value={tabValue} onChange={handleTabChange} className="product-tabs">
-        <Tab label={`Đánh Giá (${product.reviewCount})`} value="reviews" />
+        <Tab label={`Đánh Giá`} value="reviews" />
         <Tab label="Phân Tích AI" value="analysis" />
         <Tab label="Sản Phẩm Liên Quan" value="related" />
       </Tabs>
@@ -277,43 +243,17 @@ export default function ProductDetailPage({ productId }) {
                   <CardContent className="product-rating-content">
                     <Box className="product-rating-overview">
                       <Typography variant="h3" className="product-rating-score">
-                        {product.rating}
+                        {product.rating || 0}
                       </Typography>
                       <Box className="product-rating-stars">
                         <Rating
-                          value={product.rating}
+                          value={product.rating || 0}
                           readOnly
                           precision={0.5}
                           icon={<StarIcon className="product-star-icon" />}
                           emptyIcon={<StarIcon className="product-star-icon-empty" />}
                         />
                       </Box>
-                      <Typography variant="caption" className="product-rating-count">
-                        Dựa trên {product.reviewCount} đánh giá
-                      </Typography>
-                    </Box>
-                    <Box className="product-rating-distribution">
-                      {[5, 4, 3, 2, 1].map((star) => {
-                        const percent = Math.round(
-                          (product.ratingDistribution[star - 1] / product.reviewCount) * 100
-                        );
-                        return (
-                          <Box key={star} className="product-rating-bar">
-                            <Typography variant="caption" className="product-rating-bar-label">
-                              {star} sao
-                            </Typography>
-                            <Box className="product-rating-bar-container">
-                              <Box
-                                className="product-rating-bar-fill"
-                                style={{ width: `${percent}%` }}
-                              ></Box>
-                            </Box>
-                            <Typography variant="caption" className="product-rating-bar-percent">
-                              {percent}%
-                            </Typography>
-                          </Box>
-                        );
-                      })}
                     </Box>
                     <Button
                       variant="contained"
@@ -410,7 +350,7 @@ export default function ProductDetailPage({ productId }) {
                       Điểm Mạnh
                     </Typography>
                     <Box className="product-analysis-list">
-                      {product.aiAnalysis.strengths.map((strength, index) => (
+                      {(product.aiAnalysis?.strengths || []).map((strength, index) => (
                         <Box key={index} className="product-analysis-item">
                           <VerifiedIcon className="product-icon" />
                           <Typography variant="body2">{strength}</Typography>
@@ -423,7 +363,7 @@ export default function ProductDetailPage({ productId }) {
                       Điểm Yếu
                     </Typography>
                     <Box className="product-analysis-list">
-                      {product.aiAnalysis.weaknesses.map((weakness, index) => (
+                      {(product.aiAnalysis?.weaknesses || []).map((weakness, index) => (
                         <Box key={index} className="product-analysis-item">
                           <FlagIcon className="product-icon" />
                           <Typography variant="body2">{weakness}</Typography>
@@ -437,38 +377,42 @@ export default function ProductDetailPage({ productId }) {
                     Tóm Tắt Đánh Giá
                   </Typography>
                   <Typography variant="body2" className="product-analysis-text">
-                    {product.aiAnalysis.summary}
+                    {product.aiAnalysis?.summary}
                   </Typography>
                 </Box>
                 <Box className="product-analysis-sentiment">
                   <Typography variant="subtitle1" className="product-analysis-subtitle">
                     Phân Tích Cảm Xúc
                   </Typography>
-                  <Box className="product-sentiment-bar">
-                    <Box
-                      className="product-sentiment-positive"
-                      style={{ width: `${product.aiAnalysis.sentiment.positive}%` }}
-                    ></Box>
-                    <Box
-                      className="product-sentiment-neutral"
-                      style={{ width: `${product.aiAnalysis.sentiment.neutral}%` }}
-                    ></Box>
-                    <Box
-                      className="product-sentiment-negative"
-                      style={{ width: `${product.aiAnalysis.sentiment.negative}%` }}
-                    ></Box>
-                  </Box>
-                  <Box className="product-sentiment-labels">
-                    <Typography variant="caption">
-                      Tích cực ({product.aiAnalysis.sentiment.positive}%)
-                    </Typography>
-                    <Typography variant="caption">
-                      Trung lập ({product.aiAnalysis.sentiment.neutral}%)
-                    </Typography>
-                    <Typography variant="caption">
-                      Tiêu cực ({product.aiAnalysis.sentiment.negative}%)
-                    </Typography>
-                  </Box>
+                  {product.aiAnalysis?.sentiment && (
+                    <Box>
+                      <Box className="product-sentiment-bar">
+                        <Box
+                          className="product-sentiment-positive"
+                          style={{ width: `${product.aiAnalysis.sentiment.positive || 0}%` }}
+                        ></Box>
+                        <Box
+                          className="product-sentiment-neutral"
+                          style={{ width: `${product.aiAnalysis.sentiment.neutral || 0}%` }}
+                        ></Box>
+                        <Box
+                          className="product-sentiment-negative"
+                          style={{ width: `${product.aiAnalysis.sentiment.negative || 0}%` }}
+                        ></Box>
+                      </Box>
+                      <Box className="product-sentiment-labels">
+                        <Typography variant="caption">
+                          Tích cực ({product.aiAnalysis.sentiment.positive || 0}%)
+                        </Typography>
+                        <Typography variant="caption">
+                          Trung lập ({product.aiAnalysis.sentiment.neutral || 0}%)
+                        </Typography>
+                        <Typography variant="caption">
+                          Tiêu cực ({product.aiAnalysis.sentiment.negative || 0}%)
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
                 </Box>
               </CardContent>
             </Card>
