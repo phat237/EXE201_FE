@@ -60,7 +60,7 @@ export const fetchAllProductsPaginated = createAsyncThunk(
 export const productSlice = createSlice({
   name: "product",
   initialState: {
-    product: [],
+    product: null, // Thay đổi từ mảng [] thành null để lưu 1 object
     allProducts: [],
     allProductsPagination: null,
     isLoading: false,
@@ -76,12 +76,13 @@ export const productSlice = createSlice({
       .addCase(fetchProductApiById.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
-        state.product = Array.isArray(payload) ? payload : [payload];
+        state.product = payload; // Lưu trực tiếp payload (là 1 object) vào state.product
       })
       .addCase(fetchProductApiById.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
+      // Các case khác giữ nguyên
       .addCase(createProductApi.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -91,7 +92,7 @@ export const productSlice = createSlice({
         if (payload.message) {
           state.error = payload;
         } else {
-          state.product = [...state.product, payload];
+          state.product = payload; // Cập nhật sản phẩm mới tạo
         }
         console.log("Fulfilled payload:", JSON.stringify(payload, null, 2));
       })

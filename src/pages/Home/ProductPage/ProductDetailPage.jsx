@@ -23,65 +23,43 @@ import {
   BarChart as BarChartIcon,
 } from "@mui/icons-material";
 import "./ProductDetailPage.css";
-import { useParams } from 'react-router-dom'; // Import hook
+import { useParams } from "react-router-dom";
 
-// Mock data (same as provided)
-const products = [
-  {
-    id: 1,
-    name: "Điện thoại XYZ Pro",
-    images: [
-      "/placeholder.svg?height=500&width=500",
-      "/placeholder.svg?height=500&width=500&text=Ảnh 2",
-      "/placeholder.svg?height=500&width=500&text=Ảnh 3",
-      "/placeholder.svg?height=500&width=500&text=Ảnh 4",
+// Hardcode dữ liệu bổ sung cho các trường thiếu từ API
+const hardcodedProductData = {
+  rating: 4.5, // Thiếu trong API, hardcode giá trị
+  reviewCount: 128, // Thiếu trong API, hardcode giá trị
+  ratingDistribution: [80, 30, 10, 5, 3], // ThiẾu trong API, hardcode
+  aiAnalysis: {
+    strengths: [
+      "Hương vị thơm ngon",
+      "Giá cả hợp lý",
+      "Nguyên liệu tươi sạch",
+      "Đóng gói tiện lợi",
     ],
-    price: "12.990.000đ",
-    rating: 4.5,
-    reviewCount: 128,
-    category: "Điện tử",
-    verified: true,
-    description:
-      "Điện thoại XYZ Pro với màn hình AMOLED 6.7 inch, chip xử lý mạnh mẽ, camera 108MP và pin 5000mAh. Thiết kế sang trọng, mỏng nhẹ và hiệu năng vượt trội.",
-    specifications: [
-      { name: "Màn hình", value: "AMOLED 6.7 inch" },
-      { name: "Chip", value: "Snapdragon 8 Gen 2" },
-      { name: "RAM", value: "12GB" },
-      { name: "Bộ nhớ", value: "256GB" },
-      { name: "Camera", value: "108MP + 12MP + 8MP" },
-      { name: "Pin", value: "5000mAh" },
+    weaknessesრ: "https://minhtuanmobile.com/uploads/products/241207031455-3.webp",
+    weaknesses: [
+      "Hạn sử dụng ngắn",
+      "Không phù hợp với người dị ứng gluten",
     ],
-    ratingDistribution: [80, 30, 10, 5, 3],
-    aiAnalysis: {
-      strengths: [
-        "Màn hình sắc nét, màu sắc chân thực",
-        "Hiệu năng mạnh mẽ, không giật lag",
-        "Camera chụp ảnh đẹp, đặc biệt trong điều kiện thiếu sáng",
-        "Pin trâu, sử dụng được cả ngày",
-      ],
-      weaknesses: [
-        "Giá thành cao",
-        "Hơi nóng khi chơi game nặng",
-        "Không có jack cắm tai nghe 3.5mm",
-      ],
-      summary:
-        "Điện thoại XYZ Pro là một sản phẩm cao cấp với nhiều tính năng nổi bật. Đa số người dùng hài lòng với hiệu năng, camera và thời lượng pin. Tuy nhiên, một số người dùng phàn nàn về giá thành cao và việc thiếu jack cắm tai nghe 3.5mm.",
-      sentiment: {
-        positive: 75,
-        neutral: 15,
-        negative: 10,
-      },
+    summary:
+      "Bánh mì Hoa Mai là một sản phẩm chất lượng với   cao cấp với hương vị thơm ngon và giá cả hợp lý. Đa số người dùng hài lòng với chất lượng và độ tươi của bánh. Tuy nhiên, hạn sử dụng ngắn và không phù hợp với người dị ứng gluten là một số điểm cần lưu ý.",
+    sentiment: {
+      positive: 80,
+      neutral: 15,
+      negative: 5,
     },
   },
-];
+};
 
+// Dữ liệu reviews và relatedProducts giữ nguyên như trong code gốc
 const reviews = [
   {
     id: 1,
     rating: 5,
     title: "Sản phẩm tuyệt vời",
     content:
-      "Điện thoại XYZ Pro là một sản phẩm tuyệt vời. Màn hình đẹp, camera chụp rất đẹp và pin trâu. Tôi đã sử dụng được 2 tháng và rất hài lòng với hiệu năng của máy.",
+      "Bánh mì Hoa Mai rất ngon, vỏ giòn, ruột mềm. Tôi đã mua nhiều lần và rất hài lòng.",
     verified: true,
     helpful: 42,
     date: "15/04/2023",
@@ -91,9 +69,9 @@ const reviews = [
   {
     id: 2,
     rating: 4,
-    title: "Tốt nhưng còn một số hạn chế",
+    title: "Tốt nhưng cần cải thiện",
     content:
-      "Máy chạy rất mượt, camera chụp đẹp. Tuy nhiên, pin hơi nóng khi chơi game và sạc không được nhanh như quảng cáo. Nhìn chung vẫn là một sản phẩm tốt trong tầm giá.",
+      "Bánh mì ngon, nhưng hạn sử dụng hơi ngắn. Nếu để lâu sẽ không còn giòn nữa.",
     verified: true,
     helpful: 28,
     date: "03/05/2023",
@@ -105,7 +83,7 @@ const reviews = [
     rating: 3,
     title: "Tạm ổn",
     content:
-      "Máy hoạt động ổn định, nhưng không có gì đặc biệt so với các sản phẩm cùng phân khúc. Camera chụp trong điều kiện thiếu sáng không tốt như quảng cáo. Pin chỉ dùng được khoảng 1 ngày với nhu cầu sử dụng bình thường.",
+      "Bánh mì ăn được, nhưng không có gì đặc biệt. Tôi mong có thêm nhiều loại nhân hơn.",
     verified: false,
     helpful: 15,
     date: "22/05/2023",
@@ -117,51 +95,57 @@ const reviews = [
 const relatedProducts = [
   {
     id: 2,
-    name: "Điện thoại XYZ Lite",
+    name: "Bánh mì pate",
     image: "/placeholder.svg?height=300&width=300",
-    price: "8.990.000đ",
+    price: "15.000đ",
     rating: 4.2,
     reviewCount: 95,
   },
   {
     id: 3,
-    name: "Điện thoại ABC Ultra",
+    name: "Bánh mì trứng",
     image: "/placeholder.svg?height=300&width=300",
-    price: "14.990.000đ",
+    price: "12.000đ",
     rating: 4.7,
     reviewCount: 112,
   },
   {
     id: 4,
-    name: "Tai nghe XYZ Buds",
+    name: "Bánh mì chả lụa",
     image: "/placeholder.svg?height=300&width=300",
-    price: "2.490.000đ",
+    price: "18.000đ",
     rating: 4.0,
     reviewCount: 78,
   },
   {
     id: 5,
-    name: "Sạc không dây XYZ",
+    name: "Bánh mì thịt nướng",
     image: "/placeholder.svg?height=300&width=300",
-    price: "890.000đ",
+    price: "20.000đ",
     rating: 3.8,
     reviewCount: 45,
   },
 ];
 
 export default function ProductDetailPage() {
-  const { productId } = useParams(); // Lấy productId từ URL
+  const { id: productId } = useParams(); // Lấy productId từ URL
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
 
   const dispatch = useDispatch();
-  const { product, isLoading, error } = useSelector(
-    (state) => state.product
-  );
+  const { product, isLoading, error } = useSelector((state) => state.product);
 
   useEffect(() => {
     if (productId) {
-      dispatch(fetchProductApiById({ id: productId }));
+      console.log("Dispatching fetchProductApiById with ID:", productId); // Kiểm tra productId
+      dispatch(fetchProductApiById({ id: productId }))
+        .unwrap()
+        .then((data) => {
+          console.log("API response data:", data); // Kiểm tra dữ liệu trả về từ API
+        })
+        .catch((err) => {
+          console.error("API error:", err); // Kiểm tra lỗi nếu có
+        });
     }
   }, [dispatch, productId]);
 
@@ -174,12 +158,24 @@ export default function ProductDetailPage() {
   }
 
   if (error) {
-    return <Typography color="error">Lỗi khi tải chi tiết sản phẩm: {error}</Typography>;
+    return (
+      <Typography color="error">
+        Lỗi khi tải chi tiết sản phẩm: {error.message || error}
+      </Typography>
+    );
   }
 
   if (!product) {
     return <Typography>Không tìm thấy sản phẩm.</Typography>;
   }
+
+  // Kết hợp dữ liệu từ API và dữ liệu hardcode
+  const enrichedProduct = {
+    ...product,
+    ...hardcodedProductData,
+    category: product.category || "Thực phẩm", // Nếu API không trả về category, hardcode
+    price: product.price || "10.000đ", // Nếu API không trả về price, hardcode
+  };
 
   return (
     <Box className="product-container">
@@ -187,8 +183,8 @@ export default function ProductDetailPage() {
         <Box className="product-image-section">
           <Box className="product-main-image">
             <img
-              src={product.sourceUrl || "/placeholder.svg"}
-              alt={product.name}
+              src={enrichedProduct.sourceUrl || "/placeholder.svg"}
+              alt={enrichedProduct.name}
               className="product-image"
             />
           </Box>
@@ -198,17 +194,17 @@ export default function ProductDetailPage() {
           <Box className="product-header">
             <Box className="product-meta">
               <Typography variant="caption" className="product-category">
-                {product.category || "Không rõ"}
+                {enrichedProduct.category}
               </Typography>
             </Box>
             <Typography variant="h4" className="product-name">
-              {product.name}
+              {enrichedProduct.name}
             </Typography>
             <Typography variant="body2" className="product-brand-name">
-              Thương hiệu: {product.brandName || "Không rõ"}
+              Thương hiệu: {enrichedProduct.brandName || "Không rõ"}
             </Typography>
             <Typography variant="caption" className="product-created-at">
-              Ngày tạo: {new Date(product.createdAt).toLocaleDateString()}
+              Ngày tạo: {new Date(enrichedProduct.createdAt).toLocaleDateString()}
             </Typography>
           </Box>
 
@@ -228,7 +224,11 @@ export default function ProductDetailPage() {
         </Box>
       </Box>
 
-      <Tabs value={tabValue} onChange={handleTabChange} className="product-tabs">
+      <Tabs
+        value={tabValue}
+        onChange={handleTabChange}
+        className="product-tabs"
+      >
         <Tab label={`Đánh Giá`} value="reviews" />
         <Tab label="Phân Tích AI" value="analysis" />
         <Tab label="Sản Phẩm Liên Quan" value="related" />
@@ -242,23 +242,28 @@ export default function ProductDetailPage() {
                 <Card className="product-rating-card">
                   <CardContent className="product-rating-content">
                     <Box className="product-rating-overview">
-                      <Typography variant="h3" className="product-rating-score">
-                        {product.rating || 0}
+                      <Typography
+                        variant="h3"
+                        className="product-rating-score"
+                      >
+                        {enrichedProduct.rating || 0}
                       </Typography>
                       <Box className="product-rating-stars">
                         <Rating
-                          value={product.rating || 0}
+                          value={enrichedProduct.rating || 0}
                           readOnly
                           precision={0.5}
                           icon={<StarIcon className="product-star-icon" />}
-                          emptyIcon={<StarIcon className="product-star-icon-empty" />}
+                          emptyIcon={
+                            <StarIcon className="product-star-icon-empty" />
+                          }
                         />
                       </Box>
                     </Box>
                     <Button
                       variant="contained"
                       className="product-write-review-button"
-                      href={`/danh-gia/tao-moi?product=${product.id}`}
+                      href={`/danh-gia/tao-moi?product=${enrichedProduct.id}`}
                       component="a"
                     >
                       Viết Đánh Giá
@@ -277,21 +282,34 @@ export default function ProductDetailPage() {
                               value={review.rating}
                               readOnly
                               icon={<StarIcon className="product-star-icon" />}
-                              emptyIcon={<StarIcon className="product-star-icon-empty" />}
+                              emptyIcon={
+                                <StarIcon className="product-star-icon-empty" />
+                              }
                             />
-                            <Typography variant="caption" className="product-review-date">
+                            <Typography
+                              variant="caption"
+                              className="product-review-date"
+                            >
                               {review.date}
                             </Typography>
                           </Box>
-                          <Typography variant="subtitle2" className="product-review-title">
+                          <Typography
+                            variant="subtitle2"
+                            className="product-review-title"
+                          >
                             {review.title}
                           </Typography>
                         </Box>
                         <Avatar className="product-review-avatar">
-                          <Typography variant="caption">{review.userInitials}</Typography>
+                          <Typography variant="caption">
+                            {review.userInitials}
+                          </Typography>
                         </Avatar>
                       </Box>
-                      <Typography variant="body2" className="product-review-text">
+                      <Typography
+                        variant="body2"
+                        className="product-review-text"
+                      >
                         {review.content}
                       </Typography>
                       <Box className="product-review-footer">
@@ -299,10 +317,15 @@ export default function ProductDetailPage() {
                           {review.verified && (
                             <Box className="product-review-verified">
                               <VerifiedIcon className="product-icon" />
-                              <Typography variant="caption">Đã xác minh bởi AI</Typography>
+                              <Typography variant="caption">
+                                Đã xác minh bởi AI
+                              </Typography>
                             </Box>
                           )}
-                          <Typography variant="caption" className="product-review-user">
+                          <Typography
+                            variant="caption"
+                            className="product-review-user"
+                          >
                             {review.user}
                           </Typography>
                         </Box>
@@ -340,75 +363,119 @@ export default function ProductDetailPage() {
               <CardContent className="product-analysis-content">
                 <Box className="product-analysis-header">
                   <BarChartIcon className="product-icon" />
-                  <Typography variant="h6" className="product-analysis-title">
+                  <Typography
+                    variant="h6"
+                    className="product-analysis-title"
+                  >
                     Phân Tích AI
                   </Typography>
                 </Box>
                 <Box className="product-analysis-grid">
                   <Box className="product-analysis-strengths">
-                    <Typography variant="subtitle1" className="product-analysis-subtitle">
+                    <Typography
+                      variant="subtitle1"
+                      className="product-analysis-subtitle"
+                    >
                       Điểm Mạnh
                     </Typography>
                     <Box className="product-analysis-list">
-                      {(product.aiAnalysis?.strengths || []).map((strength, index) => (
-                        <Box key={index} className="product-analysis-item">
-                          <VerifiedIcon className="product-icon" />
-                          <Typography variant="body2">{strength}</Typography>
-                        </Box>
-                      ))}
+                      {(enrichedProduct.aiAnalysis?.strengths || []).map(
+                        (strength, index) => (
+                          <Box
+                            key={index}
+                            className="product-analysis-item"
+                          >
+                            <VerifiedIcon className="product-icon" />
+                            <Typography variant="body2">
+                              {strength}
+                            </Typography>
+                          </Box>
+                        )
+                      )}
                     </Box>
                   </Box>
                   <Box className="product-analysis-weaknesses">
-                    <Typography variant="subtitle1" className="product-analysis-subtitle">
+                    <Typography
+                      variant="subtitle1"
+                      className="product-analysis-subtitle"
+                    >
                       Điểm Yếu
                     </Typography>
                     <Box className="product-analysis-list">
-                      {(product.aiAnalysis?.weaknesses || []).map((weakness, index) => (
-                        <Box key={index} className="product-analysis-item">
-                          <FlagIcon className="product-icon" />
-                          <Typography variant="body2">{weakness}</Typography>
-                        </Box>
-                      ))}
+                      {(enrichedProduct.aiAnalysis?.weaknesses || []).map(
+                        (weakness, index) => (
+                          <Box
+                            key={index}
+                            className="product-analysis-item"
+                          >
+                            <FlagIcon className="product-icon" />
+                            <Typography variant="body2">
+                              {weakness}
+                            </Typography>
+                          </Box>
+                        )
+                      )}
                     </Box>
                   </Box>
                 </Box>
                 <Box className="product-analysis-summary">
-                  <Typography variant="subtitle1" className="product-analysis-subtitle">
+                  <Typography
+                    variant="subtitle1"
+                    className="product-analysis-subtitle"
+                  >
                     Tóm Tắt Đánh Giá
                   </Typography>
-                  <Typography variant="body2" className="product-analysis-text">
-                    {product.aiAnalysis?.summary}
+                  <Typography
+                    variant="body2"
+                    className="product-analysis-text"
+                  >
+                    {enrichedProduct.aiAnalysis?.summary}
                   </Typography>
                 </Box>
                 <Box className="product-analysis-sentiment">
-                  <Typography variant="subtitle1" className="product-analysis-subtitle">
+                  <Typography
+                    variant="subtitle1"
+                    className="product-analysis-subtitle"
+                  >
                     Phân Tích Cảm Xúc
                   </Typography>
-                  {product.aiAnalysis?.sentiment && (
+                  {enrichedProduct.aiAnalysis?.sentiment && (
                     <Box>
                       <Box className="product-sentiment-bar">
                         <Box
                           className="product-sentiment-positive"
-                          style={{ width: `${product.aiAnalysis.sentiment.positive || 0}%` }}
+                          style={{
+                            width: `${enrichedProduct.aiAnalysis.sentiment.positive || 0}%`,
+                          }}
                         ></Box>
                         <Box
                           className="product-sentiment-neutral"
-                          style={{ width: `${product.aiAnalysis.sentiment.neutral || 0}%` }}
+                          style={{
+                            width: `${enrichedProduct.aiAnalysis.sentiment.neutral || 0}%`,
+                          }}
                         ></Box>
                         <Box
                           className="product-sentiment-negative"
-                          style={{ width: `${product.aiAnalysis.sentiment.negative || 0}%` }}
+                          style={{
+                            width: `${enrichedProduct.aiAnalysis.sentiment.negative || 0}%`,
+                          }}
                         ></Box>
                       </Box>
                       <Box className="product-sentiment-labels">
                         <Typography variant="caption">
-                          Tích cực ({product.aiAnalysis.sentiment.positive || 0}%)
+                          Tích cực (
+                          {enrichedProduct.aiAnalysis.sentiment.positive || 0}
+                          %)
                         </Typography>
                         <Typography variant="caption">
-                          Trung lập ({product.aiAnalysis.sentiment.neutral || 0}%)
+                          Trung lập (
+                          {enrichedProduct.aiAnalysis.sentiment.neutral || 0}
+                          %)
                         </Typography>
                         <Typography variant="caption">
-                          Tiêu cực ({product.aiAnalysis.sentiment.negative || 0}%)
+                          Tiêu cực (
+                          {enrichedProduct.aiAnalysis.sentiment.negative || 0}
+                          %)
                         </Typography>
                       </Box>
                     </Box>
@@ -424,7 +491,10 @@ export default function ProductDetailPage() {
             <Box className="product-related-grid">
               {relatedProducts.map((related) => (
                 <Card key={related.id} className="product-related-card">
-                  <a href={`/san-pham/${related.id}`} className="product-related-link">
+                  <a
+                    href={`/san-pham/${related.id}`}
+                    className="product-related-link"
+                  >
                     <Box className="product-related-image">
                       <img
                         src={related.image || "/placeholder.svg"}
@@ -440,18 +510,32 @@ export default function ProductDetailPage() {
                         readOnly
                         precision={0.5}
                         icon={<StarIcon className="product-star-icon" />}
-                        emptyIcon={<StarIcon className="product-star-icon-empty" />}
+                        emptyIcon={
+                          <StarIcon className="product-star-icon-empty" />
+                        }
                       />
-                      <Typography variant="caption" className="product-related-review-count">
+                      <Typography
+                        variant="caption"
+                        className="product-related-review-count"
+                      >
                         ({related.reviewCount})
                       </Typography>
                     </Box>
-                    <a href={`/san-pham/${related.id}`} className="product-related-link">
-                      <Typography variant="subtitle2" className="product-related-name">
+                    <a
+                      href={`/san-pham/${related.id}`}
+                      className="product-related-link"
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        className="product-related-name"
+                      >
                         {related.name}
                       </Typography>
                     </a>
-                    <Typography variant="body2" className="product-related-price">
+                    <Typography
+                      variant="body2"
+                      className="product-related-price"
+                    >
                       {related.price}
                     </Typography>
                   </CardContent>
