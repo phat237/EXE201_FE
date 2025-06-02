@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductApiById } from "../../../store/slices/productSlice";
+import { fetchReviewsByProductId } from "../../../store/slices/reviewSlice";
 import {
   Button,
   Card,
@@ -53,44 +54,7 @@ const hardcodedProductData = {
 };
 
 // Dữ liệu reviews và relatedProducts giữ nguyên như trong code gốc
-const reviews = [
-  {
-    id: 1,
-    rating: 5,
-    title: "Sản phẩm tuyệt vời",
-    content:
-      "Bánh mì Hoa Mai rất ngon, vỏ giòn, ruột mềm. Tôi đã mua nhiều lần và rất hài lòng.",
-    verified: true,
-    helpful: 42,
-    date: "15/04/2023",
-    user: "Người dùng ẩn danh",
-    userInitials: "ND",
-  },
-  {
-    id: 2,
-    rating: 4,
-    title: "Tốt nhưng cần cải thiện",
-    content:
-      "Bánh mì ngon, nhưng hạn sử dụng hơi ngắn. Nếu để lâu sẽ không còn giòn nữa.",
-    verified: true,
-    helpful: 28,
-    date: "03/05/2023",
-    user: "Người dùng ẩn danh",
-    userInitials: "ND",
-  },
-  {
-    id: 3,
-    rating: 3,
-    title: "Tạm ổn",
-    content:
-      "Bánh mì ăn được, nhưng không có gì đặc biệt. Tôi mong có thêm nhiều loại nhân hơn.",
-    verified: false,
-    helpful: 15,
-    date: "22/05/2023",
-    user: "Người dùng ẩn danh",
-    userInitials: "ND",
-  },
-];
+const reviews = [];
 
 const relatedProducts = [
   {
@@ -128,39 +92,52 @@ const relatedProducts = [
 ];
 
 export default function ProductDetailPage() {
-  const { id: productId } = useParams(); // Lấy productId từ URL
+  const { id: productId } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
 
   const dispatch = useDispatch();
   const { product, isLoading, error } = useSelector((state) => state.product);
+  const { reviews, isLoading: reviewsLoading, error: reviewsError } = useSelector((state) => state.review);
 
   useEffect(() => {
     if (productId) {
-      console.log("Dispatching fetchProductApiById with ID:", productId); // Kiểm tra productId
+      console.log("Dispatching fetchProductApiById with ID:", productId);
       dispatch(fetchProductApiById({ id: productId }))
         .unwrap()
         .then((data) => {
-          console.log("API response data:", data); // Kiểm tra dữ liệu trả về từ API
+          console.log("API response data:", data);
         })
         .catch((err) => {
-          console.error("API error:", err); // Kiểm tra lỗi nếu có
+          console.error("API error:", err);
+        });
+
+      // Fetch reviews for the product
+      dispatch(fetchReviewsByProductId(productId))
+        .unwrap()
+        .then((data) => {
+          console.log("Reviews API response:", data);
+        })
+        .catch((err) => {
+          console.error("Reviews API error:", err);
         });
     }
   }, [dispatch, productId]);
+
+  console.log("Reviews from Redux state:", reviews);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  if (isLoading) {
+  if (isLoading || reviewsLoading) {
     return <Typography>Đang tải chi tiết sản phẩm...</Typography>;
   }
 
-  if (error) {
+  if (error || reviewsError) {
     return (
       <Typography color="error">
-        Lỗi khi tải chi tiết sản phẩm: {error.message || error}
+        Lỗi khi tải chi tiết sản phẩm: {error?.message || error || reviewsError?.message || reviewsError}
       </Typography>
     );
   }
@@ -272,83 +249,75 @@ export default function ProductDetailPage() {
                 </Card>
               </Box>
               <Box className="product-reviews-list">
-                {reviews.map((review) => (
-                  <Card key={review.id} className="product-review-card">
-                    <CardContent className="product-review-content">
-                      <Box className="product-review-header">
-                        <Box>
-                          <Box className="product-review-rating">
-                            <Rating
-                              value={review.rating}
-                              readOnly
-                              icon={<StarIcon className="product-star-icon" />}
-                              emptyIcon={
-                                <StarIcon className="product-star-icon-empty" />
-                              }
-                            />
-                            <Typography
-                              variant="caption"
-                              className="product-review-date"
-                            >
-                              {review.date}
-                            </Typography>
-                          </Box>
-                          <Typography
-                            variant="subtitle2"
-                            className="product-review-title"
-                          >
-                            {review.title}
-                          </Typography>
-                        </Box>
-                        <Avatar className="product-review-avatar">
-                          <Typography variant="caption">
-                            {review.userInitials}
-                          </Typography>
-                        </Avatar>
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        className="product-review-text"
-                      >
-                        {review.content}
-                      </Typography>
-                      <Box className="product-review-footer">
-                        <Box className="product-review-footer-left">
-                          {review.verified && (
-                            <Box className="product-review-verified">
-                              <VerifiedIcon className="product-icon" />
-                              <Typography variant="caption">
-                                Đã xác minh bởi AI
+                {reviews && reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <Card key={review.id} className="product-review-card">
+                      <CardContent className="product-review-content">
+                        <Box className="product-review-header">
+                          <Box>
+                            <Box className="product-review-rating">
+                              <Rating
+                                value={review.rating}
+                                readOnly
+                                icon={<StarIcon className="product-star-icon" />}
+                                emptyIcon={<StarIcon className="product-star-icon-empty" />}
+                              />
+                              <Typography variant="caption" className="product-review-date">
+                                {new Date(review.createdAt).toLocaleDateString()}
                               </Typography>
                             </Box>
-                          )}
-                          <Typography
-                            variant="caption"
-                            className="product-review-user"
-                          >
-                            {review.user}
-                          </Typography>
+                            <Typography variant="subtitle2" className="product-review-title">
+                              {review.title}
+                            </Typography>
+                          </Box>
+                          <Avatar className="product-review-avatar">
+                            <Typography variant="caption">
+                              {review.userName ? review.userName.charAt(0).toUpperCase() : 'U'}
+                            </Typography>
+                          </Avatar>
                         </Box>
-                        <Box className="product-review-footer-right">
-                          <Button
-                            variant="text"
-                            className="product-review-helpful"
-                            startIcon={<ThumbUpIcon className="product-icon" />}
-                          >
-                            {review.helpful} hữu ích
-                          </Button>
-                          <Button
-                            variant="text"
-                            className="product-review-report"
-                            startIcon={<FlagIcon className="product-icon" />}
-                          >
-                            Báo cáo
-                          </Button>
+                        <Typography variant="body2" className="product-review-text">
+                          {review.content}
+                        </Typography>
+                        <Box className="product-review-footer">
+                          <Box className="product-review-footer-left">
+                            {review.verified && (
+                              <Box className="product-review-verified">
+                                <VerifiedIcon className="product-icon" />
+                                <Typography variant="caption">
+                                  Đã xác minh bởi AI
+                                </Typography>
+                              </Box>
+                            )}
+                            <Typography variant="caption" className="product-review-user">
+                              {review.userName || "Người dùng ẩn danh"}
+                            </Typography>
+                          </Box>
+                          <Box className="product-review-footer-right">
+                            <Button
+                              variant="text"
+                              className="product-review-helpful"
+                              startIcon={<ThumbUpIcon className="product-icon" />}
+                            >
+                              {review.helpfulCount || 0} hữu ích
+                            </Button>
+                            <Button
+                              variant="text"
+                              className="product-review-report"
+                              startIcon={<FlagIcon className="product-icon" />}
+                            >
+                              Báo cáo
+                            </Button>
+                          </Box>
                         </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Typography variant="body1" className="no-reviews-message">
+                    Chưa có đánh giá nào cho sản phẩm này.
+                  </Typography>
+                )}
                 <Box className="product-load-more">
                   <Button variant="outlined">Xem Thêm Đánh Giá</Button>
                 </Box>

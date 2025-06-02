@@ -20,6 +20,23 @@ export const fetchReviewsPaginated = createAsyncThunk(
   }
 );
 
+// Async thunk để fetch danh sách review theo productId
+export const fetchReviewsByProductId = createAsyncThunk(
+  "review/fetchReviewsByProductId",
+  async (productId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `https://trustreviews.onrender.com/reviews/review/${productId}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message  
+      );
+    }
+  }
+);
+
 // Async thunk để tạo review mới cho một product theo ID
 export const createProductReview = createAsyncThunk(
   "review/createProductReview",
@@ -220,6 +237,31 @@ export const reviewSlice = createSlice({
       .addCase(deleteProductReview.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
+      })
+      // Thêm xử lý cho fetchReviewsByProductId
+      .addCase(fetchReviewsByProductId.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchReviewsByProductId.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        if (Array.isArray(payload)) {
+          state.reviews = payload;
+        } else if (payload && Array.isArray(payload.content)) {
+          state.reviews = payload.content;
+        } else if (payload && typeof payload === 'object' && Object.keys(payload).length > 0) {
+          // If the API returns a single review object, put it in an array
+          state.reviews = [payload];
+        } else {
+          state.reviews = [];
+          console.warn("Unexpected payload structure for product reviews:", payload);
+        }
+      })
+      .addCase(fetchReviewsByProductId.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        state.reviews = [];
       });
   },
 });
