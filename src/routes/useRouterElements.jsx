@@ -4,13 +4,16 @@ import Register from "../pages/Auth/Register/Register";
 import AuthLayout from "../layouts/AuthLayout/AuthLayout";
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import AdminLayout from "../layouts/AdminLayout/AdminLayout";
+import PartnerLayout from "../layouts/PartnerLayout/PartnerLayout";
 import HomePage from "../pages/Home/HomePage/HomePage";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
+import PartnerDashboard from "../pages/Partner/Dashboard/PartnerDashboard";
 import Users from "../pages/Admin/Users/Users";
 import Products from "../pages/Admin/Products/Products";
 import Orders from "../pages/Admin/Orders/Orders";
 import Settings from "../pages/Admin/Settings/Settings";
 import UpgradePackages from "../pages/Admin/UpgradePackages/UpgradePackages";
+import PartnerUpgradePackages from "../pages/Partner/UpgradePackages/UpgradePackages";
 import { useRoutes } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ReviewPage from "../pages/Home/ReviewPage/ReviewPage";
@@ -19,6 +22,7 @@ import ProductPaege from "../pages/Home/ProductPage/ProductPage";
 import ProductDetailPage from "../pages/Home/ProductPage/ProductDetailPage";
 import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 import ProfileUser from "../components/ProfileUser/ProfileUser";
+import Reviews from "../pages/Partner/Reviews/Reviews";
 
 export default function useRouterElements() {
   const element = useRoutes([
@@ -113,6 +117,32 @@ export default function useRouterElements() {
         {
           path: "upgrade-packages",
           element: <UpgradePackages />,
+        },
+      ],
+    },
+    {
+      path: PATH.PARTNER,
+      element: (
+        // <ProtectedRoute allowedRoles={["PARTNER"]}>
+          <PartnerLayout />
+        // </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <PartnerDashboard />,
+        },
+        {
+          path: "dashboard",
+          element: <PartnerDashboard />,
+        },
+        {
+          path: "upgrade-packages",
+          element: <PartnerUpgradePackages />,
+        },
+        {
+          path: "reviews",
+          element: <Reviews />,
         },
       ],
     },
