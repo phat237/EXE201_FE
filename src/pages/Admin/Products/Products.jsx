@@ -15,7 +15,10 @@ import { useForm, Controller } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useDispatch, useSelector } from "react-redux";
-import { createProductApi } from "../../../store/slices/productSlice";
+import {
+  createProductApi,
+  fetchAllProductsPaginated,
+} from "../../../store/slices/productSlice";
 
 const validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -78,7 +81,7 @@ const Products = () => {
   const [showImage, setShowImage] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const dispatch = useDispatch();
-  const { product, isLoading, error } = useSelector((state) => state.product);
+  const { allProducts, isLoading, error } = useSelector((state) => state.product);
 
   const {
     control,
@@ -91,6 +94,11 @@ const Products = () => {
   });
 
   const columns = showImage ? [...baseColumns, imageColumn] : baseColumns;
+
+  // Gọi fetchAllProductsPaginated khi component được mount
+  useEffect(() => {
+    dispatch(fetchAllProductsPaginated({ page: 0, size: 1000 })); // Lấy tất cả sản phẩm
+  }, [dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -108,17 +116,27 @@ const Products = () => {
     }
 
     try {
-      const result = await dispatch(
-        createProductApi({ data, category })
-      ).unwrap();
+      await dispatch(createProductApi({ data, category })).unwrap();
       message.success("Thêm sản phẩm thành công!");
       setIsModalOpen(false);
       reset();
+      // Gọi lại fetchAllProductsPaginated để cập nhật bảng
+      dispatch(fetchAllProductsPaginated({ page: 0, size: 1000 }));
     } catch (err) {
       message.error(err.message || "Thêm sản phẩm thất bại!");
       console.error("Submit error:", err);
     }
   };
+
+  // Chuẩn bị dữ liệu cho bảng
+  const dataSource = allProducts.map((item, index) => ({
+    key: item.id || index,
+    name: item.name,
+    price: item.price,
+    category: item.category,
+    status: item.status || "Còn hàng",
+    image: item.image || item.sourceUrl,
+  }));
 
   return (
     <div>
@@ -149,8 +167,8 @@ const Products = () => {
       </div>
       <Table
         columns={columns}
-        dataSource={product}
-        pagination={false}
+        dataSource={dataSource}
+        pagination={false} // Tắt phân trang
         loading={isLoading}
       />
 
