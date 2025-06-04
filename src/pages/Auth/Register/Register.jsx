@@ -24,7 +24,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-
 import "../Login/AuthPage.css";
 import { registerApi } from "../../../store/slices/authSlice";
 
@@ -104,7 +103,7 @@ export default function Register() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    reset(); // Reset form when switching tabs
+    reset();
   };
 
   const onSubmit = async (data) => {
@@ -123,249 +122,254 @@ export default function Register() {
 
   return (
     <Box className="auth-container">
-      <Box className="auth-form-wrapper">
-        <Card className="auth-card">
-          <CardHeader>
-            <Typography variant="h5" className="auth-card-title">
-              Đăng Ký
-            </Typography>
-            <Typography variant="body2" className="auth-card-description">
-              Tạo tài khoản mới để sử dụng dịch vụ
-            </Typography>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={tabValue} onChange={handleTabChange} centered>
-              <Tab label="Người dùng" />
-              <Tab label="Đối tác" />
-            </Tabs>
-            <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-              <Box className="auth-form-field">
-                <Typography
-                  variant="body2"
-                  component="label"
-                  htmlFor="username"
-                >
-                  Tên đăng nhập
+      <Box className="auth-grid">
+        <Box className="auth-form-wrapper">
+          <Card className="auth-card">
+            <CardHeader
+              title={
+                <Typography variant="h4" className="auth-card-title">
+                  Đăng Ký
                 </Typography>
-                <TextField
-                  id="username"
-                  placeholder="congduy"
-                  fullWidth
-                  variant="outlined"
-                  {...register("username")}
-                  error={!!errors.username}
-                  helperText={errors.username?.message}
-                />
-              </Box>
-              <Box className="auth-form-field">
-                <Typography
-                  variant="body2"
-                  component="label"
-                  htmlFor="displayName"
-                >
-                  Tên hiển thị
-                </Typography>
-                <TextField
-                  id="displayName"
-                  placeholder="congduy"
-                  fullWidth
-                  variant="outlined"
-                  {...register("displayName")}
-                  error={!!errors.displayName}
-                  helperText={errors.displayName?.message}
-                />
-              </Box>
-              <Box className="auth-form-field">
-                <Typography
-                  variant="body2"
-                  component="label"
-                  htmlFor="register-email"
-                >
-                  Email
-                </Typography>
-                <TextField
-                  id="register-email"
-                  type="email"
-                  placeholder="cduy527@gmail.com"
-                  fullWidth
-                  variant="outlined"
-                  {...register("email")}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                />
-              </Box>
-              <Box className="auth-form-field">
-                <Typography
-                  variant="body2"
-                  component="label"
-                  htmlFor="register-password"
-                >
-                  Mật khẩu
-                </Typography>
-                <Box className="auth-password-wrapper">
+              }
+            />
+            <CardContent>
+              <Typography variant="body1" className="auth-card-description">
+                Tạo tài khoản mới để sử dụng dịch vụ
+              </Typography>
+              <Tabs value={tabValue} onChange={handleTabChange} centered>
+                <Tab label="Người dùng" />
+                <Tab label="Đối tác" />
+              </Tabs>
+              <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+                <Box className="auth-form-field">
+                  <Typography
+                    variant="body2"
+                    component="label"
+                    htmlFor="username"
+                  >
+                    Tên đăng nhập
+                  </Typography>
                   <TextField
-                    id="register-password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    id="username"
+                    placeholder="congduy"
                     fullWidth
                     variant="outlined"
-                    {...register("password")}
-                    error={!!errors.password}
-                    helperText={errors.password?.message}
+                    {...register("username")}
+                    error={!!errors.username}
+                    helperText={errors.username?.message}
                   />
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="auth-password-toggle"
-                  >
-                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
                 </Box>
-                <Typography variant="caption" className="auth-password-hint">
-                  Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường
-                  và số
+                <Box className="auth-form-field">
+                  <Typography
+                    variant="body2"
+                    component="label"
+                    htmlFor="displayName"
+                  >
+                    Tên hiển thị
+                  </Typography>
+                  <TextField
+                    id="displayName"
+                    placeholder="congduy"
+                    fullWidth
+                    variant="outlined"
+                    {...register("displayName")}
+                    error={!!errors.displayName}
+                    helperText={errors.displayName?.message}
+                  />
+                </Box>
+                <Box className="auth-form-field">
+                  <Typography
+                    variant="body2"
+                    component="label"
+                    htmlFor="register-email"
+                  >
+                    Email
+                  </Typography>
+                  <TextField
+                    id="register-email"
+                    type="email"
+                    placeholder="cduy527@gmail.com"
+                    fullWidth
+                    variant="outlined"
+                    {...register("email")}
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                  />
+                </Box>
+                <Box className="auth-form-field">
+                  <Typography
+                    variant="body2"
+                    component="label"
+                    htmlFor="register-password"
+                  >
+                    Mật khẩu
+                  </Typography>
+                  <Box className="auth-password-wrapper">
+                    <TextField
+                      id="register-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      fullWidth
+                      variant="outlined"
+                      {...register("password")}
+                      error={!!errors.password}
+                      helperText={errors.password?.message}
+                    />
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="auth-password-toggle"
+                    >
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </Box>
+                  <Typography variant="caption" className="auth-password-hint">
+                    Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường
+                    và số
+                  </Typography>
+                </Box>
+                {tabValue === 1 && (
+                  <>
+                    <Box className="auth-form-field">
+                      <Typography
+                        variant="body2"
+                        component="label"
+                        htmlFor="companyName"
+                      >
+                        Tên công ty
+                      </Typography>
+                      <TextField
+                        id="companyName"
+                        placeholder="Công ty ABC"
+                        fullWidth
+                        variant="outlined"
+                        {...register("companyName")}
+                        error={!!errors.companyName}
+                        helperText={errors.companyName?.message}
+                      />
+                    </Box>
+                    <Box className="auth-form-field">
+                      <Typography
+                        variant="body2"
+                        component="label"
+                        htmlFor="businessRegistrationNumber"
+                      >
+                        Mã số đăng ký kinh doanh
+                      </Typography>
+                      <TextField
+                        id="businessRegistrationNumber"
+                        placeholder="123456789"
+                        fullWidth
+                        variant="outlined"
+                        {...register("businessRegistrationNumber")}
+                        error={!!errors.businessRegistrationNumber}
+                        helperText={errors.businessRegistrationNumber?.message}
+                      />
+                    </Box>
+                    <Box className="auth-form-field">
+                      <Typography
+                        variant="body2"
+                        component="label"
+                        htmlFor="website"
+                      >
+                        Website
+                      </Typography>
+                      <TextField
+                        id="website"
+                        placeholder="https://example.com"
+                        fullWidth
+                        variant="outlined"
+                        {...register("website")}
+                        error={!!errors.website}
+                        helperText={errors.website?.message}
+                      />
+                    </Box>
+                    <Box className="auth-form-field">
+                      <Typography
+                        variant="body2"
+                        component="label"
+                        htmlFor="contactPhone"
+                      >
+                        Số điện thoại liên hệ
+                      </Typography>
+                      <TextField
+                        id="contactPhone"
+                        placeholder="+84912345678"
+                        fullWidth
+                        variant="outlined"
+                        {...register("contactPhone")}
+                        error={!!errors.contactPhone}
+                        helperText={errors.contactPhone?.message}
+                      />
+                    </Box>
+                  </>
+                )}
+                <FormControlLabel
+                  control={<Checkbox id="terms" {...register("terms")} />}
+                  label={
+                    <Typography variant="caption">
+                      Tôi đồng ý với{" "}
+                      <Link to="/dieu-khoan" className="auth-link">
+                        Điều khoản sử dụng
+                      </Link>{" "}
+                      và{" "}
+                      <Link to="/chinh-sach" className="auth-link">
+                        Chính sách bảo mật
+                      </Link>
+                    </Typography>
+                  }
+                  className="auth-checkbox"
+                />
+                {errors.terms && (
+                  <Typography variant="caption" color="error">
+                    {errors.terms.message}
+                  </Typography>
+                )}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isLoading}
+                  className="auth-submit-button"
+                >
+                  {isLoading
+                    ? "Đang đăng ký..."
+                    : tabValue === 0
+                    ? "Đăng Ký"
+                    : "Đăng Ký Đối Tác"}
+                </Button>
+              </form>
+
+              <Box className="auth-divider">
+                <Typography variant="caption" className="auth-divider-text">
+                  Hoặc đăng ký với
                 </Typography>
               </Box>
-              {tabValue === 1 && (
-                <>
-                  <Box className="auth-form-field">
-                    <Typography
-                      variant="body2"
-                      component="label"
-                      htmlFor="companyName"
-                    >
-                      Tên công ty
-                    </Typography>
-                    <TextField
-                      id="companyName"
-                      placeholder="Công ty ABC"
-                      fullWidth
-                      variant="outlined"
-                      {...register("companyName")}
-                      error={!!errors.companyName}
-                      helperText={errors.companyName?.message}
-                    />
-                  </Box>
-                  <Box className="auth-form-field">
-                    <Typography
-                      variant="body2"
-                      component="label"
-                      htmlFor="businessRegistrationNumber"
-                    >
-                      Mã số đăng ký kinh doanh
-                    </Typography>
-                    <TextField
-                      id="businessRegistrationNumber"
-                      placeholder="123456789"
-                      fullWidth
-                      variant="outlined"
-                      {...register("businessRegistrationNumber")}
-                      error={!!errors.businessRegistrationNumber}
-                      helperText={errors.businessRegistrationNumber?.message}
-                    />
-                  </Box>
-                  <Box className="auth-form-field">
-                    <Typography
-                      variant="body2"
-                      component="label"
-                      htmlFor="website"
-                    >
-                      Website
-                    </Typography>
-                    <TextField
-                      id="website"
-                      placeholder="https://example.com"
-                      fullWidth
-                      variant="outlined"
-                      {...register("website")}
-                      error={!!errors.website}
-                      helperText={errors.website?.message}
-                    />
-                  </Box>
-                  <Box className="auth-form-field">
-                    <Typography
-                      variant="body2"
-                      component="label"
-                      htmlFor="contactPhone"
-                    >
-                      Số điện thoại liên hệ
-                    </Typography>
-                    <TextField
-                      id="contactPhone"
-                      placeholder="+84912345678"
-                      fullWidth
-                      variant="outlined"
-                      {...register("contactPhone")}
-                      error={!!errors.contactPhone}
-                      helperText={errors.contactPhone?.message}
-                    />
-                  </Box>
-                </>
-              )}
-              <FormControlLabel
-                control={<Checkbox id="terms" {...register("terms")} />}
-                label={
-                  <Typography variant="caption">
-                    Tôi đồng ý với{" "}
-                    <Link to="/dieu-khoan" className="auth-link">
-                      Điều khoản sử dụng
-                    </Link>{" "}
-                    và{" "}
-                    <Link to="/chinh-sach" className="auth-link">
-                      Chính sách bảo mật
-                    </Link>
-                  </Typography>
-                }
-                className="auth-checkbox"
-              />
-              {errors.terms && (
-                <Typography variant="caption" color="error">
-                  {errors.terms.message}
-                </Typography>
-              )}
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading}
-                className="auth-submit-button"
-              >
-                {isLoading
-                  ? "Đang đăng ký..."
-                  : tabValue === 0
-                  ? "Đăng Ký"
-                  : "Đăng Ký Đối Tác"}
-              </Button>
-            </form>
 
-            <Box className="auth-divider">
-              <Typography variant="caption" className="auth-divider-text">
-                Hoặc đăng ký với
+              <Box className="auth-social-buttons">
+                <Button variant="outlined" className="auth-social-button">
+                  <span className="auth-social-icon">F</span>
+                  Facebook
+                </Button>
+                <Button variant="outlined" className="auth-social-button">
+                  <MailIcon className="auth-social-icon" />
+                  Google
+                </Button>
+                <Button variant="outlined" className="auth-social-button">
+                  <span className="auth-social-icon">G</span>
+                  Github
+                </Button>
+              </Box>
+            </CardContent>
+            <Box className="auth-footer">
+              <Typography variant="caption" className="auth-footer-text">
+                Đã có tài khoản?{" "}
+                <Link to="/dang-nhap" className="auth-link">
+                  Đăng nhập
+                </Link>
               </Typography>
             </Box>
-
-            <Box className="auth-social-buttons">
-              <Button variant="outlined" className="auth-social-button">
-                <span className="auth-social-icon">F</span>
-                Facebook
-              </Button>
-              <Button variant="outlined" className="auth-social-button">
-                <MailIcon className="auth-social-icon" />
-                Google
-              </Button>
-              <Button variant="outlined" className="auth-social-button">
-                <span className="auth-social-icon">G</span>
-                Github
-              </Button>
-            </Box>
-          </CardContent>
-          <Box className="auth-footer">
-            <Typography variant="caption" className="auth-footer-text">
-              Đã có tài khoản?{" "}
-                <Link to="/dang-nhap" className="auth-link">
-                Đăng nhập
-              </Link>
-            </Typography>
-          </Box>
-        </Card>
+          </Card>
+        </Box>
+        <Box className="auth-image-wrapper"></Box>
       </Box>
     </Box>
   );
