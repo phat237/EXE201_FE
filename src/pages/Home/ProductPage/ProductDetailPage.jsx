@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductApiById } from "../../../store/slices/productSlice";
-import { fetchReviewsByProductId, createProductReview } from "../../../store/slices/reviewSlice";
+import { fetchReviewsByIdPaginated, createProductReview } from "../../../store/slices/reviewSlice";
 import {
   Button,
   Card,
@@ -33,7 +33,7 @@ import {
 import "./ProductDetailPage.css";
 import { useParams } from "react-router-dom";
 
-// Hardcode dữ liệu bổ sung cho các trường thiếu từ API
+// Hardcode dữ liệu bổ sung
 const hardcodedProductData = {
   ratingDistribution: [80, 30, 10, 5, 3],
   aiAnalysis: {
@@ -102,10 +102,12 @@ export default function ProductDetailPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [page, setPage] = useState(0); // Trang hiện tại
+  const [size, setSize] = useState(10); // Số review mỗi trang
 
   const dispatch = useDispatch();
   const { product, isLoading, error } = useSelector((state) => state.product);
-  const { reviews, isLoading: reviewsLoading, error: reviewsError } = useSelector((state) => state.review);
+  const { reviews, pagination, isLoading: reviewsLoading, error: reviewsError } = useSelector((state) => state.review);
 
   useEffect(() => {
     if (productId) {
@@ -118,7 +120,7 @@ export default function ProductDetailPage() {
           console.error("API error:", err);
         });
 
-      dispatch(fetchReviewsByProductId(productId))
+      dispatch(fetchReviewsByIdPaginated({ id: productId, page, size }))
         .unwrap()
         .then((data) => {
           console.log("Reviews API response:", data);
@@ -127,7 +129,7 @@ export default function ProductDetailPage() {
           console.error("Reviews API error:", err);
         });
     }
-  }, [dispatch, productId]);
+  }, [dispatch, productId, page, size]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -155,7 +157,7 @@ export default function ProductDetailPage() {
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
         handleCloseReviewDialog();
-        dispatch(fetchReviewsByProductId(productId));
+        dispatch(fetchReviewsByIdPaginated({ id: productId, page: 0, size }));
       })
       .catch((err) => {
         setSnackbarMessage(`Lỗi khi gửi đánh giá: ${err.message || err}`);
@@ -166,6 +168,12 @@ export default function ProductDetailPage() {
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleLoadMore = () => {
+    if (pagination && page < pagination.totalPages - 1) {
+      setPage(page + 1);
+    }
   };
 
   if (isLoading || reviewsLoading) {
@@ -184,7 +192,6 @@ export default function ProductDetailPage() {
     return <Typography>Không tìm thấy sản phẩm.</Typography>;
   }
 
-  // Calculate average rating and review count from reviews
   const averageRating = reviews && reviews.length > 0
     ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
     : 0;
@@ -370,9 +377,13 @@ export default function ProductDetailPage() {
                     Chưa có đánh giá nào cho sản phẩm này.
                   </Typography>
                 )}
-                <Box className="product-load-more">
-                  <Button variant="outlined">Xem Thêm Đánh Giá</Button>
-                </Box>
+                {pagination && page < pagination.totalPages - 1 && (
+                  <Box className="product-load-more">
+                    <Button variant="outlined" onClick={handleLoadMore}>
+                      Xem Thêm Đánh Giá
+                    </Button>
+                  </Box>
+                )}
               </Box>
             </Box>
 
@@ -459,20 +470,19 @@ export default function ProductDetailPage() {
                   </Typography>
                 </Box>
 
-
                 <Box className="product-analysis-aicomments">
                   <Typography
                     variant="subtitle1"
                     className="product-analysis-subtitle"
                   >
-      
+                    Nhận xét AI
                   </Typography>
                   {reviews && reviews.length > 0 ? (
                     reviews.map((review, index) => (
                       review.aicomment && (
                         <Box key={index} className="product-analysis-item">
                           <Typography variant="body2" className="text-gray-600 italic">
-                            - {review.aicomment} 
+                            - {review.aicomment}
                           </Typography>
                         </Box>
                       )
