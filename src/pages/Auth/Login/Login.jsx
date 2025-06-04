@@ -22,7 +22,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-
 import "./AuthPage.css";
 import { loginApi } from "../../../store/slices/authSlice";
 import { PATH } from "../../../routes/path";
@@ -61,7 +60,6 @@ export default function Login() {
     setIsLoading(true);
     try {
       const result = await dispatch(loginApi(data)).unwrap();
-      console.log("Login result:", result); // Debug
       toast.success("Đăng nhập thành công!");
       localStorage.setItem("currentUser", JSON.stringify(result));
       if (result.role === "USER") {
@@ -78,113 +76,118 @@ export default function Login() {
 
   return (
     <Box className="auth-container">
-      <Box className="auth-form-wrapper">
-        <Card className="auth-card">
-          <CardHeader>
-            <Typography variant="h5" className="auth-card-title">
-              Đăng Nhập
-            </Typography>
-            <Typography variant="body2" className="auth-card-description">
-              Đăng nhập vào tài khoản của bạn để tiếp tục
-            </Typography>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-              <Box className="auth-form-field">
-                <Typography
-                  variant="body2"
-                  component="label"
-                  htmlFor="login-username"
-                >
-                  Tên đăng nhập
+      <Box className="auth-grid">
+        <Box className="auth-form-wrapper">
+          <Card className="auth-card">
+            <CardHeader
+              title={
+                <Typography variant="h5" className="auth-card-title">
+                  Đăng Nhập
                 </Typography>
-                <TextField
-                  id="login-username"
-                  placeholder="Tên đăng nhập"
-                  fullWidth
-                  variant="outlined"
-                  {...register("username")}
-                  error={!!errors.username}
-                  helperText={errors.username?.message}
-                />
-              </Box>
-              <Box className="auth-form-field">
-                <Box className="auth-password-header">
+              }
+            />
+            <CardContent>
+              <Typography variant="body2" className="auth-card-description">
+                Đăng nhập vào tài khoản của bạn để tiếp tục
+              </Typography>
+              <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+                <Box className="auth-form-field">
                   <Typography
                     variant="body2"
                     component="label"
-                    htmlFor="login-password"
+                    htmlFor="login-username"
                   >
-                    Mật khẩu
+                    Tên đăng nhập
                   </Typography>
-                  <Link to="/quen-mat-khau" className="auth-link">
-                    Quên mật khẩu?
-                  </Link>
-                </Box>
-                <Box className="auth-password-wrapper">
                   <TextField
-                    id="login-password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    id="login-username"
+                    placeholder="Tên đăng nhập"
                     fullWidth
                     variant="outlined"
-                    {...register("password")}
-                    error={!!errors.password}
-                    helperText={errors.password?.message}
+                    {...register("username")}
+                    error={!!errors.username}
+                    helperText={errors.username?.message}
                   />
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="auth-password-toggle"
-                  >
-                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
                 </Box>
-              </Box>
-              <FormControlLabel
-                control={<Checkbox id="remember" />}
-                label="Ghi nhớ đăng nhập"
-                className="auth-checkbox"
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading}
-                className="auth-submit-button"
-              >
-                {isLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
-              </Button>
-            </form>
+                <Box className="auth-form-field">
+                  <Box className="auth-password-header">
+                    <Typography
+                      variant="body2"
+                      component="label"
+                      htmlFor="login-password"
+                    >
+                      Mật khẩu
+                    </Typography>
+                    <Link to="/quen-mat-khau" className="auth-link">
+                      Quên mật khẩu?
+                    </Link>
+                  </Box>
+                  <Box className="auth-password-wrapper">
+                    <TextField
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      fullWidth
+                      variant="outlined"
+                      {...register("password")}
+                      error={!!errors.password}
+                      helperText={errors.password?.message}
+                    />
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="auth-password-toggle"
+                    >
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </Box>
+                </Box>
+                <FormControlLabel
+                  control={<Checkbox id="remember" />}
+                  label="Ghi nhớ đăng nhập"
+                  className="auth-checkbox"
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isLoading}
+                  className="auth-submit-button"
+                >
+                  {isLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
+                </Button>
+              </form>
 
-            <Box className="auth-divider">
-              <Typography variant="caption" className="auth-divider-text">
-                Hoặc đăng nhập với
+              <Box className="auth-divider">
+                <Typography variant="caption" className="auth-divider-text">
+                  Hoặc đăng nhập với
+                </Typography>
+              </Box>
+
+              <Box className="auth-social-buttons">
+                <Button variant="outlined" className="auth-social-button">
+                  <span className="auth-social-icon">F</span>
+                  Facebook
+                </Button>
+                <Button variant="outlined" className="auth-social-button">
+                  <MailIcon className="auth-social-icon" />
+                  Google
+                </Button>
+                <Button variant="outlined" className="auth-social-button">
+                  <span className="auth-social-icon">G</span>
+                  Github
+                </Button>
+              </Box>
+            </CardContent>
+            <Box className="auth-footer">
+              <Typography variant="caption" className="auth-footer-text">
+                Chưa có tài khoản?{" "}
+                <Link to="/auth/register" className="auth-link">
+                  Đăng ký ngay
+                </Link>
               </Typography>
             </Box>
-
-            <Box className="auth-social-buttons">
-              <Button variant="outlined" className="auth-social-button">
-                <span className="auth-social-icon">F</span>
-                Facebook
-              </Button>
-              <Button variant="outlined" className="auth-social-button">
-                <MailIcon className="auth-social-icon" />
-                Google
-              </Button>
-              <Button variant="outlined" className="auth-social-button">
-                <span className="auth-social-icon">G</span>
-                Github
-              </Button>
-            </Box>
-          </CardContent>
-          <Box className="auth-footer">
-            <Typography variant="caption" className="auth-footer-text">
-              Chưa có tài khoản?{" "}
-              <Link to="/auth/register" className="auth-link">
-                Đăng ký ngay
-              </Link>
-            </Typography>
-          </Box>
-        </Card>
+          </Card>
+        </Box>
+        <Box className="auth-image-wrapper"></Box>
       </Box>
     </Box>
   );

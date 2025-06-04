@@ -299,3 +299,8 @@
   justify-content: center !important;
   margin-top: 32px !important;
 }
+
+.products-pagination {
+  display: flex !important;
+  flex-direction: row !important;
+}

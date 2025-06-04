@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductApiById } from "../../../store/slices/productSlice";
-import { fetchReviewsByProductId } from "../../../store/slices/reviewSlice";
+import { fetchReviewsByProductId, createProductReview } from "../../../store/slices/reviewSlice";
 import {
   Button,
   Card,
@@ -12,6 +12,13 @@ import {
   Tab,
   Rating,
   Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Star as StarIcon,
@@ -28,9 +35,7 @@ import { useParams } from "react-router-dom";
 
 // Hardcode dữ liệu bổ sung cho các trường thiếu từ API
 const hardcodedProductData = {
-  rating: 4.5, // Thiếu trong API, hardcode giá trị
-  reviewCount: 128, // Thiếu trong API, hardcode giá trị
-  ratingDistribution: [80, 30, 10, 5, 3], // ThiẾu trong API, hardcode
+  ratingDistribution: [80, 30, 10, 5, 3],
   aiAnalysis: {
     strengths: [
       "Hương vị thơm ngon",
@@ -38,13 +43,12 @@ const hardcodedProductData = {
       "Nguyên liệu tươi sạch",
       "Đóng gói tiện lợi",
     ],
-    weaknessesრ: "https://minhtuanmobile.com/uploads/products/241207031455-3.webp",
     weaknesses: [
       "Hạn sử dụng ngắn",
       "Không phù hợp với người dị ứng gluten",
     ],
     summary:
-      "Bánh mì Hoa Mai là một sản phẩm chất lượng với   cao cấp với hương vị thơm ngon và giá cả hợp lý. Đa số người dùng hài lòng với chất lượng và độ tươi của bánh. Tuy nhiên, hạn sử dụng ngắn và không phù hợp với người dị ứng gluten là một số điểm cần lưu ý.",
+      "Bánh mì Hoa Mai là một sản phẩm chất lượng với cao cấp với hương vị thơm ngon và giá cả hợp lý. Đa số người dùng hài lòng với chất lượng và độ tươi của bánh. Tuy nhiên, hạn sử dụng ngắn và không phù hợp với người dị ứng gluten là một số điểm cần lưu ý.",
     sentiment: {
       positive: 80,
       neutral: 15,
@@ -52,9 +56,6 @@ const hardcodedProductData = {
     },
   },
 };
-
-// Dữ liệu reviews và relatedProducts giữ nguyên như trong code gốc
-const reviews = [];
 
 const relatedProducts = [
   {
@@ -95,6 +96,12 @@ export default function ProductDetailPage() {
   const { id: productId } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
+  const [openReviewDialog, setOpenReviewDialog] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewContent, setReviewContent] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const dispatch = useDispatch();
   const { product, isLoading, error } = useSelector((state) => state.product);
@@ -102,7 +109,6 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (productId) {
-      console.log("Dispatching fetchProductApiById with ID:", productId);
       dispatch(fetchProductApiById({ id: productId }))
         .unwrap()
         .then((data) => {
@@ -112,7 +118,6 @@ export default function ProductDetailPage() {
           console.error("API error:", err);
         });
 
-      // Fetch reviews for the product
       dispatch(fetchReviewsByProductId(productId))
         .unwrap()
         .then((data) => {
@@ -124,10 +129,43 @@ export default function ProductDetailPage() {
     }
   }, [dispatch, productId]);
 
-  console.log("Reviews from Redux state:", reviews);
-
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleOpenReviewDialog = () => {
+    setOpenReviewDialog(true);
+  };
+
+  const handleCloseReviewDialog = () => {
+    setOpenReviewDialog(false);
+    setReviewRating(0);
+    setReviewContent("");
+  };
+
+  const handleSubmitReview = () => {
+    const reviewPayload = {
+      rating: reviewRating,
+      content: reviewContent,
+    };
+    dispatch(createProductReview({ productId, reviewData: reviewPayload }))
+      .unwrap()
+      .then((data) => {
+        setSnackbarMessage("Đánh giá đã được gửi thành công!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        handleCloseReviewDialog();
+        dispatch(fetchReviewsByProductId(productId));
+      })
+      .catch((err) => {
+        setSnackbarMessage(`Lỗi khi gửi đánh giá: ${err.message || err}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   if (isLoading || reviewsLoading) {
@@ -146,12 +184,19 @@ export default function ProductDetailPage() {
     return <Typography>Không tìm thấy sản phẩm.</Typography>;
   }
 
-  // Kết hợp dữ liệu từ API và dữ liệu hardcode
+  // Calculate average rating and review count from reviews
+  const averageRating = reviews && reviews.length > 0
+    ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
+    : 0;
+  const reviewCount = reviews ? reviews.length : 0;
+
   const enrichedProduct = {
     ...product,
     ...hardcodedProductData,
-    category: product.category || "Thực phẩm", // Nếu API không trả về category, hardcode
-    price: product.price || "10.000đ", // Nếu API không trả về price, hardcode
+    rating: averageRating,
+    reviewCount,
+    category: product.category || "Thực phẩm",
+    price: product.price || "10.000đ",
   };
 
   return (
@@ -206,7 +251,7 @@ export default function ProductDetailPage() {
         onChange={handleTabChange}
         className="product-tabs"
       >
-        <Tab label={`Đánh Giá`} value="reviews" />
+        <Tab label={`Đánh Giá (${reviewCount})`} value="reviews" />
         <Tab label="Phân Tích AI" value="analysis" />
         <Tab label="Sản Phẩm Liên Quan" value="related" />
       </Tabs>
@@ -235,13 +280,15 @@ export default function ProductDetailPage() {
                             <StarIcon className="product-star-icon-empty" />
                           }
                         />
+                        <Typography variant="caption" className="product-review-count">
+                          ({enrichedProduct.reviewCount} đánh giá)
+                        </Typography>
                       </Box>
                     </Box>
                     <Button
                       variant="contained"
                       className="product-write-review-button"
-                      href={`/danh-gia/tao-moi?product=${enrichedProduct.id}`}
-                      component="a"
+                      onClick={handleOpenReviewDialog}
                     >
                       Viết Đánh Giá
                     </Button>
@@ -279,9 +326,14 @@ export default function ProductDetailPage() {
                         <Typography variant="body2" className="product-review-text">
                           {review.content}
                         </Typography>
+                        {review.aicomment && (
+                          <Typography variant="caption" className="text-gray-600 italic mt-2">
+                            Nhận xét AI: {review.aicomment}
+                          </Typography>
+                        )}
                         <Box className="product-review-footer">
                           <Box className="product-review-footer-left">
-                            {review.verified && (
+                            {review.verifiedByAI && (
                               <Box className="product-review-verified">
                                 <VerifiedIcon className="product-icon" />
                                 <Typography variant="caption">
@@ -323,6 +375,73 @@ export default function ProductDetailPage() {
                 </Box>
               </Box>
             </Box>
+
+            <Dialog
+              open={openReviewDialog}
+              onClose={handleCloseReviewDialog}
+              maxWidth="md"
+              fullWidth
+              classes={{ paper: 'bg-white rounded-lg shadow-xl' }}
+            >
+              <DialogTitle className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-4">
+                Đánh Giá Sản Phẩm: {enrichedProduct.name}
+              </DialogTitle>
+              <DialogContent className="p-6">
+                <Box className="flex flex-col gap-6">
+                  <Box>
+                    <Typography variant="h6" className="text-lg font-semibold text-gray-700 mb-2">
+                      Đánh giá sao
+                    </Typography>
+                    <Rating
+                      value={reviewRating}
+                      onChange={(event, newValue) => setReviewRating(newValue)}
+                      precision={1}
+                      icon={<StarIcon className="text-yellow-400" />}
+                      emptyIcon={<StarIcon className="text-gray-300" />}
+                      className="text-4xl"
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="h6" className="text-lg font-semibold text-gray-700 mb-2">
+                      Nội dung đánh giá
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={6}
+                      label="Viết cảm nhận của bạn"
+                      value={reviewContent}
+                      onChange={(e) => setReviewContent(e.target.value)}
+                      variant="outlined"
+                      className="bg-gray-50 rounded-lg"
+                      InputProps={{
+                        className: 'text-gray-800',
+                      }}
+                      InputLabelProps={{
+                        className: 'text-gray-600',
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </DialogContent>
+              <DialogActions className="p-6 flex justify-end gap-4 border-t border-gray-200">
+                <Button
+                  onClick={handleCloseReviewDialog}
+                  variant="outlined"
+                  className="text-gray-600 border-gray-300 hover:bg-gray-100"
+                >
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handleSubmitReview}
+                  variant="contained"
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  disabled={!reviewRating || !reviewContent}
+                >
+                  Gửi Đánh Giá
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Box>
         )}
 
@@ -339,67 +458,30 @@ export default function ProductDetailPage() {
                     Phân Tích AI
                   </Typography>
                 </Box>
-                <Box className="product-analysis-grid">
-                  <Box className="product-analysis-strengths">
-                    <Typography
-                      variant="subtitle1"
-                      className="product-analysis-subtitle"
-                    >
-                      Điểm Mạnh
-                    </Typography>
-                    <Box className="product-analysis-list">
-                      {(enrichedProduct.aiAnalysis?.strengths || []).map(
-                        (strength, index) => (
-                          <Box
-                            key={index}
-                            className="product-analysis-item"
-                          >
-                            <VerifiedIcon className="product-icon" />
-                            <Typography variant="body2">
-                              {strength}
-                            </Typography>
-                          </Box>
-                        )
-                      )}
-                    </Box>
-                  </Box>
-                  <Box className="product-analysis-weaknesses">
-                    <Typography
-                      variant="subtitle1"
-                      className="product-analysis-subtitle"
-                    >
-                      Điểm Yếu
-                    </Typography>
-                    <Box className="product-analysis-list">
-                      {(enrichedProduct.aiAnalysis?.weaknesses || []).map(
-                        (weakness, index) => (
-                          <Box
-                            key={index}
-                            className="product-analysis-item"
-                          >
-                            <FlagIcon className="product-icon" />
-                            <Typography variant="body2">
-                              {weakness}
-                            </Typography>
-                          </Box>
-                        )
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
-                <Box className="product-analysis-summary">
+
+
+                <Box className="product-analysis-aicomments">
                   <Typography
                     variant="subtitle1"
                     className="product-analysis-subtitle"
                   >
-                    Tóm Tắt Đánh Giá
+      
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    className="product-analysis-text"
-                  >
-                    {enrichedProduct.aiAnalysis?.summary}
-                  </Typography>
+                  {reviews && reviews.length > 0 ? (
+                    reviews.map((review, index) => (
+                      review.aicomment && (
+                        <Box key={index} className="product-analysis-item">
+                          <Typography variant="body2" className="text-gray-600 italic">
+                            - {review.aicomment} 
+                          </Typography>
+                        </Box>
+                      )
+                    ))
+                  ) : (
+                    <Typography variant="body2" className="text-gray-600">
+                      Chưa có nhận xét AI nào.
+                    </Typography>
+                  )}
                 </Box>
                 <Box className="product-analysis-sentiment">
                   <Typography
@@ -514,6 +596,21 @@ export default function ProductDetailPage() {
           </Box>
         )}
       </Box>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
