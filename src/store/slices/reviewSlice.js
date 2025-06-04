@@ -77,6 +77,8 @@ export const markReviewHelpful = createAsyncThunk(
   }
 );
 
+
+
 // Async thunk để update review theo ID
 export const updateProductReview = createAsyncThunk(
   "review/updateProductReview",
@@ -105,6 +107,23 @@ export const deleteProductReview = createAsyncThunk(
       await fetcher.delete(`https://trustreviews.onrender.com/reviews/${id}`);
       // Trả về ID của review đã xóa để cập nhật state
       return id;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
+
+export const fetchReviewsByIdPaginated = createAsyncThunk(
+  "review/fetchReviewsByIdPaginated", // Đổi tên để rõ ràng hơn
+  async ({ id, page, size }, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `https://trustreviews.onrender.com/reviews/${id}/${page}/${size}/paging?page=${page}&size=${size}`
+      );
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response ? error.response.data : error.message
@@ -258,11 +277,34 @@ export const reviewSlice = createSlice({
           console.warn("Unexpected payload structure for product reviews:", payload);
         }
       })
-      .addCase(fetchReviewsByProductId.rejected, (state, { payload }) => {
-        state.isLoading = false;
-        state.error = payload;
-        state.reviews = [];
-      });
+ .addCase(fetchReviewsByIdPaginated.pending, (state) => {
+  state.isLoading = true;
+  state.error = null;
+})
+.addCase(fetchReviewsByIdPaginated.fulfilled, (state, { payload }) => {
+  state.isLoading = false;
+  state.error = null;
+  if (payload && payload.content && Array.isArray(payload.content)) {
+    state.reviews = payload.content;
+    state.pagination = {
+      totalPages: payload.totalPages,
+      totalElements: payload.totalElements,
+    };
+  } else if (Array.isArray(payload)) {
+    state.reviews = payload;
+    state.pagination = null;
+  } else {
+    state.reviews = [];
+    state.pagination = null;
+    console.warn("Unexpected payload structure for reviews:", payload);
+  }
+})
+.addCase(fetchReviewsByIdPaginated.rejected, (state, { payload }) => {
+  state.isLoading = false;
+  state.error = payload;
+  state.reviews = [];
+  state.pagination = null;
+})
   },
 });
 
