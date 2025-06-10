@@ -45,8 +45,9 @@ const categories = [
 ];
 
 function ProductCard({ product }) {
-  // Map API category to display name
-  const categoryName = categories.find(cat => cat.value === product.category)?.name || "Không rõ";
+  const categoryName =
+    categories.find((cat) => cat.value === product.category)?.name ||
+    "Không rõ";
 
   return (
     <Card className="products-card">
@@ -63,7 +64,7 @@ function ProductCard({ product }) {
         <Box className="products-card-header">
           <Box className="products-card-rating">
             <Rating
-              value={product.rating || 0}
+              value={product.averageRating || 0}
               readOnly
               precision={0.5}
               icon={<StarIcon className="products-star-icon" />}
@@ -85,9 +86,6 @@ function ProductCard({ product }) {
           </Typography>
         </a>
         <Box className="products-card-footer">
-          <Typography variant="body2" className="products-card-price">
-            {product.price ? `${product.price.toLocaleString()}đ` : "N/A"}
-          </Typography>
           <Typography variant="caption" className="products-card-category">
             {categoryName}
           </Typography>
@@ -108,38 +106,48 @@ function ProductCard({ product }) {
 export default function ProductsPage() {
   const [tabValue, setTabValue] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedRatings, setSelectedRatings] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // State để lưu từ khóa tìm kiếm
   const [page, setPage] = useState(0);
-  const [showAllCategories, setShowAllCategories] = useState(false); // State to toggle category visibility
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const dispatch = useDispatch();
-  const { allProducts: products, allProductsPagination: pagination, isLoading, error } = useSelector(
-    (state) => state.product
-  );
+  const {
+    allProducts: products,
+    allProductsPagination: pagination,
+    isLoading,
+    error,
+  } = useSelector((state) => state.product);
 
   useEffect(() => {
-    // Fetch products with pagination (6 products per page) and category filter
-    dispatch(fetchAllProductsPaginated({ 
-      page, 
-      size: 6, 
-      categories: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined
-    }));
+    dispatch(
+      fetchAllProductsPaginated({
+        page,
+        size: 6,
+        categories:
+          selectedCategories.length > 0
+            ? selectedCategories.join(",")
+            : undefined,
+      })
+    );
   }, [dispatch, page, selectedCategories]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    setPage(0); // Reset to first page when changing tabs
-    // Map tab value to categories
+    setPage(0);
     const categoryMap = {
-      "dien_thoai_laptop": ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
-      "dien_tu_phu_kien": ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
-      "thoi_trang_lam_dep": ["THOI_TRANG", "MY_PHAM_LAM_DEP"],
-      "me_va_be": ["ME_VA_BE"],
-      "thuc_pham_do_uong": ["THUC_PHAM_DO_UONG"],
-      "sach_van_phong": ["SACH_VO", "VAN_PHONG_PHAM"],
-      "noi_that_trang_tri": ["NOI_THAT_TRANG_TRI"],
-      "xe_co_phu_tung": ["XE_CO_PHU_TUNG"],
-      "dich_vu_khac": ["DICH_VU", "KHAC"],
+      dien_thoai_laptop: ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
+      dien_tu_phu_kien: ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
+      thoi_trang_lam_dep: ["THOI_TRANG", "MY_PHAM_LAM_DEP"],
+      me_va_be: ["ME_VA_BE"],
+      thuc_pham_do_uong: ["THUC_PHAM_DO_UONG"],
+      sach_van_phong: ["SACH_VO", "VAN_PHONG_PHAM"],
+      noi_that_trang_tri: ["NOI_THAT_TRANG_TRI"],
+      xe_co_phu_tung: ["XE_CO_PHU_TUNG"],
+      dich_vu_khac: ["DICH_VU", "KHAC"],
     };
-    setSelectedCategories(newValue === "all" ? [] : categoryMap[newValue] || []);
+    setSelectedCategories(
+      newValue === "all" ? [] : categoryMap[newValue] || []
+    );
   };
 
   const handleCategoryChange = (categoryValue) => {
@@ -148,11 +156,25 @@ export default function ProductsPage() {
         ? prev.filter((cat) => cat !== categoryValue)
         : [...prev, categoryValue]
     );
-    setPage(0); // Reset to first page when changing categories
+    setPage(0);
+  };
+
+  const handleRatingChange = (rating) => {
+    setSelectedRatings((prev) =>
+      prev.includes(rating)
+        ? prev.filter((r) => r !== rating)
+        : [...prev, rating]
+    );
+    setPage(0);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+    setPage(0); // Reset về trang đầu khi tìm kiếm
   };
 
   const handlePageChange = (event, newPage) => {
-    setPage(newPage - 1); // MUI Pagination is 1-based, API is 0-based
+    setPage(newPage - 1);
   };
 
   const handleShowMoreCategories = () => {
@@ -163,13 +185,25 @@ export default function ProductsPage() {
     setShowAllCategories(false);
   };
 
-  // Filter products based on selected tab/categories
-  const filteredProducts = tabValue === "all" && selectedCategories.length === 0
-    ? products
-    : products?.filter((product) => selectedCategories.includes(product.category));
+  // Filter sản phẩm dựa trên danh mục, số sao và từ khóa tìm kiếm (client-side)
+  const filteredProducts = products?.filter((product) => {
+    const matchesCategory =
+      selectedCategories.length === 0 ||
+      selectedCategories.includes(product.category);
+    const matchesRating =
+      selectedRatings.length === 0 ||
+      selectedRatings.includes(
+        Math.floor(product.averageRating || 0).toString()
+      );
+    const matchesSearch =
+      searchQuery === "" ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesRating && matchesSearch;
+  });
 
-  // Slice categories to show only 5 initially unless showAllCategories is true
-  const visibleCategories = showAllCategories ? categories : categories.slice(0, 5);
+  const visibleCategories = showAllCategories
+    ? categories
+    : categories.slice(0, 5);
 
   return (
     <Box className="products-container">
@@ -189,7 +223,10 @@ export default function ProductsPage() {
           <Card className="products-filter-card">
             <CardContent className="products-filter-content">
               <Box className="products-filter-section">
-                <Typography variant="subtitle1" className="products-filter-title">
+                <Typography
+                  variant="subtitle1"
+                  className="products-filter-title"
+                >
                   Danh Mục
                 </Typography>
                 <Box className="products-filter-categories">
@@ -229,20 +266,31 @@ export default function ProductsPage() {
               </Box>
 
               <Box className="products-filter-section">
-                <Typography variant="subtitle1" className="products-filter-title">
+                <Typography
+                  variant="subtitle1"
+                  className="products-filter-title"
+                >
                   Đánh Giá
                 </Typography>
                 <Box className="products-filter-ratings">
                   {[5, 4, 3, 2, 1].map((rating) => (
                     <FormControlLabel
                       key={rating}
-                      control={<Checkbox id={`rating-${rating}`} />}
+                      control={
+                        <Checkbox
+                          id={`rating-${rating}`}
+                          checked={selectedRatings.includes(rating.toString())}
+                          onChange={() => handleRatingChange(rating.toString())}
+                        />
+                      }
                       label={
                         <Rating
                           value={rating}
                           readOnly
                           icon={<StarIcon className="products-star-icon" />}
-                          emptyIcon={<StarIcon className="products-star-icon-empty" />}
+                          emptyIcon={
+                            <StarIcon className="products-star-icon-empty" />
+                          }
                         />
                       }
                       className="products-filter-checkbox"
@@ -250,32 +298,6 @@ export default function ProductsPage() {
                   ))}
                 </Box>
               </Box>
-
-              <Box className="products-filter-section">
-                <Typography variant="subtitle1" className="products-filter-title">
-                  Giá
-                </Typography>
-                <Box className="products-filter-price">
-                  <TextField
-                    type="number"
-                    placeholder="Từ"
-                    className="products-filter-input"
-                  />
-                  <TextField
-                    type="number"
-                    placeholder="Đến"
-                    className="products-filter-input"
-                  />
-                </Box>
-              </Box>
-
-              <Button
-                variant="contained"
-                className="products-filter-button"
-                startIcon={<FilterIcon />}
-              >
-                Lọc Sản Phẩm
-              </Button>
             </CardContent>
           </Card>
         </Box>
@@ -288,6 +310,8 @@ export default function ProductsPage() {
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
                 className="products-search-input"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
             </Box>
             <Box className="products-sort">
@@ -298,13 +322,17 @@ export default function ProductsPage() {
                 <MenuItem value="popular">Phổ biến nhất</MenuItem>
                 <MenuItem value="rating">Đánh giá cao nhất</MenuItem>
                 <MenuItem value="newest">Mới nhất</MenuItem>
-                <MenuItem value="price-low">Giá: Thấp đến cao</MenuItem>
-                <MenuItem value="price-high">Giá: Cao đến thấp</MenuItem>
               </Select>
             </Box>
           </Box>
 
-          <Tabs value={tabValue} onChange={handleTabChange} className="products-tabs" variant="scrollable" scrollButtons="auto">
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            className="products-tabs"
+            variant="scrollable"
+            scrollButtons="auto"
+          >
             <Tab label="Tất Cả" value="all" />
             <Tab label="Điện Thoại & Laptop" value="dien_thoai_laptop" />
             <Tab label="Điện Tử & Phụ Kiện" value="dien_tu_phu_kien" />
@@ -322,7 +350,9 @@ export default function ProductsPage() {
               {isLoading ? (
                 <Typography>Đang tải sản phẩm...</Typography>
               ) : error ? (
-                <Typography color="error">Lỗi khi tải sản phẩm: {error}</Typography>
+                <Typography color="error">
+                  Lỗi khi tải sản phẩm: {error}
+                </Typography>
               ) : filteredProducts && filteredProducts.length > 0 ? (
                 <Box className="products-grid">
                   {filteredProducts.map((product) => (
@@ -333,10 +363,18 @@ export default function ProductsPage() {
                 <Typography>Không tìm thấy sản phẩm nào.</Typography>
               )}
               {!isLoading && pagination && pagination.totalPages > 1 && (
-                <Box className="products-pagination" sx={{ mt: 2, display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <Box
+                  className="products-pagination"
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   <Pagination
                     count={pagination.totalPages}
-                    page={page + 1} // MUI Pagination is 1-based
+                    page={page + 1}
                     onChange={handlePageChange}
                     color="primary"
                     siblingCount={0}

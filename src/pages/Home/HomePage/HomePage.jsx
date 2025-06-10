@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Typography,
@@ -9,12 +11,46 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ReportIcon from "@mui/icons-material/Report";
+import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import "./HomePage.css";
 import { Link } from "react-router-dom";
 import image1 from "../../../assets/Lovepik_com-450122121-Person giving online reviews .png";
-import { useEffect } from "react";
 
 export default function HomePage() {
+  const dispatch = useDispatch();
+  const { allProducts, isLoading, error } = useSelector(
+    (state) => state.product
+  );
+
+  useEffect(() => {
+    // Lấy 8 sản phẩm, sắp xếp theo createdAt giảm dần
+    dispatch(
+      fetchAllProductsPaginated({
+        page: 0,
+        size: 8,
+        sortBy: "createdAt",
+        sortDir: "desc",
+      })
+    )
+      .unwrap()
+      .then((data) => {
+        console.log("Products API response:", data);
+      })
+      .catch((err) => {
+        console.error("Products API error:", err);
+      });
+  }, [dispatch]);
+
+  // Sản phẩm mới nhất: lấy 4 sản phẩm đầu tiên (đã sắp xếp theo createdAt)
+  const newestProducts = allProducts ? allProducts.slice(0, 4) : [];
+
+  // Sản phẩm được đánh giá cao nhất: sắp xếp theo averageRating và lấy 4 sản phẩm
+  const highlyRatedProducts = allProducts
+    ? [...allProducts]
+        .sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0))
+        .slice(0, 4)
+    : [];
+
   const featuresData = [
     {
       icon: <VisibilityIcon className="feature-icon2" />,
@@ -36,40 +72,9 @@ export default function HomePage() {
     },
   ];
 
-  const productsData = [
-    {
-      title: "iPhone 15 Pro",
-      description:
-        "Điện thoại thông minh cao cấp với camera chuyên nghiệp, hiệu suất mạnh mẽ.",
-      image: "https://phukiencasu.com/wp-content/uploads/2022/08/tai-nghe-bluetooth-tai-tho-de-thuong-3.jpg",
-      rating: 0,
-    },
-    {
-      title: "Samsung Galaxy S23",
-      description:
-        "Điện thoại Android hàng đầu với màn hình AMOLED và camera đẳng cấp.",
-      image: "https://via.placeholder.com/300x200?text=Samsung+Galaxy+S23",
-      rating: 0,
-    },
-    {
-      title: "MacBook Air M2",
-      description:
-        "Laptop mỏng nhẹ với hiệu suất vượt trội, lý tưởng cho công việc di động.",
-      image: "https://via.placeholder.com/300x200?text=MacBook+Air+M2",
-      rating: 0,
-    },
-    {
-      title: "Sony WH-1000XM5",
-      description:
-        "Tai nghe chống ồn cao cấp với chất lượng âm thanh vượt trội.",
-      image: "https://via.placeholder.com/300x200?text=Sony+WH-1000XM5",
-      rating: 4,
-    },
-  ];
-
   const renderStars = (rating) => {
     const totalStars = 5;
-    const filledStars = Math.round(rating);
+    const filledStars = Math.round(rating || 0);
     const emptyStars = totalStars - filledStars;
 
     return (
@@ -77,16 +82,11 @@ export default function HomePage() {
         <span className="filled-stars">{"★".repeat(filledStars)}</span>
         <span className="empty-stars">{"☆".repeat(emptyStars)}</span>
         <Typography component="span" className="rating-count">
-          ({rating})
+          ({rating || 0})
         </Typography>
       </Box>
     );
   };
-
-  const newestProducts = productsData.slice(0, 4);
-  const highlyRatedProducts = [...productsData]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 4);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -172,31 +172,50 @@ export default function HomePage() {
               Xem tất cả
             </Button>
           </Box>
-          <Box className="latest-products-cards">
-            {newestProducts.map((product, index) => (
-              <Card className="product-card" key={index}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={product.image}
-                  alt={product.title}
-                />
-                <CardContent>
-                  <Box>
-                    <Typography variant="h6" className="product-card-title">
-                      {product.title}
-                    </Typography>
-                    <Typography className="product-card-description">
-                      {product.description}
-                    </Typography>
-                  </Box>
-                  <Box className="product-card-rating">
-                    {renderStars(product.rating)}
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+          {isLoading ? (
+            <Typography>Đang tải sản phẩm mới nhất...</Typography>
+          ) : error ? (
+            <Typography color="error">
+              Lỗi khi tải sản phẩm: {error?.message || error}
+            </Typography>
+          ) : newestProducts.length > 0 ? (
+            <Box className="latest-products-cards">
+              {newestProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  to={`/san-pham/${product.id}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <Card className="product-card">
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={
+                        product.sourceUrl ||
+                        "https://via.placeholder.com/300x200"
+                      }
+                      alt={product.name}
+                    />
+                    <CardContent>
+                      <Box>
+                        <Typography variant="h6" className="product-card-title">
+                          {product.name}
+                        </Typography>
+                        <Typography className="product-card-description">
+                          {product.description || "Không có mô tả."}
+                        </Typography>
+                      </Box>
+                      <Box className="product-card-rating">
+                        {renderStars(product.averageRating)}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </Box>
+          ) : (
+            <Typography>Không có sản phẩm mới nào.</Typography>
+          )}
         </section>
 
         <section className="highly-rated-products-container hidden">
@@ -208,39 +227,58 @@ export default function HomePage() {
               Xem tất cả
             </Button>
           </Box>
-          <Box className="highly-rated-products-cards">
-            {highlyRatedProducts.map((product, index) => (
-              <Card className="product-card" key={index}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={product.image}
-                  alt={product.title}
-                />
-                <CardContent>
-                  <Box>
-                    <Typography variant="h6" className="product-card-title">
-                      {product.title}
-                    </Typography>
-                    <Typography className="product-card-description">
-                      {product.description}
-                    </Typography>
-                  </Box>
-                  <Box className="product-card-rating">
-                    {renderStars(product.rating)}
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+          {isLoading ? (
+            <Typography>Đang tải sản phẩm được đánh giá cao...</Typography>
+          ) : error ? (
+            <Typography color="error">
+              Lỗi khi tải sản phẩm: {error?.message || error}
+            </Typography>
+          ) : highlyRatedProducts.length > 0 ? (
+            <Box className="highly-rated-products-cards">
+              {highlyRatedProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  to={`/san-pham/${product.id}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <Card className="product-card">
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={
+                        product.sourceUrl ||
+                        "https://via.placeholder.com/300x200"
+                      }
+                      alt={product.name}
+                    />
+                    <CardContent>
+                      <Box>
+                        <Typography variant="h6" className="product-card-title">
+                          {product.name}
+                        </Typography>
+                        <Typography className="product-card-description">
+                          {product.description || "Không có mô tả."}
+                        </Typography>
+                      </Box>
+                      <Box className="product-card-rating">
+                        {renderStars(product.averageRating)}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </Box>
+          ) : (
+            <Typography>Không có sản phẩm được đánh giá cao.</Typography>
+          )}
         </section>
       </Box>
       <section className="footer-home hidden">
         <div className="footer-box">
           <h2 className="footer-title">Bắt đầu đánh giá ngay</h2>
           <p className="footer-text">
-            Tham gia cộng đồng TrustReview  để chia sẻ trải nghiệm của bạn và giúp
-            người khác đưa ra quyết định mua sắm tốt hơn.
+            Tham gia cộng đồng TrustReview để chia sẻ trải nghiệm của bạn và
+            giúp người khác đưa ra quyết định mua sắm tốt hơn.
           </p>
           <Button className="footer-button">
             <Link to="">Đăng ký ngay</Link>

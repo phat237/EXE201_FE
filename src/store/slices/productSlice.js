@@ -1,5 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { fetcher } from "../../apis/fetcher";
+import { fetchReviewsByIdPaginated } from "./reviewSlice"; // Import action để lấy đánh giá
+
+// Hàm tính averageRating từ danh sách reviews
+const calculateAverageRating = (reviews) => {
+  if (!reviews || reviews.length === 0) return 0;
+  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+  return Number((sum / reviews.length).toFixed(1));
+};
 
 export const fetchProductApiById = createAsyncThunk(
   "product/fetchProductApi",
@@ -43,12 +51,39 @@ export const createProductApi = createAsyncThunk(
 
 export const fetchAllProductsPaginated = createAsyncThunk(
   "product/fetchAllProductsPaginated",
-  async ({ page, size }, { rejectWithValue }) => {
+  async ({ page, size, categories }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await fetcher.get(
-        `https://trustreviews.onrender.com/products/${page}/{size}/paging?size=${size}`
+      let url = `https://trustreviews.onrender.com/products/${page}/{size}/paging?size=${size}`;
+      if (categories) {
+        url += `&categories=${categories}`;
+      }
+      const response = await fetcher.get(url);
+
+      // Fetch đánh giá cho từng sản phẩm để tính averageRating
+      const products = response.data.content || [];
+      const enrichedProducts = await Promise.all(
+        products.map(async (product) => {
+          try {
+            const reviewsResponse = await dispatch(
+              fetchReviewsByIdPaginated({ id: product.id, page: 0, size: 100 }) // Lấy tất cả đánh giá
+            ).unwrap();
+            const reviews = reviewsResponse.content || [];
+            const averageRating = calculateAverageRating(reviews);
+            return { ...product, averageRating, reviewCount: reviews.length };
+          } catch (error) {
+            console.error(
+              `Error fetching reviews for product ${product.id}:`,
+              error
+            );
+            return { ...product, averageRating: 0, reviewCount: 0 };
+          }
+        })
       );
-      return response.data;
+
+      return {
+        ...response.data,
+        content: enrichedProducts,
+      };
     } catch (error) {
       return rejectWithValue(
         error.response ? error.response.data : error.message
@@ -60,7 +95,7 @@ export const fetchAllProductsPaginated = createAsyncThunk(
 export const productSlice = createSlice({
   name: "product",
   initialState: {
-    product: null, // Thay đổi từ mảng [] thành null để lưu 1 object
+    product: null,
     allProducts: [],
     allProductsPagination: null,
     isLoading: false,
@@ -76,13 +111,12 @@ export const productSlice = createSlice({
       .addCase(fetchProductApiById.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         state.error = null;
-        state.product = payload; // Lưu trực tiếp payload (là 1 object) vào state.product
+        state.product = payload;
       })
       .addCase(fetchProductApiById.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       })
-      // Các case khác giữ nguyên
       .addCase(createProductApi.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -92,7 +126,7 @@ export const productSlice = createSlice({
         if (payload.message) {
           state.error = payload;
         } else {
-          state.product = payload; // Cập nhật sản phẩm mới tạo
+          state.product = payload;
         }
         console.log("Fulfilled payload:", JSON.stringify(payload, null, 2));
       })
@@ -125,7 +159,10 @@ export const productSlice = createSlice({
         } else {
           state.allProducts = [];
           state.allProductsPagination = null;
-          console.warn("Unexpected payload structure for all products:", payload);
+          console.warn(
+            "Unexpected payload structure for all products:",
+            payload
+          );
         }
       })
       .addCase(fetchAllProductsPaginated.rejected, (state, { payload }) => {
