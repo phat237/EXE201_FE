@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
   CardHeader,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Typography,
-  Tabs,
-  Tab,
 } from "@mui/material";
 import {
   Verified as VerifiedIcon,
@@ -23,20 +26,35 @@ import "./BusinessPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPremiumPackages } from "../../../store/slices/preniumPackageSlice";
 
-
 export default function BusinessPage() {
   const dispatch = useDispatch();
-  const { data: packages, loading, error } = useSelector((state) => state.premiumPackages);
+  const {
+    data: premiumPackages,
+    loading,
+    error,
+  } = useSelector((state) => state.premiumPackages);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
   useEffect(() => {
     dispatch(fetchPremiumPackages());
-  }, [dispatch]);
+  }, []);
 
-  useEffect(() => {
-    console.log("Packages state:", packages);
-    console.log("Is Loading:", loading);
-    console.log("Error:", error);
-  }, [packages, loading, error]);
+  const handleOpenModal = (pkg) => {
+    setSelectedPackage(pkg);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedPackage(null);
+  };
+
+  const handleConfirmUpgrade = () => {
+    // Navigate to the registration page with the selected package
+    // window.location.href = `/doanh-nghiep/dang-ky?package=${selectedPackage?.id}`;
+    handleCloseModal();
+  };
 
   return (
     <Box className="business-container">
@@ -46,7 +64,8 @@ export default function BusinessPage() {
             Giải Pháp Cho Doanh Nghiệp
           </Typography>
           <Typography variant="body1" className="business-subtitle">
-            Nâng cao hiệu quả kinh doanh với các công cụ phân tích đánh giá chuyên sâu
+            Nâng cao hiệu quả kinh doanh với các công cụ phân tích đánh giá
+            chuyên sâu
           </Typography>
         </Box>
         <Button variant="contained" component={Link} to="/doanh-nghiep/dang-ky">
@@ -61,14 +80,28 @@ export default function BusinessPage() {
               Tại Sao Chọn TrustReview?
             </Typography>
             <Typography variant="body1" className="business-section-text">
-              TrustReview cung cấp nền tảng đánh giá ẩn danh với công nghệ AI tiên tiến, giúp doanh nghiệp hiểu rõ hơn về phản hồi của khách hàng và cải thiện sản phẩm, dịch vụ.
+              TrustReview cung cấp nền tảng đánh giá ẩn danh với công nghệ AI
+              tiên tiến, giúp doanh nghiệp hiểu rõ hơn về phản hồi của khách
+              hàng và cải thiện sản phẩm, dịch vụ.
             </Typography>
             <Box className="business-features-list">
               {[
-                { icon: <VerifiedIcon className="business-icon" />, text: "Đánh giá trung thực từ người dùng thực" },
-                { icon: <CheckCircleIcon className="business-icon" />, text: "Phân tích AI chuyên sâu về đánh giá sản phẩm" },
-                { icon: <BarChartIcon className="business-icon" />, text: "Báo cáo chi tiết và xu hướng thị trường" },
-                { icon: <PeopleIcon className="business-icon" />, text: "Hiểu rõ nhu cầu và mong đợi của khách hàng" },
+                {
+                  icon: <VerifiedIcon className="business-icon" />,
+                  text: "Đánh giá trung thực từ người dùng thực",
+                },
+                {
+                  icon: <CheckCircleIcon className="business-icon" />,
+                  text: "Phân tích AI chuyên sâu về đánh giá sản phẩm",
+                },
+                {
+                  icon: <BarChartIcon className="business-icon" />,
+                  text: "Báo cáo chi tiết và xu hướng thị trường",
+                },
+                {
+                  icon: <PeopleIcon className="business-icon" />,
+                  text: "Hiểu rõ nhu cầu và mong đợi của khách hàng",
+                },
               ].map((item, index) => (
                 <Box key={index} className="business-feature-item">
                   {item.icon}
@@ -80,7 +113,7 @@ export default function BusinessPage() {
           <Box className="business-image-container">
             <Box className="business-image-wrapper">
               <img
-                src="/placeholder.svg?height=500&width=700"
+                src="https://taca.com.vn/wp-content/uploads/2022/12/bao-cao-thong-tin-doanh-nghiep-BIR.jpg"
                 alt="Dashboard doanh nghiệp"
                 className="business-image"
               />
@@ -95,7 +128,8 @@ export default function BusinessPage() {
             Các Gói Dịch Vụ
           </Typography>
           <Typography variant="body1" className="business-section-text">
-            Lựa chọn gói dịch vụ phù hợp với nhu cầu và quy mô doanh nghiệp của bạn
+            Lựa chọn gói dịch vụ phù hợp với nhu cầu và quy mô doanh nghiệp của
+            bạn
           </Typography>
         </Box>
 
@@ -104,27 +138,60 @@ export default function BusinessPage() {
             <Typography>Đang tải...</Typography>
           ) : error ? (
             <Typography color="error">Lỗi: {error}</Typography>
+          ) : premiumPackages && premiumPackages.length > 0 ? (
+            <Box className="business-pricing-grid">
+              {premiumPackages
+                .slice()
+                .sort((a, b) => a.id - b.id)
+                .map((pkg) => (
+                  <Box
+                    key={pkg.id}
+                    className={`business-pricing-card ${
+                      pkg.id === 3 ? "business-pricing-highlighted" : ""
+                    }`}
+                  >
+                    <Box className="business-pricing-header">
+                      <Typography
+                        variant="h6"
+                        className="business-pricing-title"
+                      >
+                        {pkg.name}
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        className="business-pricing-price"
+                      >
+                        {`${pkg.price.toLocaleString()} VNĐ`}
+                      </Typography>
+                      <Typography
+                        variant="subtitle1"
+                        className="business-pricing-duration"
+                      >
+                        {`${pkg.duration} ngày`}
+                      </Typography>
+                    </Box>
+                    <Box className="business-pricing-content">
+                      <Typography
+                        variant="body2"
+                        className="business-pricing-description"
+                      >
+                        {pkg.description}
+                      </Typography>
+                    </Box>
+                    <CardActions className="business-pricing-footer">
+                      <Button
+                        variant={pkg.id === 3 ? "contained" : "outlined"}
+                        onClick={() => handleOpenModal(pkg)}
+                        className="business-pricing-button"
+                      >
+                        Nâng Cấp Ngay
+                      </Button>
+                    </CardActions>
+                  </Box>
+                ))}
+            </Box>
           ) : (
-            packages && packages.length > 0 ? (
-                <Box className="business-pricing-grid">
-                  {(packages || []).slice().sort((a, b) => a.id - b.id).map((pkg) => (
-                    <PricingCard
-                      key={pkg.id}
-                      title={pkg.name}
-                      price={pkg.price === 0 ? "Miễn phí" : `${pkg.price.toLocaleString()}đ/${pkg.duration} ngày`}
-                      description={pkg.description}
-                      features={[
-                        "Tính năng 1", "Tính năng 2"
-                      ]}
-                      buttonText="Nâng Cấp Ngay"
-                      buttonLink="/doanh-nghiep/dang-ky"
-                      highlighted
-                    />
-                  ))}
-                </Box>
-            ) : (
-                <Typography>Không tìm thấy gói dịch vụ nào.</Typography>
-            )
+            <Typography>Không tìm thấy gói dịch vụ nào.</Typography>
           )}
         </Box>
       </Box>
@@ -179,7 +246,8 @@ export default function BusinessPage() {
             Quy Trình Đơn Giản
           </Typography>
           <Typography variant="body1" className="business-section-text">
-            Chỉ với vài bước đơn giản, doanh nghiệp của bạn có thể bắt đầu sử dụng TrustReview
+            Chỉ với vài bước đơn giản, doanh nghiệp của bạn có thể bắt đầu sử
+            dụng TrustReview
           </Typography>
         </Box>
 
@@ -218,16 +286,9 @@ export default function BusinessPage() {
             </Typography>
           </Box>
         </Box>
-
-        <Box className="business-process-cta">
-          <Button variant="contained" component={Link} to="/doanh-nghiep/dang-ky">
-            Bắt Đầu Ngay
-            <ArrowForwardIcon className="business-icon" />
-          </Button>
-        </Box>
       </Box>
 
-      <Box className="business-clients-section">
+      {/* <Box className="business-clients-section">
         <Box className="business-section-header">
           <Typography variant="h3" className="business-section-title">
             Khách Hàng Tin Tưởng
@@ -241,14 +302,14 @@ export default function BusinessPage() {
           {[1, 2, 3, 4].map((i) => (
             <Box key={i} className="business-client-logo">
               <img
-                src={`/placeholder.svg?height=80&width=160&text=Logo ${i}`}
+                src={`https://via.placeholder.com/160x80?text=Logo+${i}`}
                 alt={`Khách hàng ${i}`}
                 className="business-logo-image"
               />
             </Box>
           ))}
         </Box>
-      </Box>
+      </Box> */}
 
       <Box className="business-contact-section">
         <Card className="business-contact-card">
@@ -259,7 +320,8 @@ export default function BusinessPage() {
                   Bạn Còn Thắc Mắc?
                 </Typography>
                 <Typography variant="body1" className="business-section-text">
-                  Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giải đáp mọi thắc mắc của bạn về dịch vụ TrustReview dành cho doanh nghiệp.
+                  Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giải đáp mọi thắc
+                  mắc của bạn về dịch vụ TrustReview dành cho doanh nghiệp.
                 </Typography>
                 <Button variant="contained" component={Link} to="/lien-he">
                   Liên Hệ Ngay
@@ -267,15 +329,27 @@ export default function BusinessPage() {
               </Box>
               <Box className="business-contact-features">
                 {[
-                  { title: "Hỗ trợ 24/7", text: "Đội ngũ hỗ trợ luôn sẵn sàng giúp đỡ bạn" },
-                  { title: "Tư vấn miễn phí", text: "Nhận tư vấn miễn phí về giải pháp phù hợp" },
-                  { title: "Dùng thử miễn phí", text: "Dùng thử gói Cao Cấp miễn phí trong 14 ngày" },
+                  {
+                    title: "Hỗ trợ 24/7",
+                    text: "Đội ngũ hỗ trợ luôn sẵn sàng giúp đỡ bạn",
+                  },
+                  {
+                    title: "Tư vấn miễn phí",
+                    text: "Nhận tư vấn miễn phí về giải pháp phù hợp",
+                  },
+                  {
+                    title: "Dùng thử miễn phí",
+                    text: "Dùng thử gói Cao Cấp miễn phí trong 14 ngày",
+                  },
                 ].map((item, index) => (
                   <Box key={index} className="business-contact-feature">
                     <CheckCircleIcon className="business-icon" />
                     <Box>
                       <Typography variant="subtitle1">{item.title}</Typography>
-                      <Typography variant="body2" className="business-contact-text">
+                      <Typography
+                        variant="body2"
+                        className="business-contact-text"
+                      >
                         {item.text}
                       </Typography>
                     </Box>
@@ -286,6 +360,42 @@ export default function BusinessPage() {
           </CardContent>
         </Card>
       </Box>
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        aria-labelledby="confirm-upgrade-dialog-title"
+        classes={{ paper: "business-modal" }}
+      >
+        <DialogTitle
+          id="confirm-upgrade-dialog-title"
+          className="business-modal-title"
+        >
+          Xác Nhận Nâng Cấp
+        </DialogTitle>
+        <DialogContent className="business-modal-content">
+          <Typography variant="body1">
+            Bạn có chắc chắn muốn nâng cấp lên gói{" "}
+            <strong>{selectedPackage?.name}</strong> với giá{" "}
+            <strong>{selectedPackage?.price.toLocaleString()} VNĐ</strong> cho{" "}
+            <strong>{selectedPackage?.duration} ngày</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions className="business-modal-actions">
+          <Button
+            onClick={handleCloseModal}
+            className="business-modal-button business-modal-button-cancel"
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleConfirmUpgrade}
+            variant="contained"
+            className="business-modal-button business-modal-button-confirm"
+          >
+            Xác Nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
@@ -304,39 +414,6 @@ function FeatureCard({ icon, title, description }) {
           {description}
         </Typography>
       </CardContent>
-    </Card>
-  );
-}
-
-function PricingCard({ title, price, description, features, buttonText, buttonLink, highlighted = false }) {
-  return (
-    <Card className={`business-pricing-card ${highlighted ? "business-pricing-highlighted" : ""}`}>
-      <CardHeader className="business-pricing-header">
-        <Typography variant="h6" className="business-pricing-title">
-          {title}
-        </Typography>
-        <Typography variant="h4" className="business-pricing-price">
-          {price}
-        </Typography>
-      </CardHeader>
-      <CardContent className="business-pricing-content">
-        <Box className="business-pricing-features">
-          <Box className="business-pricing-feature">
-            <CheckCircleIcon className="business-icon" />
-            <Typography variant="body2">{description}</Typography>
-          </Box>
-        </Box>
-      </CardContent>
-      <Box className="business-pricing-footer">
-        <Button
-          variant={highlighted ? "contained" : "outlined"}
-          component={Link}
-          to={buttonLink}
-          className="business-pricing-button"
-        >
-          {buttonText}
-        </Button>
-      </Box>
     </Card>
   );
 }
