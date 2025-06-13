@@ -14,10 +14,12 @@ const ProtectedRoute = ({ children, allowedRoles, redirectTo }) => {
       return <Navigate to={PATH.HOME} replace />;
     } else if (currentUser.role === "ADMIN") {
       return <Navigate to={PATH.DASHBOARD} replace />;
+    } else if (currentUser.role === "PARTNER") {
+      return <Navigate to={PATH.PARTNER} replace />;
     }
   }
 
-  // Kiểm tra quyền truy cập cho các route khác (như admin)
+  // Kiểm tra quyền truy cập cho các route khác (như admin hoặc partner)
   if (allowedRoles && !allowedRoles.includes(currentUser?.role)) {
     if (!currentUser || !currentUser.token) {
       console.log("No user or token, redirecting to login");
@@ -29,6 +31,9 @@ const ProtectedRoute = ({ children, allowedRoles, redirectTo }) => {
     } else if (currentUser.role === "ADMIN") {
       console.log("Admin role, redirecting to dashboard");
       return <Navigate to={PATH.DASHBOARD} replace />;
+    } else if (currentUser.role === "PARTNER") {
+      console.log("Partner role, redirecting to partner dashboard");
+      return <Navigate to={PATH.PARTNER} replace />;
     }
   }
 

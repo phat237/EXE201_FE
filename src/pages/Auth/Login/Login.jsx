@@ -60,12 +60,24 @@ export default function Login() {
     setIsLoading(true);
     try {
       const result = await dispatch(loginApi(data)).unwrap();
+      // Xử lý dữ liệu người dùng từ API
+      const userData = {
+        ...result,
+        token: result.token || result.accessToken,
+        role: result.role || (result.authorities && result.authorities[0]?.authority) || "USER",
+      };
       toast.success("Đăng nhập thành công!");
-      localStorage.setItem("currentUser", JSON.stringify(result));
-      if (result.role === "USER") {
+      localStorage.setItem("currentUser", JSON.stringify(userData));
+      
+      // Chuyển hướng dựa trên vai trò
+      if (userData.role === "USER") {
         navigate(PATH.HOME);
-      } else if (result.role === "ADMIN") {
+      } else if (userData.role === "ADMIN") {
         navigate(PATH.DASHBOARD);
+      } else if (userData.role === "PARTNER") {
+        navigate(PATH.PARTNER);
+      } else {
+        navigate(PATH.HOME); // Dự phòng cho các vai trò không xác định
       }
     } catch (error) {
       toast.error(error.message || "Đăng nhập thất bại, vui lòng thử lại!");

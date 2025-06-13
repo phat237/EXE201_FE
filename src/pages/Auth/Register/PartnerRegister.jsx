@@ -16,8 +16,9 @@ import * as yup from "yup";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { registerParnerApi } from "../../../store/slices/authSlice";
+import { loginApi, registerParnerApi } from "../../../store/slices/authSlice";
 import { transactionDepositApi } from "../../../store/slices/transactionSlice";
+import { fetcher } from "../../../apis/fetcher";
 
 const partnerSchema = yup.object().shape({
   username: yup
@@ -71,31 +72,40 @@ export default function PartnerRegister() {
     resolver: yupResolver(partnerSchema),
   });
 
-  const onSubmit = async (data) => {
-    setIsLoading(true);
-    try {
-      const result = await dispatch(registerParnerApi(data)).unwrap();
-      toast.success("Đăng ký partner thành công!");
+const onSubmit = async (data) => {
+  setIsLoading(true);
+  try {
+    // Đăng ký
+    const registerResult = await dispatch(registerParnerApi({ ...data, role: "PARTNER" })).unwrap();
+    toast.success("Đăng ký partner thành công!");
+    localStorage.setItem("currentUser", JSON.stringify(registerResult));
 
-      // Lưu thông tin người dùng vào localStorage
-      localStorage.setItem("currentUser", JSON.stringify(result));
+    // Đăng nhập để lấy token
+    const loginResult = await dispatch(loginApi({ username: data.username, password: data.password })).unwrap();
+    localStorage.setItem("currentUser", JSON.stringify({ ...registerResult, token: loginResult.token }));
+    console.log("Token sau đăng nhập:", loginResult.token);
 
-      // Gọi API transactionDepositApi với packageId
-      const depositData = { packageId };
-      await dispatch(transactionDepositApi(depositData)).unwrap();
+    const packageId = searchParams.get("packageId") || 3;
+    const depositData = { packageId };
+    console.log("Gửi yêu cầu deposit với dữ liệu:", depositData);
 
-      // Chuyển hướng đến PayOS để thanh toán
-      const redirectUrl = "https://pay.payos.vn/web/f50e34e1693a4805aad0fa5198b1a599";
-      window.location.href = redirectUrl;
-    } catch (error) {
-      console.error("Lỗi đăng ký hoặc thanh toán:", error);
-      toast.error(
-        error.message || "Đăng ký hoặc thanh toán thất bại, vui lòng thử lại!"
-      );
-    } finally {
-      setIsLoading(false);
+    const transactionResult = await dispatch(transactionDepositApi(depositData)).unwrap();
+    console.log("Phản hồi từ transactionDepositApi:", transactionResult);
+
+    // Sửa từ tokenResult thành transactionResult
+    if (transactionResult && transactionResult.checkoutUrl) {
+      window.location.href = transactionResult.checkoutUrl;
+    } else {
+      console.error("Checkout URL không tồn tại:", transactionResult);
+      toast.error("Không thể lấy liên kết thanh toán, vui lòng thử lại!");
     }
-  };
+  } catch (error) {
+    console.error("Lỗi đăng ký hoặc thanh toán:", error);
+    toast.error(error.message || "Đăng ký hoặc thanh toán thất bại, vui lòng thử lại!");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Box className="auth-container">

@@ -21,28 +21,34 @@ import {
   People as PeopleIcon,
   ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./BusinessPage.css";
 import { useDispatch, useSelector } from "react-redux";
+import { selectUserRole } from "../../../store/slices/authSlice";
 import { fetchPremiumPackages } from "../../../store/slices/preniumPackageSlice";
 
 export default function BusinessPage() {
   const dispatch = useDispatch();
-  const {
-    data: premiumPackages,
-    loading,
-    error,
-  } = useSelector((state) => state.premiumPackages);
+  const { data: premiumPackages, loading, error } = useSelector((state) => state.premiumPackages);
+  const userRole = useSelector(selectUserRole);
   const [openModal, setOpenModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(fetchPremiumPackages());
-  }, []);
+  }, [dispatch]);
 
   const handleOpenModal = (pkg) => {
-    setSelectedPackage(pkg);
-    setOpenModal(true);
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (currentUser?.role === "USER") {
+      if (window.confirm("Bạn muốn đăng ký trở thành partner sao?")) {
+        navigate(`/auth/register/partner?packageId=${pkg?.id}`);
+      }
+    } else {
+      setSelectedPackage(pkg);
+      setOpenModal(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -51,9 +57,11 @@ export default function BusinessPage() {
   };
 
   const handleConfirmUpgrade = () => {
-    // Navigate to the registration page with the selected package
-    // window.location.href = `/doanh-nghiep/dang-ky?package=${selectedPackage?.id}`;
-    handleCloseModal();
+    if (userRole !== "USER") {
+      // Logic cho PARTNER hoặc ADMIN (nếu có)
+      handleCloseModal();
+      // Thêm logic nâng cấp gói nếu cần
+    }
   };
 
   return (
@@ -288,29 +296,6 @@ export default function BusinessPage() {
         </Box>
       </Box>
 
-      {/* <Box className="business-clients-section">
-        <Box className="business-section-header">
-          <Typography variant="h3" className="business-section-title">
-            Khách Hàng Tin Tưởng
-          </Typography>
-          <Typography variant="body1" className="business-section-text">
-            Hàng nghìn doanh nghiệp đã tin tưởng và sử dụng TrustReview
-          </Typography>
-        </Box>
-
-        <Box className="business-clients-grid">
-          {[1, 2, 3, 4].map((i) => (
-            <Box key={i} className="business-client-logo">
-              <img
-                src={`https://via.placeholder.com/160x80?text=Logo+${i}`}
-                alt={`Khách hàng ${i}`}
-                className="business-logo-image"
-              />
-            </Box>
-          ))}
-        </Box>
-      </Box> */}
-
       <Box className="business-contact-section">
         <Card className="business-contact-card">
           <CardContent className="business-contact-content">
@@ -360,6 +345,7 @@ export default function BusinessPage() {
           </CardContent>
         </Card>
       </Box>
+
       <Dialog
         open={openModal}
         onClose={handleCloseModal}

@@ -9,7 +9,9 @@ import {
   LogoutOutlined,
   FileTextOutlined,
   CrownOutlined,
+  MoneyCollectOutlined,
 } from '@ant-design/icons';
+
 
 const { Header, Sider, Content } = Layout;
 
@@ -33,6 +35,11 @@ const PartnerLayout = () => {
       key: '/partner/reviews',
       icon: <StarOutlined />,
       label: 'Đánh giá',
+    },
+        {
+      key: '/partner/deposit',
+      icon: <MoneyCollectOutlined />,
+      label: 'Nạp Tiền',
     },
 
   ];
