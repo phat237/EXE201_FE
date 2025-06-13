@@ -3,6 +3,7 @@ export const PATH = {
   AUTH: "/auth",
   LOGIN: "/auth/login",
   REGISTER: "/auth/register",
+  REGISTERPARTNER:"/auth/register/partner",
 
   // HOME
   HOME: "/",
@@ -25,4 +26,5 @@ export const PATH = {
   PARTNER_REVIEWS: "/partner/reviews",
   PARTNER_REPORTS: "/partner/reports",
   PARTNER_SETTINGS: "/partner/settings",
+  PARTNER_DEPOSIT:"/partner/deposit"
 };

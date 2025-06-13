@@ -23,6 +23,7 @@ import ProductDetailPage from "../pages/Home/ProductPage/ProductDetailPage";
 import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 import ProfileUser from "../components/ProfileUser/ProfileUser";
 import Reviews from "../pages/Partner/Reviews/Reviews";
+import PartnerRegister from "../pages/Auth/Register/PartnerRegister";
 
 export default function useRouterElements() {
   const element = useRoutes([
@@ -42,6 +43,10 @@ export default function useRouterElements() {
           path: PATH.REGISTER,
           element: <Register />,
         },
+        {
+          path: PATH.REGISTERPARTNER,
+          element: <PartnerRegister/>
+        }
       ],
     },
     {
@@ -144,6 +149,7 @@ export default function useRouterElements() {
           path: "reviews",
           element: <Reviews />,
         },
+  
       ],
     },
   ]);

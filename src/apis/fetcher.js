@@ -5,7 +5,7 @@ export const fetcher = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  withCredentials: true, // Giữ nguyên để hỗ trợ cookie
 });
 
 fetcher.interceptors.request.use((config) => {
@@ -13,17 +13,13 @@ fetcher.interceptors.request.use((config) => {
   const currentUserStr = localStorage.getItem("currentUser");
   let currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
-
-
+  console.log("Current User:", currentUser);
   if (currentUser && !publicEndpoints.some((endpoint) => config.url.includes(endpoint))) {
-    const accessToken = currentUser.token || currentUser.accessToken; // Thử cả hai trường hợp
-    if (!accessToken) {
-      console.warn("No accessToken found in currentUser:", currentUser);
+    const accessToken = currentUser.token;
+    console.log("Access Token from currentUser:", accessToken);
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    config.headers.Authorization = accessToken ? `Bearer ${accessToken}` : "Bearer no-token";
-  
-  } else {
-   console.log("CurrentUser from localStorage:", currentUser);
   }
 
   return config;
