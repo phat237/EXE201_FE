@@ -24,6 +24,9 @@ import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 import ProfileUser from "../components/ProfileUser/ProfileUser";
 import Reviews from "../pages/Partner/Reviews/Reviews";
 import PartnerRegister from "../pages/Auth/Register/PartnerRegister";
+import CheckoutSucess from "../pages/Home/Checkout/CheckoutSucess";
+import CheckoutFail from "../pages/Home/Checkout/CheckoutFail";
+import PaymentCallback from "../pages/Home/Checkout/PaymentCallBack";
 
 export default function useRouterElements() {
   const element = useRoutes([
@@ -45,8 +48,8 @@ export default function useRouterElements() {
         },
         {
           path: PATH.REGISTERPARTNER,
-          element: <PartnerRegister/>
-        }
+          element: <PartnerRegister />,
+        },
       ],
     },
     {
@@ -85,14 +88,26 @@ export default function useRouterElements() {
           path: PATH.PROFILEUSER,
           element: <ProfileUser />,
         },
+        {
+          path: PATH.CHECKOUTSUCCESS,
+          element: <CheckoutSucess />,
+        },
+        {
+          path: PATH.CHECKOUTFAIL,
+          element: <CheckoutFail />,
+        },
+        {
+          path: PATH.PAYMENTCALLBACL,
+          element: <PaymentCallback />,
+        },
       ],
     },
     {
       path: PATH.ADMIN,
       element: (
-      //  <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminLayout />
-       // </ProtectedRoute>
+        //  <ProtectedRoute allowedRoles={["admin"]}>
+        <AdminLayout />
+        // </ProtectedRoute>
       ),
       children: [
         {
@@ -129,7 +144,7 @@ export default function useRouterElements() {
       path: PATH.PARTNER,
       element: (
         // <ProtectedRoute allowedRoles={["PARTNER"]}>
-          <PartnerLayout />
+        <PartnerLayout />
         // </ProtectedRoute>
       ),
       children: [
@@ -149,7 +164,6 @@ export default function useRouterElements() {
           path: "reviews",
           element: <Reviews />,
         },
-  
       ],
     },
   ]);
