@@ -16,23 +16,41 @@ export default function PaymentCallback() {
     // Lấy tham số từ URL
     const searchParams = new URLSearchParams(location.search);
     const orderCode = searchParams.get("orderCode");
-    const status = searchParams.get("status");
-    const transactionId = searchParams.get("id") || `TXN_${Date.now()}`;
-    const partnerId = searchParams.get("partnerId") || "unknown";
+    const status = searchParams.get("status")?.toUpperCase(); // Chuyển thành chữ hoa để tránh lỗi
+    const code = searchParams.get("code");
+    const cancel = searchParams.get("cancel");
+    const partnerId = searchParams.get("partnerId") || "unknown"; // Mặc định nếu thiếu
+    const transactionId = searchParams.get("id") || `TXN_${Date.now()}`; // Mặc định nếu thiếu
+
+    // Ghi log để kiểm tra tham số
+    console.log("Tham số callback thanh toán:", {
+      orderCode,
+      status,
+      code,
+      cancel,
+      partnerId,
+      transactionId,
+      rawQuery: location.search, // URL gốc
+    });
 
     const handlePaymentResult = async () => {
       try {
-        if (status === "PAID") {
-          // Gọi checkoutSuccessApi
+        // Kiểm tra giao dịch thành công: status là PAID, code (nếu có) là 00, và cancel không phải true
+        const isSuccess = status === "PAID" && (!code || code === "00") && cancel !== "true";
+
+        if (isSuccess) {
+          // Gọi API xác nhận thanh toán thành công
           await dispatch(checkoutSuccessApi({ orderCode, partnerId })).unwrap();
           toast.success("Thanh toán thành công!");
+          // Chuyển hướng tới trang thành công
           navigate(
             `/checkout/success?orderId=${orderCode}&amount=499000&package=premium&method=credit_card&transactionId=${transactionId}`
           );
         } else {
-          // Gọi checkoutFailApi
+          // Gọi API xác nhận thanh toán thất bại
           await dispatch(checkoutFailApi({ orderCode })).unwrap();
           toast.error("Thanh toán thất bại!");
+          // Chuyển hướng tới trang thất bại
           navigate(
             `/checkout/fail?orderId=${orderCode}&amount=499000&package=premium&method=credit_card&transactionId=${transactionId}`
           );
@@ -44,9 +62,11 @@ export default function PaymentCallback() {
       }
     };
 
+    // Kiểm tra xem có đủ tham số để xử lý
     if (orderCode && status) {
       handlePaymentResult();
     } else {
+      console.error("Thiếu tham số thanh toán:", { orderCode, status });
       toast.error("Dữ liệu thanh toán không hợp lệ!");
       navigate("/");
     }

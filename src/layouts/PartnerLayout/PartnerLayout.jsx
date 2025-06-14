@@ -10,6 +10,7 @@ import {
   FileTextOutlined,
   CrownOutlined,
   MoneyCollectOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 
 
