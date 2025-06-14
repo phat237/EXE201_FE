@@ -25,10 +25,12 @@ export const PATH = {
   // PARTNER
   PARTNER: "/partner",
   PARTNER_DASHBOARD: "/partner/dashboard",
-  PARTNER_UPGRADE_PACKAGES: "/partner/upgrade-packages",
+  PARTNER_UPGRADE_: "/partner/upgrade-packages",
   PARTNER_ORDERS: "/partner/orders",
   PARTNER_REVIEWS: "/partner/reviews",
   PARTNER_REPORTS: "/partner/reports",
   PARTNER_SETTINGS: "/partner/settings",
   PARTNER_DEPOSIT: "/partner/deposit",
+  PARTNER_AVAILABLE_PACKAGES:"/partner/available-packages"
+
 };

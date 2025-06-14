@@ -27,8 +27,8 @@ import Reviews from "../pages/Partner/Reviews/Reviews";
 import PartnerRegister from "../pages/Auth/Register/PartnerRegister"; 
 import CheckoutSucess from "../pages/Home/Checkout/CheckoutSucess";
 import CheckoutFail from "../pages/Home/Checkout/CheckoutFail";
-import PaymentCallback from "../pages/Home/Checkout/PaymentCallBack";
 import Voucher from '../pages/Admin/Voucher/Voucher';         
+import PaymentCallback from "../pages/Home/Checkout/PaymentCallback";
 
 export default function useRouterElements() {
   const element = useRoutes([ 

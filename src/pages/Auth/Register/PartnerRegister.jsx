@@ -61,7 +61,7 @@ export default function PartnerRegister() {
   const dispatch = useDispatch();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const packageId = searchParams.get("packageId") || 3;
+  const packageId = Number(searchParams.get("packageId")) || 3;
 
   const {
     register,
@@ -79,23 +79,38 @@ export default function PartnerRegister() {
         registerParnerApi({ ...data, role: "PARTNER" })
       ).unwrap();
       toast.success("Đăng ký partner thành công!");
-      localStorage.setItem("currentUser", JSON.stringify(registerResult));
 
       // Đăng nhập để lấy token
       const loginResult = await dispatch(
         loginApi({ username: data.username, password: data.password })
       ).unwrap();
-      localStorage.setItem(
-        "currentUser",
-        JSON.stringify({ ...registerResult, token: loginResult.token })
-      );
+      const currentUser = { ...registerResult, token: loginResult.token, id: registerResult.id };
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
       // Gửi yêu cầu deposit để lấy URL thanh toán
-      const packageId = searchParams.get("packageId") || 3;
       const depositData = { packageId };
       const transactionResult = await dispatch(
         transactionDepositApi(depositData)
       ).unwrap();
+
+      // Lưu dữ liệu giao dịch vào localStorage
+      localStorage.setItem(
+        "lastTransaction",
+        JSON.stringify({
+          orderCode: transactionResult.orderCode,
+          amount: transactionResult.amount,
+          package: transactionResult.description.toLowerCase().includes("vip")
+            ? "vip"
+            : transactionResult.description.toLowerCase().includes("premium")
+            ? "premium"
+            : transactionResult.description.toLowerCase().includes("basic")
+            ? "basic"
+            : "unknown",
+          paymentLinkId: transactionResult.paymentLinkId,
+          transactionId: transactionResult.paymentLinkId,
+          method: "credit_card",
+        })
+      );
 
       // Kiểm tra và chuyển hướng đến URL của cổng thanh toán
       if (transactionResult && transactionResult.checkoutUrl) {
