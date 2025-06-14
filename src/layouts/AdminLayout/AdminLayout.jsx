@@ -2,13 +2,13 @@ import React from 'react';
 import { Layout, Menu, Button } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  UserOutlined,
+  HomeOutlined,
   ShoppingCartOutlined,
   DollarOutlined,
-  BarChartOutlined,
   SettingOutlined,
   LogoutOutlined,
   StarOutlined,
+  GiftOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -19,14 +19,14 @@ const AdminLayout = () => {
 
   const menuItems = [
     {
-      key: '/admin/dashboard',
-      icon: <BarChartOutlined />,
-      label: 'Dashboard',
+      key: '/',
+      icon: <HomeOutlined />,
+      label: 'Trang chủ',
     },
     {
-      key: '/admin/users',
-      icon: <UserOutlined />,
-      label: 'Users',
+      key: '/admin/voucher',
+      icon: <GiftOutlined />,
+      label: 'Voucher',
     },
     {
       key: '/admin/products',
