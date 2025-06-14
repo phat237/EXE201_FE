@@ -3,7 +3,7 @@ export const PATH = {
   AUTH: "/auth",
   LOGIN: "/auth/login",
   REGISTER: "/auth/register",
-  REGISTERPARTNER:"/auth/register/partner",
+  REGISTERPARTNER: "/auth/register/partner",
 
   // HOME
   HOME: "/",
@@ -13,7 +13,10 @@ export const PATH = {
   PRODUCT_DETAIL: "/san-pham/:id",
   BUSINESS: "/doanh-nghiep",
   PROFILEUSER: "/profile",
-  
+  CHECKOUTSUCCESS: "/checkout/success",
+  CHECKOUTFAIL: "/checkout/fail",
+  PAYMENTCALLBACL: "/payment/callback",
+
   // ADMIN
   ADMIN: "/admin",
   DASHBOARD: "/admin/dashboard",
@@ -26,5 +29,5 @@ export const PATH = {
   PARTNER_REVIEWS: "/partner/reviews",
   PARTNER_REPORTS: "/partner/reports",
   PARTNER_SETTINGS: "/partner/settings",
-  PARTNER_DEPOSIT:"/partner/deposit"
+  PARTNER_DEPOSIT: "/partner/deposit",
 };
