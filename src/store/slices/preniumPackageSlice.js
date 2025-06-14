@@ -20,6 +20,21 @@ export const fetchPremiumPackages = createAsyncThunk(
   }
 );
 
+// Thunk để lấy thông tin chi tiết gói premium theo ID
+export const fetchPremiumPackageById = createAsyncThunk(
+  'premiumPackages/fetchPremiumPackageById',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`${API_URL}/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 // Thunk để tạo mới gói premium
 export const createPremiumPackage = createAsyncThunk(
   'premiumPackages/createPremiumPackage',
@@ -69,6 +84,7 @@ const premiumPackagesSlice = createSlice({
   name: 'premiumPackages',
   initialState: {
     data: [],
+    selectedPackage: null, // Thêm state để lưu thông tin package được chọn
     loading: false,
     error: null,
     createSuccess: false,
@@ -84,6 +100,9 @@ const premiumPackagesSlice = createSlice({
     },
     resetDeleteSuccess(state) {
       state.deleteSuccess = false;
+    },
+    resetSelectedPackage(state) {
+      state.selectedPackage = null;
     }
   },
   extraReducers: (builder) => {
@@ -97,6 +116,18 @@ const premiumPackagesSlice = createSlice({
         state.data = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchPremiumPackages.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(fetchPremiumPackageById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPremiumPackageById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedPackage = action.payload;
+      })
+      .addCase(fetchPremiumPackageById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       })
@@ -153,5 +184,11 @@ const premiumPackagesSlice = createSlice({
   },
 });
 
-export const { resetCreateSuccess, resetUpdateSuccess, resetDeleteSuccess } = premiumPackagesSlice.actions;
+export const { 
+  resetCreateSuccess, 
+  resetUpdateSuccess, 
+  resetDeleteSuccess,
+  resetSelectedPackage 
+} = premiumPackagesSlice.actions;
+
 export default premiumPackagesSlice.reducer;

@@ -5,6 +5,8 @@ import productReducer from "./slices/productSlice";
 import reviewReducer from "./slices/reviewSlice";
 import transactionReducer from "./slices/transactionSlice";
 import checkoutReducer from "./slices/checkoutSlice";
+import partnerPackageReducer from "./slices/partnerPackageSlice"
+import voucherReducer from "./slices/voucherSlice"
 
 // tạo store
 export const store = configureStore({
@@ -15,6 +17,9 @@ export const store = configureStore({
     review: reviewReducer,
     transaction: transactionReducer,
     checkout: checkoutReducer,
+    review: reviewReducer,  
+    partnerPackage: partnerPackageReducer,
+    vouchers: voucherReducer, 
   },
 });
 

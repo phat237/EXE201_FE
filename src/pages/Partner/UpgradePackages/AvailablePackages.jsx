@@ -1,18 +1,22 @@
 import React, { useEffect } from 'react';
-import { Card, Table, Tag, Typography, Space, Spin } from 'antd';
-import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Card, Table, Tag, Typography, Space, Spin, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPartnerPackages } from '../../../store/slices/partnerPackageSlice';
+import { fetchAvailablePartnerPackages } from '../../../store/slices/partnerPackageSlice';
 
 const { Title } = Typography;
 
-const UpgradePackages = () => {
+const AvailablePackages = () => {
   const dispatch = useDispatch();
-  const { packages, isLoading, error } = useSelector((state) => state.partnerPackage);
+  const { availablePackages, isLoading, error } = useSelector((state) => state.partnerPackage);
 
   useEffect(() => {
-    dispatch(fetchPartnerPackages());
+    dispatch(fetchAvailablePartnerPackages());
   }, [dispatch]);
+
+  const handlePurchase = (packageId) => {
+    // TODO: Implement purchase functionality
+    console.log('Purchase package:', packageId);
+  };
 
   const columns = [
     {
@@ -22,35 +26,16 @@ const UpgradePackages = () => {
       render: (text) => <strong>{text}</strong>,
     },
     {
-      title: 'Ngày mua',
-      dataIndex: 'purchaseDate',
-      key: 'purchaseDate',
-      render: (date) => new Date(date).toLocaleDateString('vi-VN'),
-    },
-    {
-      title: 'Ngày hết hạn',
-      dataIndex: 'expiryDate',
-      key: 'expiryDate',
-      render: (date) => new Date(date).toLocaleDateString('vi-VN'),
-    },
-    {
       title: 'Giá',
       dataIndex: 'price',
       key: 'price',
       render: (price) => `${price.toLocaleString('vi-VN')}đ`,
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag
-          color={status === 'ACTIVE' ? 'green' : 'red'}
-          icon={status === 'ACTIVE' ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-        >
-          {status === 'ACTIVE' ? 'Đang hoạt động' : 'Hết hạn'}
-        </Tag>
-      ),
+      title: 'Thời hạn',
+      dataIndex: 'duration',
+      key: 'duration',
+      render: (duration) => `${duration} tháng`,
     },
     {
       title: 'Tính năng',
@@ -66,6 +51,15 @@ const UpgradePackages = () => {
         </Space>
       ),
     },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      render: (_, record) => (
+        <Button type="primary" onClick={() => handlePurchase(record.id)}>
+          Mua ngay
+        </Button>
+      ),
+    },
   ];
 
   if (isLoading) {
@@ -79,7 +73,7 @@ const UpgradePackages = () => {
   if (error) {
     return (
       <div style={{ padding: '24px' }}>
-        <Title level={2}>Gói nâng cấp đã mua</Title>
+        <Title level={2}>Gói nâng cấp có sẵn</Title>
         <Card>
           <div style={{ color: 'red', textAlign: 'center' }}>
             Có lỗi xảy ra khi tải dữ liệu: {error.message}
@@ -91,11 +85,11 @@ const UpgradePackages = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <Title level={2}>Gói nâng cấp đã mua</Title>
+      <Title level={2}>Gói nâng cấp có sẵn</Title>
       <Card>
         <Table
           columns={columns}
-          dataSource={packages}
+          dataSource={availablePackages}
           pagination={false}
           scroll={{ x: true }}
           rowKey="id"
@@ -105,4 +99,4 @@ const UpgradePackages = () => {
   );
 };
 
-export default UpgradePackages; 
+export default AvailablePackages; 

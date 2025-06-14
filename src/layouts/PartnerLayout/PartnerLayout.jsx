@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout, Menu, Button } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
-  BarChartOutlined,
+  HomeOutlined,
   StarOutlined,
   DollarOutlined,
   SettingOutlined,
@@ -21,20 +21,19 @@ const PartnerLayout = () => {
 
   const menuItems = [
     {
-      key: '/partner/dashboard',
-      icon: <BarChartOutlined />,
-      label: 'Dashboard',
+      key: '/',
+      icon: <HomeOutlined />,
+      label: 'Trang chủ',
     },
     {
       key: '/partner/upgrade-packages',
       icon: <CrownOutlined />,
-      label: 'Gói nâng cấp',
+      label: 'Gói nâng cấp đã mua',
     },
-   
     {
-      key: '/partner/reviews',
-      icon: <StarOutlined />,
-      label: 'Đánh giá',
+      key: '/partner/available-packages',
+      icon: <ShoppingOutlined />,
+      label: 'Gói nâng cấp có sẵn',
     },
         {
       key: '/partner/deposit',

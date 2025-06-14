@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, message, Popconfirm } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, message, Popconfirm, Descriptions, Spin, Card, Row, Col } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchPremiumPackages,
@@ -9,14 +9,17 @@ import {
   resetCreateSuccess,
   resetUpdateSuccess,
   resetDeleteSuccess,
+  fetchPremiumPackageById,
+  resetSelectedPackage
 } from '../../../store/slices/preniumPackageSlice';
 
 const UpgradePackages = () => {
   const dispatch = useDispatch();
-  const { data, loading, error, createSuccess, updateSuccess, deleteSuccess } = useSelector(state => state.premiumPackages);
+  const { data, loading, error, createSuccess, updateSuccess, deleteSuccess, selectedPackage } = useSelector(state => state.premiumPackages);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null); // null: add, object: edit
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -71,6 +74,16 @@ const UpgradePackages = () => {
     });
   };
 
+  const handleViewDetails = (id) => {
+    dispatch(fetchPremiumPackageById(id));
+    setDetailsModalOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsModalOpen(false);
+    dispatch(resetSelectedPackage());
+  };
+
   const columns = [
     {
       title: 'Tên gói',
@@ -81,6 +94,30 @@ const UpgradePackages = () => {
       title: 'Mô tả',
       dataIndex: 'description',
       key: 'description',
+      render: (desc) => (
+        <Row gutter={[8, 8]}>
+          {desc?.split('\n').map((feature, idx) =>
+            feature.trim() ? (
+              <Col key={idx}>
+                <Card
+                  size="small"
+                  style={{
+                    backgroundColor: '#f0f5ff',
+                    borderColor: '#1890ff',
+                    minWidth: 120,
+                    textAlign: 'center',
+                    padding: 0,
+                    margin: 0
+                  }}
+                  bodyStyle={{ padding: 8 }}
+                >
+                  {feature.trim()}
+                </Card>
+              </Col>
+            ) : null
+          )}
+        </Row>
+      )
     },
     {
       title: 'Giá',
@@ -92,13 +129,16 @@ const UpgradePackages = () => {
       title: 'Thời hạn',
       dataIndex: 'duration',
       key: 'duration',
-      render: (duration) => duration ? `${Math.round(duration/30)} tháng` : ''
+      render: (duration) => duration ? `${duration} tháng` : '',
+      sorter: (a, b) => a.duration - b.duration,
+      defaultSortOrder: 'ascend'
     },
     {
       title: 'Hành động',
       key: 'action',
       render: (_, record) => (
         <>
+          <Button type="link" onClick={() => handleViewDetails(record.id)}>Xem chi tiết</Button>
           <Button type="link" onClick={() => openEditModal(record)}>Sửa</Button>
           <Popconfirm title="Bạn chắc chắn muốn xóa?" onConfirm={() => handleDelete(record.id)} okText="Xóa" cancelText="Hủy">
             <Button type="link" danger>Xóa</Button>
@@ -107,8 +147,6 @@ const UpgradePackages = () => {
       ),
     },
   ];
-
-  console.log('data from redux:', data);
 
   return (
     <div>
@@ -146,6 +184,66 @@ const UpgradePackages = () => {
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Chi tiết gói nâng cấp"
+        open={detailsModalOpen}
+        onCancel={handleCloseDetails}
+        footer={[
+          <Button key="close" onClick={handleCloseDetails}>
+            Đóng
+          </Button>
+        ]}
+        width={800}
+      >
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+          </div>
+        ) : selectedPackage ? (
+          <>
+            <Descriptions bordered column={1}>
+              <Descriptions.Item label="Tên gói">{selectedPackage.name}</Descriptions.Item>
+              <Descriptions.Item label="Giá">{selectedPackage.price?.toLocaleString('vi-VN')}₫</Descriptions.Item>
+              <Descriptions.Item label="Thời hạn">{selectedPackage.duration} tháng</Descriptions.Item>
+            </Descriptions>
+            
+            <div style={{ marginTop: '20px' }}>
+              <h3 style={{ marginBottom: '16px' }}>Tính năng gói:</h3>
+              <Row gutter={[16, 16]}>
+                {selectedPackage.description.split('\n').map((feature, index) => (
+                  feature.trim() && (
+                    <Col span={8} key={index}>
+                      <Card 
+                        hoverable
+                        style={{ 
+                          height: '100%',
+                          backgroundColor: '#f0f5ff',
+                          borderColor: '#1890ff'
+                        }}
+                      >
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          height: '100%',
+                          textAlign: 'center'
+                        }}>
+                          {feature.trim()}
+                        </div>
+                      </Card>
+                    </Col>
+                  )
+                ))}
+              </Row>
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            Không tìm thấy thông tin gói
+          </div>
+        )}
       </Modal>
     </div>
   );

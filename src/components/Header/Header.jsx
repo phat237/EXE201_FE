@@ -28,7 +28,7 @@ export default function Header() {
   const navLinks = [
     { href: "/", label: "Trang Chủ" },
     { href: "/san-pham", label: "Sản Phẩm" },
-    { href: "/danh-gia", label: "Đánh Giá" },
+   
     { href: "/doanh-nghiep", label: "Doanh Nghiệp" },
     { href: "/gioi-thieu", label: "Giới Thiệu" },
   ];

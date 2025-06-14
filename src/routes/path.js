@@ -7,7 +7,7 @@ export const PATH = {
 
   // HOME
   HOME: "/",
-  REVIEW: "/danh-gia",
+  
   CREATERVIEW: "/tao-danh-gia",
   PRODUCT: "/san-pham",
   PRODUCT_DETAIL: "/san-pham/:id",
@@ -20,6 +20,7 @@ export const PATH = {
   // ADMIN
   ADMIN: "/admin",
   DASHBOARD: "/admin/dashboard",
+  VOUCHER: "/admin/voucher",
 
   // PARTNER
   PARTNER: "/partner",

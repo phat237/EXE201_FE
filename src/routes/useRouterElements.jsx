@@ -14,7 +14,8 @@ import Orders from "../pages/Admin/Orders/Orders";
 import Settings from "../pages/Admin/Settings/Settings";
 import UpgradePackages from "../pages/Admin/UpgradePackages/UpgradePackages";
 import PartnerUpgradePackages from "../pages/Partner/UpgradePackages/UpgradePackages";
-import { useRoutes } from "react-router-dom";
+import AvailablePackages from "../pages/Partner/UpgradePackages/AvailablePackages";
+import { useRoutes } from "react-router-dom"; 
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ReviewPage from "../pages/Home/ReviewPage/ReviewPage";
 import FormReview from "../pages/Home/ReviewPage/FormReview";
@@ -22,14 +23,15 @@ import ProductPaege from "../pages/Home/ProductPage/ProductPage";
 import ProductDetailPage from "../pages/Home/ProductPage/ProductDetailPage";
 import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 import ProfileUser from "../components/ProfileUser/ProfileUser";
-import Reviews from "../pages/Partner/Reviews/Reviews";
-import PartnerRegister from "../pages/Auth/Register/PartnerRegister";
+import Reviews from "../pages/Partner/Reviews/Reviews"; 
+import PartnerRegister from "../pages/Auth/Register/PartnerRegister"; 
 import CheckoutSucess from "../pages/Home/Checkout/CheckoutSucess";
 import CheckoutFail from "../pages/Home/Checkout/CheckoutFail";
 import PaymentCallback from "../pages/Home/Checkout/PaymentCallBack";
+import Voucher from '../pages/Admin/Voucher/Voucher';         
 
 export default function useRouterElements() {
-  const element = useRoutes([
+  const element = useRoutes([ 
     {
       path: PATH.AUTH,
       element: <AuthLayout />,
@@ -60,10 +62,7 @@ export default function useRouterElements() {
           index: true,
           element: <HomePage />,
         },
-        {
-          path: PATH.REVIEW,
-          element: <ReviewPage />,
-        },
+       
         {
           path: PATH.CREATERVIEW,
           element: <FormReview />,
@@ -119,9 +118,10 @@ export default function useRouterElements() {
           element: <Dashboard />,
         },
         {
-          path: "users",
-          element: <Users />,
+          path: PATH.VOUCHER,
+          element: <Voucher />,
         },
+      
         {
           path: "products",
           element: <Products />,
@@ -160,11 +160,12 @@ export default function useRouterElements() {
           path: "upgrade-packages",
           element: <PartnerUpgradePackages />,
         },
+      ,
         {
-          path: "reviews",
-          element: <Reviews />,
+          path: PATH.PARTNER_AVAILABLE_PACKAGES,
+          element: <AvailablePackages />,
         },
-      ],
+        ],
     },
   ]);
   return element;
