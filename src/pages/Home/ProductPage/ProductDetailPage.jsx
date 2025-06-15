@@ -7,6 +7,7 @@ import {
 import {
   fetchReviewsByIdPaginated,
   createProductReview,
+  markReviewHelpful,
 } from "../../../store/slices/reviewSlice";
 import {
   Button,
@@ -63,11 +64,15 @@ export default function ProductDetailPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [helpfulStatus, setHelpfulStatus] = useState({});
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const reviewsSectionRef = useRef(null);
 
   const dispatch = useDispatch();
+
+
+
   const {
     product,
     allProducts,
@@ -221,12 +226,8 @@ export default function ProductDetailPage() {
           content.includes("không tốt")
         ) {
           negative += 1;
-          console.log(
-            `Classified as NEGATIVE based on rating <= 2 or negative content`
-          );
         } else {
           neutral += 1;
-          console.log(`Classified as NEUTRAL by default`);
         }
       }
     });
@@ -244,8 +245,6 @@ export default function ProductDetailPage() {
       neutral: neutralPercentage,
       negative: negativePercentage,
     };
-
-    console.log("Sentiment Analysis Result:", sentimentResult);
     return sentimentResult;
   };
 
@@ -293,6 +292,50 @@ export default function ProductDetailPage() {
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleMarkHelpful = (reviewId, currentStatus) => {
+    const newStatus = !currentStatus; // Toggle trạng thái
+    dispatch(markReviewHelpful({ reviewId, status: newStatus }))
+      .unwrap()
+      .then(() => {
+        setHelpfulStatus((prev) => ({
+          ...prev,
+          [reviewId]: { ...prev[reviewId], helpful: newStatus },
+        }));
+        setSnackbarMessage(
+          newStatus ? "Đã đánh dấu hữu ích!" : "Đã hủy đánh dấu hữu ích!"
+        );
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      })
+      .catch((err) => {
+        setSnackbarMessage(`Lỗi: ${err.message || err}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      });
+  };
+
+  const handleReport = (reviewId, currentStatus) => {
+    const newStatus = !currentStatus; // Toggle trạng thái
+    dispatch(markReviewHelpful({ reviewId, status: !newStatus })) // Báo cáo là status: false
+      .unwrap()
+      .then(() => {
+        setHelpfulStatus((prev) => ({
+          ...prev,
+          [reviewId]: { ...prev[reviewId], reported: newStatus },
+        }));
+        setSnackbarMessage(
+          newStatus ? "Đã báo cáo đánh giá!" : "Đã hủy báo cáo!"
+        );
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      })
+      .catch((err) => {
+        setSnackbarMessage(`Lỗi: ${err.message || err}`);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      });
   };
 
   const handleLoadMore = () => {
@@ -541,6 +584,17 @@ export default function ProductDetailPage() {
                               startIcon={
                                 <ThumbUpIcon className="product-icon" />
                               }
+                              onClick={() =>
+                                handleMarkHelpful(
+                                  review.id,
+                                  helpfulStatus[review.id]?.helpful || false
+                                )
+                              }
+                              style={{
+                                color: helpfulStatus[review.id]?.helpful
+                                  ? "#6517ce"
+                                  : "inherit",
+                              }}
                             >
                               {review.helpfulCount || 0} hữu ích
                             </Button>
@@ -548,6 +602,17 @@ export default function ProductDetailPage() {
                               variant="text"
                               className="product-review-report"
                               startIcon={<FlagIcon className="product-icon" />}
+                              onClick={() =>
+                                handleReport(
+                                  review.id,
+                                  helpfulStatus[review.id]?.reported || false
+                                )
+                              }
+                              style={{
+                                color: helpfulStatus[review.id]?.reported
+                                  ? "#6517ce"
+                                  : "inherit",
+                              }}
                             >
                               Báo cáo
                             </Button>
