@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchVouchers, bulkCreateVouchers } from '../../../store/slices/voucherSlice';
 import { Table, Spin, Alert, Tag, Button, Modal, Form, Input, InputNumber, DatePicker, message, Switch } from 'antd';
 import dayjs from 'dayjs';
+import AdminSearchSort from '../../../components/Admin/AdminSearchSort';
 
 const Voucher = () => {
   const dispatch = useDispatch();
@@ -10,9 +11,26 @@ const Voucher = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [form] = Form.useForm();
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  const sortOptions = [
+    { value: 'code', label: 'Mã voucher' },
+    { value: 'name', label: 'Tên voucher' },
+    { value: 'createdAt', label: 'Ngày tạo' },
+    { value: 'requiredPoint', label: 'Điểm đổi' },
+    { value: 'discount', label: 'Giảm giá' },
+  ];
+
+  const fetchVoucherData = () => {
+    // Giả sử fetchVouchers có thể nhận các tham số search, sortBy, sortOrder
+    dispatch(fetchVouchers({ search: searchTerm, sortBy, sortOrder }));
+  };
+
   useEffect(() => {
-    dispatch(fetchVouchers());
-  }, [dispatch]);
+    fetchVoucherData();
+  }, [dispatch, searchTerm, sortBy, sortOrder]);
 
   const columns = [
     { title: 'Mã voucher', dataIndex: 'code', key: 'code' },
@@ -66,6 +84,16 @@ const Voucher = () => {
   return (
     <div>
       <h2>Quản lý Voucher</h2>
+      <AdminSearchSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        sortOptions={sortOptions}
+        onApply={fetchVoucherData}
+      />
       <Button type="primary" onClick={openModal} style={{ marginBottom: 16 }}>Tạo Voucher</Button>
       {error && <Alert type="error" message={error} />}
       <Spin spinning={loading}>

@@ -8,7 +8,6 @@ import PartnerLayout from "../layouts/PartnerLayout/PartnerLayout";
 import HomePage from "../pages/Home/HomePage/HomePage";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import PartnerDashboard from "../pages/Partner/Dashboard/PartnerDashboard";
-import Users from "../pages/Admin/Users/Users";
 import Products from "../pages/Admin/Products/Products";
 import Orders from "../pages/Admin/Orders/Orders";
 import Settings from "../pages/Admin/Settings/Settings";
@@ -104,9 +103,9 @@ export default function useRouterElements() {
     {
       path: PATH.ADMIN,
       element: (
-        //  <ProtectedRoute allowedRoles={["admin"]}>
+         <ProtectedRoute allowedRoles={["admin"]}>
         <AdminLayout />
-        // </ProtectedRoute>
+        </ProtectedRoute>
       ),
       children: [
         {
@@ -143,9 +142,9 @@ export default function useRouterElements() {
     {
       path: PATH.PARTNER,
       element: (
-        // <ProtectedRoute allowedRoles={["PARTNER"]}>
+         <ProtectedRoute allowedRoles={["PARTNER"]}>
         <PartnerLayout />
-        // </ProtectedRoute>
+        </ProtectedRoute> 
       ),
       children: [
         {

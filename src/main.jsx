@@ -7,6 +7,7 @@ import { store } from "./store/index.js";
 import { ThemeProvider } from "./Context/ThemeContext.jsx";
 import { useContext } from "react";
 import { ThemeContext } from "./Context/ThemeContext.jsx";
+import { NotificationProvider } from "./Context/NotificationContext";
 
 // Wrapper to add data-theme attribute
 function RootApp() {
@@ -22,9 +23,11 @@ function RootApp() {
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <ThemeProvider>
-      <BrowserRouter>
-        <RootApp />
-      </BrowserRouter>
+      <NotificationProvider>
+        <BrowserRouter>
+          <RootApp />
+        </BrowserRouter>
+      </NotificationProvider>
     </ThemeProvider>
   </Provider>
 );

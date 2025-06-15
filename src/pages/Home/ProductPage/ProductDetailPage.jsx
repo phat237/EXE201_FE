@@ -37,6 +37,7 @@ import {
 } from "@mui/icons-material";
 import "./ProductDetailPage.css";
 import { useParams } from "react-router-dom";
+import { useNotification } from "../../../Context/NotificationContext";
 
 // Hardcode dữ liệu bổ sung
 const hardcodedProductData = {
@@ -70,8 +71,7 @@ export default function ProductDetailPage() {
   const reviewsSectionRef = useRef(null);
 
   const dispatch = useDispatch();
-
-
+  const { addNotification } = useNotification();
 
   const {
     product,
@@ -303,16 +303,14 @@ export default function ProductDetailPage() {
           ...prev,
           [reviewId]: { ...prev[reviewId], helpful: newStatus },
         }));
-        setSnackbarMessage(
-          newStatus ? "Đã đánh dấu hữu ích!" : "Đã hủy đánh dấu hữu ích!"
+        addNotification(
+          newStatus
+            ? "Bạn vừa đánh dấu một đánh giá là hữu ích!"
+            : "Bạn vừa hủy đánh dấu hữu ích cho một đánh giá."
         );
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
       })
       .catch((err) => {
-        setSnackbarMessage(`Lỗi: ${err.message || err}`);
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
+        addNotification(`Lỗi khi đánh dấu hữu ích: ${err.message || err}`);
       });
   };
 
@@ -531,12 +529,8 @@ export default function ProductDetailPage() {
                                 ).toLocaleDateString()}
                               </Typography>
                             </Box>
-                            <Typography
-                              variant="subtitle2"
-                              className="product-review-title"
-                            >
-                              {review.title || "Không có tiêu đề"}
-                            </Typography>
+                          
+                          
                           </Box>
                           <Avatar className="product-review-avatar">
                             <Typography variant="caption">
@@ -549,6 +543,7 @@ export default function ProductDetailPage() {
                         <Typography
                           variant="body2"
                           className="product-review-text"
+                          sx={{ color: '#222', fontWeight: 500, fontSize: 15 }}
                         >
                           {review.content}
                         </Typography>
@@ -556,6 +551,7 @@ export default function ProductDetailPage() {
                           <Typography
                             variant="caption"
                             className="text-gray-600 italic mt-2"
+                            sx={{ color: '#777', fontSize: 13, fontStyle: 'italic' }}
                           >
                             Nhận xét AI: {review.aicomment}
                           </Typography>
