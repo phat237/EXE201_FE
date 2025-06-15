@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import { HomeWorkOutlined } from '@mui/icons-material';
 
 const { Header, Sider, Content } = Layout;
 
@@ -30,6 +31,11 @@ const AdminLayout = () => {
       key: '/',
       icon: <HomeOutlined />,
       label: 'Trang chủ',
+    },
+    {
+      key: '/admin/dashboard',
+      icon: <HomeWorkOutlined />,
+      label: 'Dashboard',
     },
     {
       key: '/admin/voucher',

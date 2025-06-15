@@ -113,7 +113,7 @@ export default function useRouterElements() {
           element: <Dashboard />,
         },
         {
-          path: "dashboard",
+          path: PATH.DASHBOARD,
           element: <Dashboard />,
         },
         {
