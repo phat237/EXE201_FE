@@ -31,6 +31,7 @@ export const PATH = {
   PARTNER_REPORTS: "/partner/reports",
   PARTNER_SETTINGS: "/partner/settings",
   PARTNER_DEPOSIT: "/partner/deposit",
+  PARTNER_AVAILABLE_PACKAGES: "/partner/available-packages",
   PARTNER_AVAILABLE_PACKAGES:"/partner/available-packages"
 
 };

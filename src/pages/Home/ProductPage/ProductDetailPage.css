@@ -301,17 +301,19 @@
 }
 
 .product-review-card {
-  border: none !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08) !important;
   transition: box-shadow 0.3s !important;
 }
 
 .product-review-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .product-review-content {
-  padding: 24px !important;
+  padding: 20px !important;
 }
 
 .product-review-header {

@@ -319,6 +319,14 @@ export default function PartnerRegister() {
                   {isLoading ? "Đang đăng ký..." : "Đăng Ký Đối Tác"}
                 </Button>
               </form>
+              <Box mt={2} textAlign="center">
+                <Typography variant="body2">
+                  Bạn là người dùng thông thường?{' '}
+                  <Link to="/auth/register" className="auth-link">
+                    Đăng ký user tại đây
+                  </Link>
+                </Typography>
+              </Box>
             </CardContent>
           </Card>
         </Box>

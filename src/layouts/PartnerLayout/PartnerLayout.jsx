@@ -12,6 +12,8 @@ import {
   MoneyCollectOutlined,
   ShoppingOutlined,
 } from '@ant-design/icons';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/slices/authSlice';
 
 
 const { Header, Sider, Content } = Layout;
@@ -19,6 +21,12 @@ const { Header, Sider, Content } = Layout;
 const PartnerLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/'); // Chuyển về trang home
+  };
 
   const menuItems = [
     {
@@ -76,7 +84,7 @@ const PartnerLayout = () => {
           <Button
             type="text"
             icon={<LogoutOutlined />}
-            onClick={() => navigate('/auth/login')}
+            onClick={handleLogout}
           >
             Đăng xuất
           </Button>

@@ -10,12 +10,20 @@ import {
   StarOutlined,
   GiftOutlined,
 } from '@ant-design/icons';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/slices/authSlice';
 
 const { Header, Sider, Content } = Layout;
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/'); // Chuyển về trang home
+  };
 
   const menuItems = [
     {
@@ -82,7 +90,7 @@ const AdminLayout = () => {
           <Button
             type="text"
             icon={<LogoutOutlined />}
-            onClick={() => navigate('/auth/login')}
+            onClick={handleLogout}
           >
             Logout
           </Button>

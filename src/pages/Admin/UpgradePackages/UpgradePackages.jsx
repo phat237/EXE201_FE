@@ -12,6 +12,7 @@ import {
   fetchPremiumPackageById,
   resetSelectedPackage
 } from '../../../store/slices/preniumPackageSlice';
+import AdminSearchSort from '../../../components/Admin/AdminSearchSort';
 
 const UpgradePackages = () => {
   const dispatch = useDispatch();
@@ -22,9 +23,25 @@ const UpgradePackages = () => {
   const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt'); // Hoặc 'name', 'price', 'duration'
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  const sortOptions = [
+    { value: 'name', label: 'Tên gói' },
+    { value: 'price', label: 'Giá' },
+    { value: 'duration', label: 'Thời hạn' },
+    { value: 'createdAt', label: 'Ngày tạo' },
+  ];
+
+  const fetchPackageData = () => {
+    // Giả sử fetchPremiumPackages có thể nhận các tham số search, sortBy, sortOrder
+    dispatch(fetchPremiumPackages({ search: searchTerm, sortBy, sortOrder }));
+  };
+
   useEffect(() => {
-    dispatch(fetchPremiumPackages());
-  }, [dispatch]);
+    fetchPackageData();
+  }, [dispatch, searchTerm, sortBy, sortOrder]);
 
   useEffect(() => {
     if (createSuccess) {
@@ -32,16 +49,19 @@ const UpgradePackages = () => {
       dispatch(resetCreateSuccess());
       setModalOpen(false);
       form.resetFields();
+      fetchPackageData(); // Refresh data
     }
     if (updateSuccess) {
       message.success('Cập nhật gói thành công!');
       dispatch(resetUpdateSuccess());
       setModalOpen(false);
       form.resetFields();
+      fetchPackageData(); // Refresh data
     }
     if (deleteSuccess) {
       message.success('Xóa gói thành công!');
       dispatch(resetDeleteSuccess());
+      fetchPackageData(); // Refresh data
     }
     if (error) {
       message.error(error);
@@ -151,6 +171,16 @@ const UpgradePackages = () => {
   return (
     <div>
       <h2>Gói nâng cấp</h2>
+      <AdminSearchSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        sortOptions={sortOptions}
+        onApply={fetchPackageData}
+      />
       <div style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={openAddModal}>Thêm gói mới</Button>
       </div>

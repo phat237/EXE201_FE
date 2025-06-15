@@ -19,6 +19,7 @@ import {
   createProductApi,
   fetchAllProductsPaginated,
 } from "../../../store/slices/productSlice";
+import AdminSearchSort from "../../../components/Admin/AdminSearchSort";
 
 const validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -55,19 +56,17 @@ const baseColumns = [
   { title: "ID", dataIndex: "key", key: "key", width: 60 },
   { title: "Tên sản phẩm", dataIndex: "name", key: "name" },
   {
-    title: "Giá",
-    dataIndex: "price",
-    key: "price",
+    title: "Tên thương hiệu",
+    dataIndex: "brandName",
+    key: "brandName",
+  },
+  {
+    title: "Thời gian tạo",
+    dataIndex: "createdAt",
+    key: "createdAt",
+    render: (date) => new Date(date).toLocaleDateString(),
   },
   { title: "Danh mục", dataIndex: "category", key: "category" },
-  {
-    title: "Trạng thái",
-    dataIndex: "status",
-    key: "status",
-    render: (status) => (
-      <Tag color={status === "Còn hàng" ? "green" : "volcano"}>{status}</Tag>
-    ),
-  },
 ];
 
 const imageColumn = {
@@ -80,6 +79,10 @@ const imageColumn = {
 const Products = () => {
   const [showImage, setShowImage] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+
   const dispatch = useDispatch();
   const { allProducts, isLoading, error } = useSelector((state) => state.product);
 
@@ -95,10 +98,26 @@ const Products = () => {
 
   const columns = showImage ? [...baseColumns, imageColumn] : baseColumns;
 
-  // Gọi fetchAllProductsPaginated khi component được mount
+  const sortOptions = [
+    { value: "name", label: "Tên sản phẩm" },
+    { value: "brandName", label: "Tên thương hiệu" },
+    { value: "createdAt", label: "Thời gian tạo" },
+    { value: "category", label: "Danh mục" },
+  ];
+
+  const fetchProducts = () => {
+    dispatch(fetchAllProductsPaginated({
+      page: 0,
+      size: 1000,
+      search: searchTerm,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+    }));
+  };
+
   useEffect(() => {
-    dispatch(fetchAllProductsPaginated({ page: 0, size: 1000 })); // Lấy tất cả sản phẩm
-  }, [dispatch]);
+    fetchProducts();
+  }, [dispatch, searchTerm, sortBy, sortOrder]);
 
   useEffect(() => {
     if (error) {
@@ -120,27 +139,34 @@ const Products = () => {
       message.success("Thêm sản phẩm thành công!");
       setIsModalOpen(false);
       reset();
-      // Gọi lại fetchAllProductsPaginated để cập nhật bảng
-      dispatch(fetchAllProductsPaginated({ page: 0, size: 1000 }));
+      fetchProducts();
     } catch (err) {
       message.error(err.message || "Thêm sản phẩm thất bại!");
       console.error("Submit error:", err);
     }
   };
 
-  // Chuẩn bị dữ liệu cho bảng
   const dataSource = allProducts.map((item, index) => ({
     key: item.id || index,
     name: item.name,
-    price: item.price,
+    brandName: item.brandName,
+    createdAt: item.createdAt,
     category: item.category,
-    status: item.status || "Còn hàng",
     image: item.image || item.sourceUrl,
   }));
 
   return (
     <div>
       <h2>Products Management Page</h2>
+      <AdminSearchSort
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        sortBy={sortBy}
+        onSortByChange={setSortBy}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        sortOptions={sortOptions}
+      />
       <div
         style={{
           marginBottom: 16,
@@ -168,7 +194,7 @@ const Products = () => {
       <Table
         columns={columns}
         dataSource={dataSource}
-        pagination={false} // Tắt phân trang
+        pagination={false}
         loading={isLoading}
       />
 
