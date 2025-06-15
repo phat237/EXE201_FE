@@ -61,13 +61,10 @@ export const markReviewHelpful = createAsyncThunk(
   "review/markReviewHelpful",
   async ({ reviewId, status }, { rejectWithValue }) => {
     try {
-      // Gửi yêu cầu POST với reviewId trong path và status qua query parameter
-      // Cần kiểm tra lại API endpoint chính xác và cách truyền status (query/body).
-      // Giả định endpoint là POST /reviews/{reviewId}/helpful và status là query param.
       const response = await fetcher.post(
-                `https://trustreviews.onrender.com/reviews/helpful/${reviewId}/{status}?status=${status}`// Adjusted URL slightly based on common patterns
+                `/reviews/helpful/${reviewId}/{status}?status=${status}`
       );
-      // Giả định API trả về object review đã được cập nhật trạng thái helpful
+      console.log(response.data)
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -201,25 +198,20 @@ export const reviewSlice = createSlice({
       })
       // Thêm xử lý cho markReviewHelpful
       .addCase(markReviewHelpful.pending, (state) => {
-        //state.isLoading = true; // Optional: show loading specifically for this action
-        state.error = null;
+        state.isLoading = true;
       })
-      .addCase(markReviewHelpful.fulfilled, (state, { payload }) => {
-        //state.isLoading = false; // Optional
-        // Cập nhật review trong danh sách reviews nếu payload hợp lệ và có id trùng khớp
-        if (payload && typeof payload === 'object' && payload.id) {
-            state.reviews = state.reviews.map(review =>
-                review.id === payload.id ? payload : review // Cập nhật review với dữ liệu mới từ payload
-            );
-            console.log("Review updated after helpful click:", payload);
-        } else {
-             console.warn("Mark review helpful fulfilled but received invalid payload or missing ID:", payload);
+      .addCase(markReviewHelpful.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Cập nhật helpfulCount của review tương ứng
+        const { reviewId, helpfulCount } = action.payload;
+        const review = state.reviews.find((r) => r.id === reviewId);
+        if (review) {
+          review.helpfulCount = helpfulCount;
         }
       })
-      .addCase(markReviewHelpful.rejected, (state, { payload }) => {
-        //state.isLoading = false; // Optional
-        state.error = payload;
-        console.error("Failed to mark review helpful:", payload);
+      .addCase(markReviewHelpful.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || "Lỗi khi đánh dấu hữu ích/báo cáo";
       })
       // Thêm xử lý cho updateProductReview
       .addCase(updateProductReview.pending, (state) => {
