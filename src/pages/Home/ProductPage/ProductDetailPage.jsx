@@ -41,6 +41,7 @@ import "./ProductDetailPage.css";
 import { useParams } from "react-router-dom";
 import { useNotification } from "../../../Context/NotificationContext";
 import { toast } from "react-hot-toast";
+import LoadingDetail from "../../../components/Loading/LoadingDetail";
 
 // Hardcode dữ liệu bổ sung
 const hardcodedProductData = {
@@ -99,7 +100,7 @@ export default function ProductDetailPage() {
       navigate("/auth/login");
       return;
     }
-    
+
     if (productId) {
       dispatch(fetchProductApiById({ id: productId }))
         .unwrap()
@@ -367,7 +368,12 @@ export default function ProductDetailPage() {
   const totalPages = Math.ceil(reviews.length / reviewsPerPage);
 
   if (productLoading || reviewsLoading) {
-    return <Typography>Đang tải chi tiết sản phẩm...</Typography>;
+    return (
+      <Typography>
+        {" "}
+        <LoadingDetail />
+      </Typography>
+    );
   }
 
   if (productError || reviewsError) {
@@ -554,8 +560,6 @@ export default function ProductDetailPage() {
                                   ).toLocaleDateString()}
                                 </Typography>
                               </Box>
-                            
-                            
                             </Box>
                             <Avatar className="product-review-avatar">
                               <Typography variant="caption">
@@ -568,7 +572,11 @@ export default function ProductDetailPage() {
                           <Typography
                             variant="body2"
                             className="product-review-text"
-                            sx={{ color: '#222', fontWeight: 500, fontSize: 15 }}
+                            sx={{
+                              color: "#222",
+                              fontWeight: 500,
+                              fontSize: 15,
+                            }}
                           >
                             {review.content}
                           </Typography>
@@ -576,7 +584,11 @@ export default function ProductDetailPage() {
                             <Typography
                               variant="caption"
                               className="text-gray-600 italic mt-2"
-                              sx={{ color: '#777', fontSize: 13, fontStyle: 'italic' }}
+                              sx={{
+                                color: "#777",
+                                fontSize: 13,
+                                fontStyle: "italic",
+                              }}
                             >
                               Nhận xét AI: {review.aicomment}
                             </Typography>
@@ -622,7 +634,9 @@ export default function ProductDetailPage() {
                               <Button
                                 variant="text"
                                 className="product-review-report"
-                                startIcon={<FlagIcon className="product-icon" />}
+                                startIcon={
+                                  <FlagIcon className="product-icon" />
+                                }
                                 onClick={() =>
                                   handleReport(
                                     review.id,
@@ -642,34 +656,41 @@ export default function ProductDetailPage() {
                         </CardContent>
                       </Card>
                     ))}
-                    <Box className="product-pagination" sx={{ display: 'flex', justifyContent: 'center', mt: 2, flexDirection: 'row' }}>
-                      <Pagination 
+                    <Box
+                      className="product-pagination"
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 2,
+                        flexDirection: "row",
+                      }}
+                    >
+                      <Pagination
                         count={totalPages}
                         page={currentPage + 1}
                         onChange={handlePageChange}
                         color="primary"
                         sx={{
-                          '& .MuiPaginationItem-root': {
-                            color: '#6517ce',
+                          "& .MuiPaginationItem-root": {
+                            color: "#6517ce",
                           },
-                          '& .Mui-selected': {
-                            backgroundColor: '#6517ce !important',
-                            color: 'white !important',
+                          "& .Mui-selected": {
+                            backgroundColor: "#6517ce !important",
+                            color: "white !important",
                           },
-                          '& .MuiPagination-ul': {
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: '8px',
-                            listStyle: 'none',
+                          "& .MuiPagination-ul": {
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: "8px",
+                            listStyle: "none",
                             padding: 0,
                             margin: 0,
-                          }
+                          },
                         }}
                       />
                     </Box>
                   </>
-                  
                 ) : (
                   <Typography variant="body1" className="no-reviews-message">
                     Chưa có đánh giá nào cho sản phẩm này.
