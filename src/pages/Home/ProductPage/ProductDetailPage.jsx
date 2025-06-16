@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   fetchProductApiById,
   fetchAllProductsPaginated,
@@ -26,6 +27,7 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Pagination,
 } from "@mui/material";
 import {
   Star as StarIcon,
@@ -38,6 +40,7 @@ import {
 import "./ProductDetailPage.css";
 import { useParams } from "react-router-dom";
 import { useNotification } from "../../../Context/NotificationContext";
+import { toast } from "react-hot-toast";
 
 // Hardcode dữ liệu bổ sung
 const hardcodedProductData = {
@@ -57,6 +60,7 @@ const hardcodedProductData = {
 
 export default function ProductDetailPage() {
   const { id: productId } = useParams();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
@@ -68,10 +72,13 @@ export default function ProductDetailPage() {
   const [helpfulStatus, setHelpfulStatus] = useState({});
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(0);
+  const reviewsPerPage = 3;
   const reviewsSectionRef = useRef(null);
 
   const dispatch = useDispatch();
   const { addNotification } = useNotification();
+  const { currentUser } = useSelector((state) => state.auth);
 
   const {
     product,
@@ -87,6 +94,12 @@ export default function ProductDetailPage() {
   } = useSelector((state) => state.review);
 
   useEffect(() => {
+    if (!currentUser) {
+      toast.error("Vui lòng đăng nhập để xem chi tiết sản phẩm!");
+      navigate("/auth/login");
+      return;
+    }
+    
     if (productId) {
       dispatch(fetchProductApiById({ id: productId }))
         .unwrap()
@@ -106,7 +119,7 @@ export default function ProductDetailPage() {
           console.error("Reviews API error:", err);
         });
     }
-  }, [dispatch, productId, page, size]);
+  }, [dispatch, productId, page, size, currentUser, navigate]);
 
   useEffect(() => {
     if (product?.category) {
@@ -342,6 +355,17 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Thêm hàm xử lý phân trang
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage - 1);
+  };
+
+  // Tính toán reviews cần hiển thị cho trang hiện tại
+  const indexOfLastReview = (currentPage + 1) * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+
   if (productLoading || reviewsLoading) {
     return <Typography>Đang tải chi tiết sản phẩm...</Typography>;
   }
@@ -503,120 +527,149 @@ export default function ProductDetailPage() {
                 </Card>
               </Box>
               <Box className="product-reviews-list">
-                {reviews && reviews.length > 0 ? (
-                  reviews.map((review) => (
-                    <Card key={review.id} className="product-review-card">
-                      <CardContent className="product-review-content">
-                        <Box className="product-review-header">
-                          <Box>
-                            <Box className="product-review-rating">
-                              <Rating
-                                value={review.rating}
-                                readOnly
-                                icon={
-                                  <StarIcon className="product-star-icon" />
-                                }
-                                emptyIcon={
-                                  <StarIcon className="product-star-icon-empty" />
-                                }
-                              />
-                              <Typography
-                                variant="caption"
-                                className="product-review-date"
-                              >
-                                {new Date(
-                                  review.createdAt
-                                ).toLocaleDateString()}
-                              </Typography>
-                            </Box>
-                          
-                          
-                          </Box>
-                          <Avatar className="product-review-avatar">
-                            <Typography variant="caption">
-                              {review.userName
-                                ? review.userName.charAt(0).toUpperCase()
-                                : "U"}
-                            </Typography>
-                          </Avatar>
-                        </Box>
-                        <Typography
-                          variant="body2"
-                          className="product-review-text"
-                          sx={{ color: '#222', fontWeight: 500, fontSize: 15 }}
-                        >
-                          {review.content}
-                        </Typography>
-                        {review.aicomment && (
-                          <Typography
-                            variant="caption"
-                            className="text-gray-600 italic mt-2"
-                            sx={{ color: '#777', fontSize: 13, fontStyle: 'italic' }}
-                          >
-                            Nhận xét AI: {review.aicomment}
-                          </Typography>
-                        )}
-                        <Box className="product-review-footer">
-                          <Box className="product-review-footer-left">
-                            {review.verifiedByAI && (
-                              <Box className="product-review-verified">
-                                <VerifiedIcon className="product-icon" />
-                                <Typography variant="caption">
-                                  Đã xác minh bởi AI
+                {currentReviews && currentReviews.length > 0 ? (
+                  <>
+                    {currentReviews.map((review) => (
+                      <Card key={review.id} className="product-review-card">
+                        <CardContent className="product-review-content">
+                          <Box className="product-review-header">
+                            <Box>
+                              <Box className="product-review-rating">
+                                <Rating
+                                  value={review.rating}
+                                  readOnly
+                                  icon={
+                                    <StarIcon className="product-star-icon" />
+                                  }
+                                  emptyIcon={
+                                    <StarIcon className="product-star-icon-empty" />
+                                  }
+                                />
+                                <Typography
+                                  variant="caption"
+                                  className="product-review-date"
+                                >
+                                  {new Date(
+                                    review.createdAt
+                                  ).toLocaleDateString()}
                                 </Typography>
                               </Box>
-                            )}
+                            
+                            
+                            </Box>
+                            <Avatar className="product-review-avatar">
+                              <Typography variant="caption">
+                                {review.userName
+                                  ? review.userName.charAt(0).toUpperCase()
+                                  : "U"}
+                              </Typography>
+                            </Avatar>
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            className="product-review-text"
+                            sx={{ color: '#222', fontWeight: 500, fontSize: 15 }}
+                          >
+                            {review.content}
+                          </Typography>
+                          {review.aicomment && (
                             <Typography
                               variant="caption"
-                              className="product-review-user"
+                              className="text-gray-600 italic mt-2"
+                              sx={{ color: '#777', fontSize: 13, fontStyle: 'italic' }}
                             >
-                              {review.userName || "Người dùng ẩn danh"}
+                              Nhận xét AI: {review.aicomment}
                             </Typography>
+                          )}
+                          <Box className="product-review-footer">
+                            <Box className="product-review-footer-left">
+                              {review.verifiedByAI && (
+                                <Box className="product-review-verified">
+                                  <VerifiedIcon className="product-icon" />
+                                  <Typography variant="caption">
+                                    Đã xác minh bởi AI
+                                  </Typography>
+                                </Box>
+                              )}
+                              <Typography
+                                variant="caption"
+                                className="product-review-user"
+                              >
+                                {review.userName || "Người dùng ẩn danh"}
+                              </Typography>
+                            </Box>
+                            <Box className="product-review-footer-right">
+                              <Button
+                                variant="text"
+                                className="product-review-helpful"
+                                startIcon={
+                                  <ThumbUpIcon className="product-icon" />
+                                }
+                                onClick={() =>
+                                  handleMarkHelpful(
+                                    review.id,
+                                    helpfulStatus[review.id]?.helpful || false
+                                  )
+                                }
+                                style={{
+                                  color: helpfulStatus[review.id]?.helpful
+                                    ? "#6517ce"
+                                    : "inherit",
+                                }}
+                              >
+                                {review.helpfulCount || 0} hữu ích
+                              </Button>
+                              <Button
+                                variant="text"
+                                className="product-review-report"
+                                startIcon={<FlagIcon className="product-icon" />}
+                                onClick={() =>
+                                  handleReport(
+                                    review.id,
+                                    helpfulStatus[review.id]?.reported || false
+                                  )
+                                }
+                                style={{
+                                  color: helpfulStatus[review.id]?.reported
+                                    ? "#6517ce"
+                                    : "inherit",
+                                }}
+                              >
+                                Báo cáo
+                              </Button>
+                            </Box>
                           </Box>
-                          <Box className="product-review-footer-right">
-                            <Button
-                              variant="text"
-                              className="product-review-helpful"
-                              startIcon={
-                                <ThumbUpIcon className="product-icon" />
-                              }
-                              onClick={() =>
-                                handleMarkHelpful(
-                                  review.id,
-                                  helpfulStatus[review.id]?.helpful || false
-                                )
-                              }
-                              style={{
-                                color: helpfulStatus[review.id]?.helpful
-                                  ? "#6517ce"
-                                  : "inherit",
-                              }}
-                            >
-                              {review.helpfulCount || 0} hữu ích
-                            </Button>
-                            <Button
-                              variant="text"
-                              className="product-review-report"
-                              startIcon={<FlagIcon className="product-icon" />}
-                              onClick={() =>
-                                handleReport(
-                                  review.id,
-                                  helpfulStatus[review.id]?.reported || false
-                                )
-                              }
-                              style={{
-                                color: helpfulStatus[review.id]?.reported
-                                  ? "#6517ce"
-                                  : "inherit",
-                              }}
-                            >
-                              Báo cáo
-                            </Button>
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  ))
+                        </CardContent>
+                      </Card>
+                    ))}
+                    <Box className="product-pagination" sx={{ display: 'flex', justifyContent: 'center', mt: 2, flexDirection: 'row' }}>
+                      <Pagination 
+                        count={totalPages}
+                        page={currentPage + 1}
+                        onChange={handlePageChange}
+                        color="primary"
+                        sx={{
+                          '& .MuiPaginationItem-root': {
+                            color: '#6517ce',
+                          },
+                          '& .Mui-selected': {
+                            backgroundColor: '#6517ce !important',
+                            color: 'white !important',
+                          },
+                          '& .MuiPagination-ul': {
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: '8px',
+                            listStyle: 'none',
+                            padding: 0,
+                            margin: 0,
+                          }
+                        }}
+                      />
+                    </Box>
+                  </>
+                  
                 ) : (
                   <Typography variant="body1" className="no-reviews-message">
                     Chưa có đánh giá nào cho sản phẩm này.
