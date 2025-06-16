@@ -24,6 +24,7 @@ import {
 import "./ProductPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
+import LoadingProduct from "../../../components/Loading/LoadingProduct";
 
 // Categories from the provided list
 const categories = [
@@ -348,7 +349,9 @@ export default function ProductsPage() {
           <Box className="products-tabs-content">
             <Box className="products-tab-panel">
               {isLoading ? (
-                <Typography>Đang tải sản phẩm...</Typography>
+                <Typography>
+                  <LoadingProduct />
+                </Typography>
               ) : error ? (
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {error}

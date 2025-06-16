@@ -15,6 +15,7 @@ import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import "./HomePage.css";
 import { Link } from "react-router-dom";
 import image1 from "../../../assets/Lovepik_com-450122121-Person giving online reviews .png";
+import Loading from "../../../components/Loading/Loading";
 
 export default function HomePage() {
   const dispatch = useDispatch();
@@ -173,7 +174,9 @@ export default function HomePage() {
             </Button>
           </Box>
           {isLoading ? (
-            <Typography>Đang tải sản phẩm mới nhất...</Typography>
+            <Typography sx={{ marginLeft: "50%" }}>
+              <Loading />
+            </Typography>
           ) : error ? (
             <Typography color="error">
               Lỗi khi tải sản phẩm: {error?.message || error}
@@ -228,7 +231,9 @@ export default function HomePage() {
             </Button>
           </Box>
           {isLoading ? (
-            <Typography>Đang tải sản phẩm được đánh giá cao...</Typography>
+            <Typography sx={{ marginLeft: "50%" }}>
+              <Loading />
+            </Typography>
           ) : error ? (
             <Typography color="error">
               Lỗi khi tải sản phẩm: {error?.message || error}
