@@ -92,6 +92,7 @@ export default function ProductDetailPage() {
     pagination,
     isLoading: reviewsLoading,
     error: reviewsError,
+    loadingStates,
   } = useSelector((state) => state.review);
 
   useEffect(() => {
@@ -140,6 +141,20 @@ export default function ProductDetailPage() {
         });
     }
   }, [dispatch, product?.category]);
+
+  useEffect(() => {
+    if (reviews && reviews.length > 0) {
+      setHelpfulStatus(
+        reviews.reduce((acc, review) => {
+          acc[review.id] = {
+            helpful: !!review.helpful,
+            reported: !!review.reported,
+          };
+          return acc;
+        }, {})
+      );
+    }
+  }, [reviews]);
 
   const relatedProducts =
     allProducts
@@ -297,10 +312,12 @@ export default function ProductDetailPage() {
         handleCloseReviewDialog();
         dispatch(fetchReviewsByIdPaginated({ id: productId, page: 0, size }));
       })
-      .catch((err) => {
-        setSnackbarMessage(`Lỗi khi gửi đánh giá: ${err.message || err}`);
+      .catch((error) => {
+        console.log("Error submitting review:", error);
+        setSnackbarMessage(error || "Có lỗi xảy ra khi gửi đánh giá");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
+        handleCloseReviewDialog();
       });
   };
 
@@ -376,7 +393,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (productError || reviewsError) {
+  if (!product && (productError || reviewsError)) {
     return (
       <Typography color="error">
         Lỗi khi tải sản phẩm:
@@ -623,13 +640,14 @@ export default function ProductDetailPage() {
                                     helpfulStatus[review.id]?.helpful || false
                                   )
                                 }
+                                disabled={loadingStates.helpfulReviews[review.id]}
                                 style={{
-                                  color: helpfulStatus[review.id]?.helpful
-                                    ? "#6517ce"
-                                    : "inherit",
+                                  color: helpfulStatus[review.id]?.helpful ? "red" : "inherit",
                                 }}
                               >
-                                {review.helpfulCount || 0} hữu ích
+                                {loadingStates.helpfulReviews[review.id] 
+                                  ? "Đang xử lý..." 
+                                  : `${review.helpfulCount || 0} hữu ích`}
                               </Button>
                               <Button
                                 variant="text"
@@ -643,13 +661,12 @@ export default function ProductDetailPage() {
                                     helpfulStatus[review.id]?.reported || false
                                   )
                                 }
+                                disabled={loadingStates.helpfulReviews[review.id]}
                                 style={{
-                                  color: helpfulStatus[review.id]?.reported
-                                    ? "#6517ce"
-                                    : "inherit",
+                                  color: helpfulStatus[review.id]?.reported ? "red" : "inherit",
                                 }}
                               >
-                                Báo cáo
+                                {loadingStates.helpfulReviews[review.id] ? "Đang xử lý..." : "Báo cáo"}
                               </Button>
                             </Box>
                           </Box>
@@ -769,6 +786,7 @@ export default function ProductDetailPage() {
                   onClick={handleCloseReviewDialog}
                   variant="outlined"
                   className="text-gray-600 border-gray-300 hover:bg-gray-100"
+                  disabled={loadingStates.createReview}
                 >
                   Hủy
                 </Button>
@@ -776,10 +794,10 @@ export default function ProductDetailPage() {
                   onClick={handleSubmitReview}
                   variant="contained"
                   className="bg-blue-600 text-white hover:bg-blue-700"
-                  disabled={!reviewRating || !reviewContent}
+                  disabled={!reviewRating || !reviewContent || loadingStates.createReview}
                   style={{ backgroundColor: "#6517ce" }}
                 >
-                  Gửi Đánh Giá
+                  {loadingStates.createReview ? "Đang gửi..." : "Gửi Đánh Giá"}
                 </Button>
               </DialogActions>
             </Dialog>
@@ -950,14 +968,18 @@ export default function ProductDetailPage() {
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        sx={{ zIndex: 9999 }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbarSeverity}
           sx={{
             width: "100%",
-            backgroundColor:
-              snackbarSeverity === "success" ? "#6517ce" : undefined,
+            backgroundColor: snackbarSeverity === "success" ? "#6517ce" : undefined,
+            '& .MuiAlert-message': {
+              fontSize: '1rem',
+              fontWeight: 500
+            }
           }}
         >
           {snackbarMessage}
