@@ -14,7 +14,7 @@ function RootApp() {
   const { themeMode } = useContext(ThemeContext);
   return (
     <div data-theme={themeMode}>
-      <Toaster />
+      <Toaster  />
       <App />
     </div>
   );

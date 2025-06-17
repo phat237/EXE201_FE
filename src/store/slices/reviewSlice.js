@@ -44,13 +44,13 @@ export const createProductReview = createAsyncThunk(
     try {
       const response = await fetcher.post(
         `https://trustreviews.onrender.com/reviews/${productId}`,
-        reviewData // Dữ liệu review cần gửi lên
+        reviewData
       );
-      // Giả định API trả về object review vừa được tạo
       return response.data;
     } catch (error) {
+      // Trả về message lỗi từ server
       return rejectWithValue(
-        error.response ? error.response.data : error.message
+        error.response?.data || error.message || "Có lỗi xảy ra khi gửi đánh giá"
       );
     }
   }
@@ -136,6 +136,11 @@ export const reviewSlice = createSlice({
     pagination: null, // Thông tin phân trang nếu API trả về
     isLoading: false,
     error: null,
+    loadingStates: {
+      createReview: false,
+      helpfulReviews: {}, // Map lưu trạng thái loading của từng review khi đánh dấu hữu ích
+      reportReviews: {}, // Map lưu trạng thái loading của từng review khi báo cáo
+    }
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -175,42 +180,39 @@ export const reviewSlice = createSlice({
       })
       // Thêm xử lý cho createProductReview
       .addCase(createProductReview.pending, (state) => {
-        state.isLoading = true;
+        state.loadingStates.createReview = true;
         state.error = null;
       })
       .addCase(createProductReview.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
+        state.loadingStates.createReview = false;
         state.error = null;
-        // Thêm review vừa tạo vào danh sách reviews nếu payload hợp lệ
         if (payload && typeof payload === 'object' && Object.keys(payload).length > 0) {
-            // Có thể bạn muốn thêm review này vào state.reviews hoặc refresh lại danh sách reviews chính
-            // Tùy thuộc vào luồng dữ liệu mong muốn. Ví dụ: thêm vào cuối danh sách reviews hiện tại
-            // state.reviews.push(payload); // hoặc state.reviews = [...state.reviews, payload];
-            // Hiện tại, chỉ cập nhật trạng thái loading và error.
             console.log("Review created successfully:", payload);
         } else {
              console.warn("Create product review fulfilled but received invalid payload:", payload);
         }
       })
       .addCase(createProductReview.rejected, (state, { payload }) => {
-        state.isLoading = false;
+        state.loadingStates.createReview = false;
         state.error = payload;
       })
       // Thêm xử lý cho markReviewHelpful
-      .addCase(markReviewHelpful.pending, (state) => {
-        state.isLoading = true;
+      .addCase(markReviewHelpful.pending, (state, action) => {
+        const { reviewId } = action.meta.arg;
+        state.loadingStates.helpfulReviews[reviewId] = true;
       })
       .addCase(markReviewHelpful.fulfilled, (state, action) => {
-        state.isLoading = false;
-        // Cập nhật helpfulCount của review tương ứng
-        const { reviewId, helpfulCount } = action.payload;
-        const review = state.reviews.find((r) => r.id === reviewId);
+        const { reviewId } = action.meta.arg;
+        state.loadingStates.helpfulReviews[reviewId] = false;
+        const { reviewId: id, helpfulCount } = action.payload;
+        const review = state.reviews.find((r) => r.id === id);
         if (review) {
           review.helpfulCount = helpfulCount;
         }
       })
       .addCase(markReviewHelpful.rejected, (state, action) => {
-        state.isLoading = false;
+        const { reviewId } = action.meta.arg;
+        state.loadingStates.helpfulReviews[reviewId] = false;
         state.error = action.payload || "Lỗi khi đánh dấu hữu ích/báo cáo";
       })
       // Thêm xử lý cho updateProductReview
