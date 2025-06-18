@@ -33,6 +33,7 @@ export default function BusinessPage() {
   const userRole = useSelector(selectUserRole);
   const [openModal, setOpenModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,6 +64,20 @@ export default function BusinessPage() {
       // Thêm logic nâng cấp gói nếu cần
     }
   };
+
+  // Sắp xếp để gói giá cao nhất ở giữa
+  let sortedPackages = [];
+  if (premiumPackages && premiumPackages.length > 0) {
+    const maxIdx = premiumPackages.reduce((maxIdx, pkg, idx, arr) => pkg.price > arr[maxIdx].price ? idx : maxIdx, 0);
+    const maxPackage = premiumPackages[maxIdx];
+    const others = premiumPackages.filter((_, idx) => idx !== maxIdx);
+    if (others.length === 2) {
+      sortedPackages = [others[0], maxPackage, others[1]];
+    } else {
+      // fallback: max ở giữa
+      sortedPackages = [...others.slice(0, Math.floor(others.length/2)), maxPackage, ...others.slice(Math.floor(others.length/2))];
+    }
+  }
 
   return (
     <Box className="business-container">
@@ -148,55 +163,52 @@ export default function BusinessPage() {
             <Typography color="error">Lỗi: {error}</Typography>
           ) : premiumPackages && premiumPackages.length > 0 ? (
             <Box className="business-pricing-grid">
-              {premiumPackages
-                .slice()
-                .sort((a, b) => a.id - b.id)
-                .map((pkg) => (
-                  <Box
-                    key={pkg.id}
-                    className={`business-pricing-card ${
-                      pkg.id === 3 ? "business-pricing-highlighted" : ""
-                    }`}
-                  >
-                    <Box className="business-pricing-header">
-                      <Typography
-                        variant="h6"
-                        className="business-pricing-title"
-                      >
-                        {pkg.name}
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        className="business-pricing-price"
-                      >
-                        {`${pkg.price.toLocaleString()} VNĐ`}
-                      </Typography>
-                      <Typography
-                        variant="subtitle1"
-                        className="business-pricing-duration"
-                      >
-                        {`${pkg.duration} ngày`}
-                      </Typography>
-                    </Box>
-                    <Box className="business-pricing-content">
-                      <Typography
-                        variant="body2"
-                        className="business-pricing-description"
-                      >
-                        {pkg.description}
-                      </Typography>
-                    </Box>
-                    <CardActions className="business-pricing-footer">
-                      <Button
-                        variant={pkg.id === 3 ? "contained" : "outlined"}
-                        onClick={() => handleOpenModal(pkg)}
-                        className="business-pricing-button"
-                      >
-                        Nâng Cấp Ngay
-                      </Button>
-                    </CardActions>
+              {sortedPackages.map((pkg, idx) => (
+                <Box
+                  key={pkg.id}
+                  className={`business-pricing-card${hoveredIndex === idx ? " business-pricing-highlighted" : ""}`}
+                  onMouseEnter={() => setHoveredIndex(idx)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  <Box className="business-pricing-header">
+                    <Typography
+                      variant="h6"
+                      className="business-pricing-title"
+                    >
+                      {pkg.name}
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      className="business-pricing-price"
+                    >
+                      {`${pkg.price.toLocaleString()} VNĐ`}
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      className="business-pricing-duration"
+                    >
+                      {`${pkg.duration} ngày`}
+                    </Typography>
                   </Box>
-                ))}
+                  <Box className="business-pricing-content">
+                    <Typography
+                      variant="body2"
+                      className="business-pricing-description"
+                    >
+                      {pkg.description}
+                    </Typography>
+                  </Box>
+                  <CardActions className="business-pricing-footer">
+                    <Button
+                      variant={hoveredIndex === idx ? "contained" : "outlined"}
+                      onClick={() => handleOpenModal(pkg)}
+                      className="business-pricing-button"
+                    >
+                      Nâng Cấp Ngay
+                    </Button>
+                  </CardActions>
+                </Box>
+              ))}
             </Box>
           ) : (
             <Typography>Không tìm thấy gói dịch vụ nào.</Typography>
@@ -389,13 +401,11 @@ export default function BusinessPage() {
 function FeatureCard({ icon, title, description }) {
   return (
     <Card className="business-feature-card">
-      <CardHeader className="business-feature-header">
-        {icon}
+      <CardContent style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <div className="business-feature-icon">{icon}</div>
         <Typography variant="h6" className="business-feature-title">
           {title}
         </Typography>
-      </CardHeader>
-      <CardContent>
         <Typography variant="body2" className="business-feature-text">
           {description}
         </Typography>

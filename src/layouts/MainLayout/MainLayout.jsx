@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import Header from "../../components/Header/Header";
 import HeaderLog from "../../components/Header/HeaderLog";
 import Footer from "../../components/Footer/Footer";
+import ScrollToTop from "../../components/common/ScrollToTop";
 
 export default function MainLayout() {
   const user =
@@ -13,6 +14,7 @@ export default function MainLayout() {
 
   return (
     <Box>
+      <ScrollToTop />
       {user ? <HeaderLog /> : <Header />}
       <Outlet />
       <Footer />

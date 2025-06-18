@@ -146,87 +146,166 @@ button.banner-button-more:hover {
 
 /* feature */
 .features-container {
-  padding: 40px 20px;
-  background-color: #f9fbff;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #f9fbff 0%, #e8f0fe 100%);
   text-align: center;
   font-family: "Roboto", sans-serif;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  margin: 40px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.features-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
 }
 
 .features-header {
   display: flex;
   flex-direction: column;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .features-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 15px !important;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 20px !important;
+  position: relative;
+  display: inline-block;
+}
+
+.features-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+  border-radius: 2px;
 }
 
 .features-description {
-  font-size: 1rem;
-  color: #666;
-  max-width: 600px;
+  font-size: 1.1rem;
+  color: #4a5568;
+  max-width: 700px;
   margin: 0 auto;
-  line-height: 30px !important;
-  margin-bottom: 30px !important;
+  line-height: 1.8 !important;
+  margin-bottom: 40px !important;
+  position: relative;
 }
 
 .features-cards {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 1024px) {
+  .features-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .features-cards {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 10px;
+  }
 }
 
 .feature-card {
   max-width: 450px;
   width: 100%;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   text-align: left;
-  padding: 20px;
+  padding: 30px;
+  background: white;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
 }
 
 .feature-icon1 {
-  width: 40px;
-  height: 40px;
-  background-color: #f7e2f9;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #f7e2f9 0%, #e8f0fe 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px;
-  border-radius: 50%;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon1 {
+  transform: scale(1.1);
 }
 
 .feature-icon2 {
-  font-size: 1.5rem;
-  color: #7e22cd;
+  font-size: 2rem;
+  color: #6a11cb;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon2 {
+  color: #2575fc;
 }
 
 .feature-card-title {
-  font-size: 1.25rem;
-  font-weight: 600 !important;
-  margin-bottom: 10px;
-  color: #333;
+  font-size: 1.4rem;
+  font-weight: 700 !important;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  transition: color 0.3s ease;
+}
+
+.feature-card:hover .feature-card-title {
+  color: #6a11cb;
 }
 
 .feature-card-description {
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.5;
-}
-
-@media (max-width: 768px) {
-  .features-cards {
-    flex-direction: column;
-    align-items: center;
-  }
-  .feature-card {
-    max-width: 100%;
-  }
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.7;
 }
 
 /* product new */
