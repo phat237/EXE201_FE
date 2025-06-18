@@ -21,6 +21,9 @@ export const PATH = {
   ADMIN: "/admin",
   DASHBOARD: "/admin/dashboard",
   VOUCHER: "/admin/voucher",
+  PRODUCTS: "/admin/products",
+  ORDERS: "/admin/orders",
+
 
   // PARTNER
   PARTNER: "/partner",

@@ -76,6 +76,10 @@ export default function ProductDetailPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const reviewsPerPage = 3;
   const reviewsSectionRef = useRef(null);
+  const [showReviewSection, setShowReviewSection] = useState(false);
+  const reviewBlockRef = useRef(null);
+  const [filterRating, setFilterRating] = useState(null);
+  const [filterMode, setFilterMode] = useState(false);
 
   const dispatch = useDispatch();
   const { addNotification } = useNotification();
@@ -286,10 +290,15 @@ export default function ProductDetailPage() {
   };
 
   const handleViewReview = () => {
-    setTabValue("reviews");
-    if (reviewsSectionRef.current) {
-      reviewsSectionRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    setShowReviewSection((prev) => {
+      const next = !prev;
+      setTimeout(() => {
+        if (!prev && reviewBlockRef.current) {
+          reviewBlockRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100); // Đợi render xong mới scroll
+      return next;
+    });
   };
 
   const handleCloseReviewDialog = () => {
@@ -377,6 +386,11 @@ export default function ProductDetailPage() {
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage - 1);
   };
+
+  // Tính toán reviews cần hiển thị cho trang hiện tại (có filter)
+  const filteredReviews = filterRating
+    ? reviews.filter((review) => Math.round(review.rating) === filterRating)
+    : reviews;
 
   // Tính toán reviews cần hiển thị cho trang hiện tại
   const indexOfLastReview = (currentPage + 1) * reviewsPerPage;
@@ -478,7 +492,7 @@ export default function ProductDetailPage() {
               onClick={handleViewReview}
               style={{ backgroundColor: "#6517ce", color: "white" }}
             >
-              Xem Đánh Giá
+              {showReviewSection ? "Ẩn Đánh Giá" : "Xem Đánh Giá"}
             </Button>
             <Button
               variant="outlined"
@@ -488,31 +502,8 @@ export default function ProductDetailPage() {
               <ShareIcon className="product-icon" />
             </Button>
           </Box>
-        </Box>
-      </Box>
-
-      <Tabs
-        value={tabValue}
-        onChange={handleTabChange}
-        className="product-tabs"
-        sx={{
-          "& .MuiTabs-indicator": {
-            backgroundColor: "#6517ce",
-          },
-          "& .MuiTab-root.Mui-selected": {
-            color: "#6517ce",
-          },
-        }}
-      >
-        <Tab label={`Đánh Giá (${reviewCount})`} value="reviews" />
-        <Tab label="Phân Tích AI" value="analysis" />
-        <Tab label="Sản Phẩm Liên Quan" value="related" />
-      </Tabs>
-
-      <Box className="product-tabs-content" ref={reviewsSectionRef}>
-        {tabValue === "reviews" && (
-          <Box className="product-tab-panel">
-            <Box className="product-reviews-section">
+          {showReviewSection && (
+            <Box ref={reviewBlockRef} className="product-reviews-section" style={{ marginTop: 32 }}>
               <Box className="product-rating-summary">
                 <Card className="product-rating-card">
                   <CardContent className="product-rating-content">
@@ -520,23 +511,66 @@ export default function ProductDetailPage() {
                       <Typography variant="h3" className="product-rating-score">
                         {enrichedProduct.rating || 0}
                       </Typography>
-                      <Box className="product-rating-stars">
-                        <Rating
-                          value={enrichedProduct.rating || 0}
-                          readOnly
-                          precision={0.5}
-                          icon={<StarIcon className="product-star-icon" />}
-                          emptyIcon={
-                            <StarIcon className="product-star-icon-empty" />
-                          }
-                        />
-                        <Typography
-                          variant="caption"
-                          className="product-review-count"
-                        >
-                          ({enrichedProduct.reviewCount} đánh giá)
-                        </Typography>
-                      </Box>
+                      {(!filterMode && filterRating === null) ? (
+                        <Box className="product-rating-stars" onClick={() => setFilterMode(true)} style={{ cursor: 'pointer' }}>
+                          <Rating
+                            value={enrichedProduct.rating || 0}
+                            readOnly
+                            precision={0.5}
+                            icon={<StarIcon className="product-star-icon" />}
+                            emptyIcon={<StarIcon className="product-star-icon-empty" />}
+                            size="large"
+                          />
+                          <Typography
+                            variant="caption"
+                            className="product-review-count"
+                            style={{ display: 'block', marginTop: 4 }}
+                          >
+                            ({enrichedProduct.reviewCount} đánh giá)
+                          </Typography>
+                          <Typography variant="caption" style={{ color: '#6517ce', marginTop: 2, display: 'block' }}>
+                            (Nhấn vào để lọc theo số sao)
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Box className="product-rating-stars" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 48, gap: 0 }}>
+                          {[1,2,3,4,5].map((star) => (
+                            <span
+                              key={star}
+                              style={{
+                                color: star <= (filterRating || 0) ? '#FFC107' : '#E0E0E0',
+                                fontSize: 28,
+                                marginRight: star < 5 ? 2 : 0,
+                                cursor: 'pointer',
+                                filter: filterRating === star ? 'drop-shadow(0 2px 8px #6517ce)' : 'none',
+                                transition: 'filter 0.2s',
+                                display: 'inline-block',
+                                lineHeight: 1,
+                                padding: 0,
+                              }}
+                              onClick={() => setFilterRating(star)}
+                              title={`Lọc đánh giá ${star} sao`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                          <Button
+                            size="small"
+                            onClick={() => { setFilterRating(null); setFilterMode(false); }}
+                            style={{
+                              marginLeft: 8,
+                              color: '#6517ce',
+                              minWidth: 0,
+                              padding: '2px 8px',
+                              fontSize: 14,
+                              height: 28,
+                              lineHeight: 1,
+                            }}
+                          >
+                            Bỏ lọc
+                          </Button>
+                        </Box>
+                      )}
                     </Box>
                     <Button
                       variant="contained"
@@ -549,10 +583,10 @@ export default function ProductDetailPage() {
                   </CardContent>
                 </Card>
               </Box>
-              <Box className="product-reviews-list">
-                {currentReviews && currentReviews.length > 0 ? (
+              <Box className="product-reviews-list" style={{ maxHeight: 350, overflowY: 'auto', marginTop: 16 }}>
+                {filteredReviews && filteredReviews.length > 0 ? (
                   <>
-                    {currentReviews.map((review) => (
+                    {filteredReviews.map((review) => (
                       <Card key={review.id} className="product-review-card">
                         <CardContent className="product-review-content">
                           <Box className="product-review-header">
@@ -673,40 +707,6 @@ export default function ProductDetailPage() {
                         </CardContent>
                       </Card>
                     ))}
-                    <Box
-                      className="product-pagination"
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        mt: 2,
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Pagination
-                        count={totalPages}
-                        page={currentPage + 1}
-                        onChange={handlePageChange}
-                        color="primary"
-                        sx={{
-                          "& .MuiPaginationItem-root": {
-                            color: "#6517ce",
-                          },
-                          "& .Mui-selected": {
-                            backgroundColor: "#6517ce !important",
-                            color: "white !important",
-                          },
-                          "& .MuiPagination-ul": {
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: "8px",
-                            listStyle: "none",
-                            padding: 0,
-                            margin: 0,
-                          },
-                        }}
-                      />
-                    </Box>
                   </>
                 ) : (
                   <Typography variant="body1" className="no-reviews-message">
@@ -726,81 +726,31 @@ export default function ProductDetailPage() {
                 )}
               </Box>
             </Box>
+          )}
+        </Box>
+      </Box>
 
-            <Dialog
-              open={openReviewDialog}
-              onClose={handleCloseReviewDialog}
-              maxWidth="md"
-              fullWidth
-              classes={{ paper: "bg-white rounded-lg shadow-xl" }}
-            >
-              <DialogTitle className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-4">
-                Đánh Giá Sản Phẩm: {enrichedProduct.name}
-              </DialogTitle>
-              <DialogContent className="p-6">
-                <Box className="flex flex-col gap-6">
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      className="text-lg font-semibold text-gray-700 mb-2"
-                    >
-                      Đánh giá sao
-                    </Typography>
-                    <Rating
-                      value={reviewRating}
-                      onChange={(event, newValue) => setReviewRating(newValue)}
-                      precision={1}
-                      icon={<StarIcon className="text-yellow-400" />}
-                      emptyIcon={<StarIcon className="text-gray-300" />}
-                      className="text-4xl"
-                    />
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      className="text-lg font-semibold text-gray-700 mb-2"
-                    >
-                      Nội dung đánh giá
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={6}
-                      label="Viết cảm nhận của bạn"
-                      value={reviewContent}
-                      onChange={(e) => setReviewContent(e.target.value)}
-                      variant="outlined"
-                      className="bg-gray-50 rounded-lg"
-                      InputProps={{
-                        className: "text-gray-800",
-                      }}
-                      InputLabelProps={{
-                        className: "text-gray-600",
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </DialogContent>
-              <DialogActions className="p-6 flex justify-end gap-4 border-t border-gray-200">
-                <Button
-                  onClick={handleCloseReviewDialog}
-                  variant="outlined"
-                  className="text-gray-600 border-gray-300 hover:bg-gray-100"
-                  disabled={loadingStates.createReview}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  onClick={handleSubmitReview}
-                  variant="contained"
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                  disabled={!reviewRating || !reviewContent || loadingStates.createReview}
-                  style={{ backgroundColor: "#6517ce" }}
-                >
-                  {loadingStates.createReview ? "Đang gửi..." : "Gửi Đánh Giá"}
-                </Button>
-              </DialogActions>
-            </Dialog>
+      <Tabs
+        value={tabValue}
+        onChange={handleTabChange}
+        className="product-tabs"
+        sx={{
+          "& .MuiTabs-indicator": {
+            backgroundColor: "#6517ce",
+          },
+          "& .MuiTab-root.Mui-selected": {
+            color: "#6517ce",
+          },
+        }}
+      >
+        <Tab label="Phân Tích AI" value="analysis" />
+        <Tab label="Sản Phẩm Liên Quan" value="related" />
+      </Tabs>
+
+      <Box className="product-tabs-content" ref={reviewsSectionRef}>
+        {tabValue === "reviews" && (
+          <Box className="product-tab-panel">
+            {/* Bỏ toàn bộ phần đánh giá ở đây */}
           </Box>
         )}
 
@@ -810,7 +760,7 @@ export default function ProductDetailPage() {
               <CardContent className="product-analysis-content">
                 <Box className="product-analysis-header">
                   <BarChartIcon className="product-icon" />
-                  <Typography variant="h6" className="product-analysis-title">
+     <Typography variant="h6" className="product-analysis-title">
                     Phân Tích AI
                   </Typography>
                 </Box>
@@ -985,6 +935,81 @@ export default function ProductDetailPage() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <Dialog
+        open={openReviewDialog}
+        onClose={handleCloseReviewDialog}
+        maxWidth="md"
+        fullWidth
+        classes={{ paper: "bg-white rounded-lg shadow-xl" }}
+      >
+        <DialogTitle className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-4">
+          Đánh Giá Sản Phẩm: {enrichedProduct.name}
+        </DialogTitle>
+        <DialogContent className="p-6">
+          <Box className="flex flex-col gap-6">
+            <Box>
+              <Typography
+                variant="h6"
+                className="text-lg font-semibold text-gray-700 mb-2"
+              >
+                Đánh giá sao
+              </Typography>
+              <Rating
+                value={reviewRating}
+                onChange={(event, newValue) => setReviewRating(newValue)}
+                precision={1}
+                icon={<StarIcon className="text-yellow-400" />}
+                emptyIcon={<StarIcon className="text-gray-300" />}
+                className="text-4xl"
+              />
+            </Box>
+            <Box>
+              <Typography
+                variant="h6"
+                className="text-lg font-semibold text-gray-700 mb-2"
+              >
+                Nội dung đánh giá
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={6}
+                label="Viết cảm nhận của bạn"
+                value={reviewContent}
+                onChange={(e) => setReviewContent(e.target.value)}
+                variant="outlined"
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-800",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600",
+                }}
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions className="p-6 flex justify-end gap-4 border-t border-gray-200">
+          <Button
+            onClick={handleCloseReviewDialog}
+            variant="outlined"
+            className="text-gray-600 border-gray-300 hover:bg-gray-100"
+            disabled={loadingStates.createReview}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleSubmitReview}
+            variant="contained"
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            disabled={!reviewRating || !reviewContent || loadingStates.createReview}
+            style={{ backgroundColor: "#6517ce" }}
+          >
+            {loadingStates.createReview ? "Đang gửi..." : "Gửi Đánh Giá"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -13,9 +13,19 @@ import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ReportIcon from "@mui/icons-material/Report";
 import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import "./HomePage.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import image1 from "../../../assets/Lovepik_com-450122121-Person giving online reviews .png";
 import Loading from "../../../components/Loading/Loading";
+
+const ScrollToTop = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [navigate]);
+
+  return null;
+};
 
 export default function HomePage() {
   const dispatch = useDispatch();
@@ -169,7 +179,13 @@ export default function HomePage() {
             <Typography variant="h2" className="latest-products-title">
               Sản phẩm mới nhất
             </Typography>
-            <Button variant="outlined" className="view-all-button">
+            <Button 
+              variant="outlined" 
+              className="view-all-button" 
+              component={Link} 
+              to="/san-pham"
+              onClick={() => window.scrollTo(0, 0)}
+            >
               Xem tất cả
             </Button>
           </Box>
@@ -226,7 +242,13 @@ export default function HomePage() {
             <Typography variant="h2" className="highly-rated-products-title">
               Sản phẩm được đánh giá cao nhất
             </Typography>
-            <Button variant="outlined" className="view-all-button">
+            <Button 
+              variant="outlined" 
+              className="view-all-button" 
+              component={Link} 
+              to="/san-pham"
+              onClick={() => window.scrollTo(0, 0)}
+            >
               Xem tất cả
             </Button>
           </Box>

@@ -123,7 +123,7 @@ export default function ProductsPage() {
     dispatch(
       fetchAllProductsPaginated({
         page,
-        size: 6,
+        size: 18,
         categories:
           selectedCategories.length > 0
             ? selectedCategories.join(",")

@@ -271,12 +271,9 @@
 }
 
 .business-feature-icon {
-  width: 48px !important;
-  height: 48px !important;
+  font-size: 2.5rem !important;
   color: #1976d2 !important;
-  background: rgba(25, 118, 210, 0.1) !important;
-  border-radius: 50% !important;
-  padding: 8px !important;
+  margin-bottom: 8px !important;
 }
 
 .business-feature-title {
