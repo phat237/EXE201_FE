@@ -112,13 +112,12 @@ export const deleteProductReview = createAsyncThunk(
   }
 );
 
-
 export const fetchReviewsByIdPaginated = createAsyncThunk(
-  "review/fetchReviewsByIdPaginated", // Đổi tên để rõ ràng hơn
+  "review/fetchReviewsByIdPaginated",
   async ({ id, page, size }, { rejectWithValue }) => {
     try {
       const response = await fetcher.get(
-        `https://trustreviews.onrender.com/reviews/${id}/${page}/${size}/paging?page=${page}&size=${size}`
+        `https://trustreviews.onrender.com/reviews/${id}?page=${page}&size=${size}`
       );
       return response.data;
     } catch (error) {
@@ -278,6 +277,7 @@ export const reviewSlice = createSlice({
 .addCase(fetchReviewsByIdPaginated.fulfilled, (state, { payload }) => {
   state.isLoading = false;
   state.error = null;
+  console.log("Payload received:", payload);
   if (payload && payload.content && Array.isArray(payload.content)) {
     state.reviews = payload.content;
     state.pagination = {
