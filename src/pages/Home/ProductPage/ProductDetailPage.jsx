@@ -78,6 +78,7 @@ export default function ProductDetailPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const reviewsPerPage = 5;
   const reviewsSectionRef = useRef(null);
+  const [helpfulClicked, setHelpfulClicked] = useState({});
 
   const dispatch = useDispatch();
   const { addNotification } = useNotification();
@@ -327,6 +328,7 @@ export default function ProductDetailPage() {
 
   const handleMarkHelpful = (reviewId, currentStatus) => {
     const newStatus = !currentStatus;
+    setHelpfulClicked((prev) => ({ ...prev, [reviewId]: true }));
     dispatch(markReviewHelpful({ reviewId, status: newStatus }))
       .unwrap()
       .then(() => {
@@ -340,9 +342,13 @@ export default function ProductDetailPage() {
             ? "Bạn vừa đánh dấu một đánh giá là hữu ích!"
             : "Bạn vừa hủy đánh dấu hữu ích cho một đánh giá."
         );
+        setTimeout(() => {
+          setHelpfulClicked((prev) => ({ ...prev, [reviewId]: false }));
+        }, 300);
       })
       .catch((err) => {
         addNotification(`Lỗi khi đánh dấu hữu ích: ${err.message || err}`);
+        setHelpfulClicked((prev) => ({ ...prev, [reviewId]: false }));
       });
   };
 
@@ -355,16 +361,12 @@ export default function ProductDetailPage() {
           ...prev,
           [reviewId]: { ...prev[reviewId], reported: newStatus },
         }));
-        setSnackbarMessage(
+        addNotification(
           newStatus ? "Đã báo cáo đánh giá!" : "Đã hủy báo cáo!"
         );
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
       })
       .catch((err) => {
-        setSnackbarMessage(`Lỗi: ${err.message || err}`);
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
+        addNotification(`Lỗi khi báo cáo: ${err.message || err}`);
       });
   };
 
@@ -640,9 +642,9 @@ export default function ProductDetailPage() {
                             <Box className="product-review-footer-right">
                               <Button
                                 variant="text"
-                                className="product-review-helpful"
+                                className={`product-review-helpful${helpfulClicked[review.id] ? " helpful-animate" : ""}`}
                                 startIcon={
-                                  <ThumbUpIcon className="product-icon" />
+                                  <ThumbUpIcon className="product-icon" style={{ color: helpfulStatus[review.id]?.helpful ? "red" : "#666" }} />
                                 }
                                 onClick={() =>
                                   handleMarkHelpful(
@@ -650,13 +652,12 @@ export default function ProductDetailPage() {
                                     helpfulStatus[review.id]?.helpful || false
                                   )
                                 }
-                                disabled={
-                                  loadingStates.helpfulReviews[review.id]
-                                }
+                                disabled={loadingStates.helpfulReviews[review.id]}
                                 style={{
-                                  color: helpfulStatus[review.id]?.helpful
-                                    ? "red"
-                                    : "inherit",
+                                  color: helpfulStatus[review.id]?.helpful ? "red" : "#666",
+                                  fontWeight: helpfulStatus[review.id]?.helpful ? 700 : 400,
+                                  transition: "color 0.2s, transform 0.2s",
+                                  transform: helpfulClicked[review.id] ? "scale(1.2)" : "none"
                                 }}
                               >
                                 {loadingStates.helpfulReviews[review.id]
