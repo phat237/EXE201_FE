@@ -144,6 +144,24 @@ export const averageRating = createAsyncThunk(
   }
 );
 
+// Async thunk để lấy số lượng like (helpful count) của review
+export const fetchReviewHelpfulCount = createAsyncThunk(
+  "review/fetchReviewHelpfulCount",
+  async (reviewId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `/reviews/helpful/count/${reviewId}?status=true`
+      );
+      console.log("Số lượt like từ DB cho reviewId", reviewId, ":", response.data);
+      return { reviewId, helpfulCount: response.data };
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 export const reviewSlice = createSlice({
   name: "review",
   initialState: {
@@ -349,7 +367,18 @@ export const reviewSlice = createSlice({
         state.error = payload;
         console.error("Error fetching average rating:", payload);
       }
-      );
+      )
+      // Thêm xử lý cho fetchReviewHelpfulCount
+      .addCase(fetchReviewHelpfulCount.fulfilled, (state, action) => {
+        const { reviewId, helpfulCount } = action.payload;
+        const review = state.reviews.find((r) => r.id === reviewId);
+        if (review) {
+          review.helpfulCount = helpfulCount;
+        }
+      })
+      .addCase(fetchReviewHelpfulCount.rejected, (state, action) => {
+        state.error = action.payload || "Lỗi khi lấy số lượng like của review";
+      });
   },
 });
 
