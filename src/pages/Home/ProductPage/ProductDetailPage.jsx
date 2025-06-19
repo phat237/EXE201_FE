@@ -60,7 +60,7 @@ const hardcodedProductData = {
 };
 
 export default function ProductDetailPage() {
-  const { id: productId } = useParams();
+ const { id: productId } = useParams();
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
@@ -99,33 +99,49 @@ export default function ProductDetailPage() {
     loadingStates,
   } = useSelector((state) => state.review);
 
-  useEffect(() => {
-    if (!currentUser) {
-      toast.error("Vui lòng đăng nhập để xem chi tiết sản phẩm!");
-      navigate("/auth/login");
-      return;
-    }
+useEffect(() => {
+  console.log("useEffect triggered with productId:", productId, "currentUser:", currentUser);
+  if (!currentUser) {
+    toast.error("Vui lòng đăng nhập để xem chi tiết sản phẩm!");
+    navigate("/auth/login");
+    return;
+  }
 
-    if (productId) {
-      dispatch(fetchProductApiById({ id: productId }))
-        .unwrap()
-        .then((data) => {
-          console.log("Product API response data:", data);
-        })
-        .catch((err) => {
-          console.error("Product API error:", err);
-        });
+  if (productId) {
+    const initialPage = 0;
+    const initialSize = 10;
+    dispatch(fetchProductApiById({ id: productId }))
+      .unwrap()
+      .then((data) => {
+        console.log("Product API response data:", data);
+      })
+      .catch((err) => {
+        console.error("Product API error:", err);
+      });
 
-      dispatch(fetchReviewsByIdPaginated({ id: productId, page, size }))
-        .unwrap()
-        .then((data) => {
-          console.log("Reviews API response:", data);
-        })
-        .catch((err) => {
-          console.error("Reviews API error:", err);
-        });
-    }
-  }, [dispatch, productId, page, size, currentUser, navigate]);
+    dispatch(fetchReviewsByIdPaginated({ id: productId, page: initialPage, size: initialSize }))
+      .unwrap()
+      .then((data) => {
+        console.log("Reviews API response for productId", productId, ":", data);
+      })
+      .catch((err) => {
+        console.error("Reviews API error for productId", productId, ":", err);
+      });
+
+    dispatch(averageRating(productId))
+      .unwrap()
+      .then((data) => {
+        console.log("Average rating API response for productId", productId, ":", data);
+      })
+      .catch((err) => {
+        console.error("Average rating API error:", err);
+      });
+  }
+}, [dispatch, productId, currentUser, navigate]);
+
+
+
+
 
   useEffect(() => {
     if (product?.category) {
@@ -173,10 +189,8 @@ export default function ProductDetailPage() {
     let negative = 0;
     const totalReviews = reviews?.length || 0;
 
-    console.log("Input reviews for sentiment analysis:", reviews);
 
     if (!reviews || totalReviews === 0) {
-      console.log("No reviews to analyze, returning default sentiment");
       return { positive: 0, neutral: 0, negative: 0 };
     }
 
@@ -185,15 +199,8 @@ export default function ProductDetailPage() {
       const content = review.content ? review.content.toLowerCase() : "";
       const rating = review.rating || 0;
 
-      console.log(`Processing Review ${index + 1}:`, {
-        id: review.id,
-        comment,
-        content,
-        rating,
-      });
 
       if (comment) {
-        console.log(`Analyzing aicomment: "${comment}"`);
         if (
           comment.includes("không hài lòng") ||
           comment.includes("số sao thấp") ||
@@ -243,9 +250,7 @@ export default function ProductDetailPage() {
           }
         }
       } else {
-        console.log(
-          `No aicomment, analyzing rating: ${rating}, content: "${content}"`
-        );
+
         if (rating >= 4) {
           positive += 1;
           console.log(`Classified as POSITIVE based on rating >= 4`);
@@ -322,7 +327,6 @@ export default function ProductDetailPage() {
         dispatch(fetchReviewsByIdPaginated({ id: productId, page: 0, size }));
       })
       .catch((error) => {
-        console.log("Error submitting review:", error);
         setSnackbarMessage(error || "Có lỗi xảy ra khi gửi đánh giá");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
