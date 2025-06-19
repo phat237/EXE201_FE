@@ -9,6 +9,7 @@ import {
   fetchReviewsByIdPaginated,
   createProductReview,
   markReviewHelpful,
+  averageRating,
 } from "../../../store/slices/reviewSlice";
 import {
   Button,
@@ -72,9 +73,9 @@ export default function ProductDetailPage() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [helpfulStatus, setHelpfulStatus] = useState({});
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(10);
+  const [size, setSize] = useState(50);
   const [currentPage, setCurrentPage] = useState(0);
-  const reviewsPerPage = 3;
+  const reviewsPerPage = 5;
   const reviewsSectionRef = useRef(null);
 
   const dispatch = useDispatch();
@@ -93,6 +94,7 @@ export default function ProductDetailPage() {
     isLoading: reviewsLoading,
     error: reviewsError,
     loadingStates,
+    averageRating: averageRatingObj,
   } = useSelector((state) => state.review);
 
   useEffect(() => {
@@ -122,24 +124,24 @@ export default function ProductDetailPage() {
     }
   }, [dispatch, productId, page, size, currentUser, navigate]);
 
-  useEffect(() => {
-    if (product?.category) {
-      dispatch(
-        fetchAllProductsPaginated({
-          page: 0,
-          size: 4,
-          categories: product.category,
-        })
-      )
-        .unwrap()
-        .then((data) => {
-          console.log("Related products API response:", data);
-        })
-        .catch((err) => {
-          console.error("Related products API error:", err);
-        });
-    }
-  }, [dispatch, product?.category]);
+  // useEffect(() => {
+  //   if (product?.category) {
+  //     dispatch(
+  //       fetchReviewsByIdPaginated({
+  //         page: 0,
+  //         size: 4,
+  //         categories: product.category,
+  //       })
+  //     )
+  //       .unwrap()
+  //       .then((data) => {
+  //         console.log("Related products API response:", data);
+  //       })
+  //       .catch((err) => {
+  //         console.error("Related products API error:", err);
+  //       });
+  //   }
+  // }, [dispatch, product?.category]);
 
   useEffect(() => {
     if (reviews && reviews.length > 0) {
@@ -154,6 +156,12 @@ export default function ProductDetailPage() {
       );
     }
   }, [reviews]);
+
+  useEffect(() => {
+    if (productId) {
+      dispatch(averageRating(productId));
+    }
+  }, [dispatch, productId]);
 
   const relatedProducts =
     allProducts
@@ -394,21 +402,13 @@ export default function ProductDetailPage() {
     return <Typography>Không tìm thấy sản phẩm.</Typography>;
   }
 
-  const averageRating =
-    reviews && reviews.length > 0
-      ? Number(
-          (
-            reviews.reduce((sum, review) => sum + review.rating, 0) /
-            reviews.length
-          ).toFixed(1)
-        )
-      : 0;
+  const averageRatingValue = averageRatingObj?.[productId] ?? 0;
   const reviewCount = reviews ? reviews.length : 0;
 
   const enrichedProduct = {
     ...product,
     ...hardcodedProductData,
-    rating: averageRating,
+    rating: averageRatingValue,
     reviewCount,
     category: product.category || "DIEN_THOAI",
     price: product.price,
@@ -626,7 +626,7 @@ export default function ProductDetailPage() {
                                 variant="caption"
                                 className="product-review-user"
                               >
-                                {review.userName || "Người dùng ẩn danh"}
+                                {review.displayName || "Người dùng ẩn danh"}
                               </Typography>
                             </Box>
                             <Box className="product-review-footer-right">
