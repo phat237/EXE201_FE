@@ -10,6 +10,7 @@ import {
   createProductReview,
   markReviewHelpful,
   averageRating,
+  fetchReviewHelpfulCount,
 } from "../../../store/slices/reviewSlice";
 import {
   Button,
@@ -154,8 +155,14 @@ export default function ProductDetailPage() {
           return acc;
         }, {})
       );
+      // Fetch số lượt like cho từng review nếu chưa có
+      reviews.forEach((review) => {
+        if (typeof review.helpfulCount !== "number") {
+          dispatch(fetchReviewHelpfulCount(review.id));
+        }
+      });
     }
-  }, [reviews]);
+  }, [reviews, dispatch]);
 
   useEffect(() => {
     if (productId) {
@@ -319,7 +326,7 @@ export default function ProductDetailPage() {
   };
 
   const handleMarkHelpful = (reviewId, currentStatus) => {
-    const newStatus = !currentStatus; // Toggle trạng thái
+    const newStatus = !currentStatus;
     dispatch(markReviewHelpful({ reviewId, status: newStatus }))
       .unwrap()
       .then(() => {
@@ -327,6 +334,7 @@ export default function ProductDetailPage() {
           ...prev,
           [reviewId]: { ...prev[reviewId], helpful: newStatus },
         }));
+        dispatch(fetchReviewHelpfulCount(reviewId));
         addNotification(
           newStatus
             ? "Bạn vừa đánh dấu một đánh giá là hữu ích!"
