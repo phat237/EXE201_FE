@@ -288,6 +288,7 @@ export default function ProductDetailPage() {
       rating: reviewRating,
       content: reviewContent,
     };
+    console.log("reviewData gửi lên:", reviewPayload);
     dispatch(createProductReview({ productId, reviewData: reviewPayload }))
       .unwrap()
       .then((data) => {
