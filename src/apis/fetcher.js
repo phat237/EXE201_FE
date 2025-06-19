@@ -13,10 +13,8 @@ fetcher.interceptors.request.use((config) => {
   const currentUserStr = localStorage.getItem("currentUser");
   let currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
 
-  console.log("Current User:", currentUser);
   if (currentUser && !publicEndpoints.some((endpoint) => config.url.includes(endpoint))) {
     const accessToken = currentUser.token;
-    console.log("Access Token from currentUser:", accessToken);
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -27,7 +25,6 @@ fetcher.interceptors.request.use((config) => {
 
 fetcher.interceptors.response.use(
   (response) => {
-    console.log("API response:", response.data);
     return response;
   },
   (error) => {

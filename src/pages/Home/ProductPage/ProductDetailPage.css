@@ -21,6 +21,11 @@
   flex-direction: column !important;
   gap: 16px !important;
 }
+.product-rating-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 .product-main-image {
   position: relative !important;

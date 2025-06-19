@@ -31,7 +31,7 @@ export const fetchReviewsByProductId = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response ? error.response.data : error.message  
+        error.response ? error.response.data : error.message
       );
     }
   }
@@ -50,7 +50,9 @@ export const createProductReview = createAsyncThunk(
     } catch (error) {
       // Trả về message lỗi từ server
       return rejectWithValue(
-        error.response?.data || error.message || "Có lỗi xảy ra khi gửi đánh giá"
+        error.response?.data ||
+          error.message ||
+          "Có lỗi xảy ra khi gửi đánh giá"
       );
     }
   }
@@ -62,9 +64,9 @@ export const markReviewHelpful = createAsyncThunk(
   async ({ reviewId, status }, { rejectWithValue }) => {
     try {
       const response = await fetcher.post(
-                `/reviews/helpful/${reviewId}/{status}?status=${status}`
+        `/reviews/helpful/${reviewId}/{status}?status=${status}`
       );
-      console.log(response.data)
+      console.log(response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -73,8 +75,6 @@ export const markReviewHelpful = createAsyncThunk(
     }
   }
 );
-
-
 
 // Async thunk để update review theo ID
 export const updateProductReview = createAsyncThunk(
@@ -112,7 +112,6 @@ export const deleteProductReview = createAsyncThunk(
   }
 );
 
-
 export const fetchReviewsByIdPaginated = createAsyncThunk(
   "review/fetchReviewsByIdPaginated", // Đổi tên để rõ ràng hơn
   async ({ id, page, size }, { rejectWithValue }) => {
@@ -129,10 +128,27 @@ export const fetchReviewsByIdPaginated = createAsyncThunk(
   }
 );
 
+export const averageRating = createAsyncThunk(
+  "review/averageRating",
+  async (productId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        `/reviews/average-rating/${productId}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 export const reviewSlice = createSlice({
   name: "review",
   initialState: {
     reviews: [], // Danh sách reviews
+    averageRating: {},
     pagination: null, // Thông tin phân trang nếu API trả về
     isLoading: false,
     error: null,
@@ -140,7 +156,7 @@ export const reviewSlice = createSlice({
       createReview: false,
       helpfulReviews: {}, // Map lưu trạng thái loading của từng review khi đánh dấu hữu ích
       reportReviews: {}, // Map lưu trạng thái loading của từng review khi báo cáo
-    }
+    },
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -154,22 +170,22 @@ export const reviewSlice = createSlice({
         state.error = null;
         // Kiểm tra cấu trúc payload. Nếu payload chứa danh sách reviews và thông tin phân trang
         if (payload && payload.content && Array.isArray(payload.content)) {
-            state.reviews = payload.content;
-            // Giả định API trả về cấu trúc { content: [...], totalPages: N, totalElements: M, ... }
-            state.pagination = {
-                totalPages: payload.totalPages,
-                totalElements: payload.totalElements,
-                // Thêm các thông tin phân trang khác nếu có
-            };
+          state.reviews = payload.content;
+          // Giả định API trả về cấu trúc { content: [...], totalPages: N, totalElements: M, ... }
+          state.pagination = {
+            totalPages: payload.totalPages,
+            totalElements: payload.totalElements,
+            // Thêm các thông tin phân trang khác nếu có
+          };
         } else if (Array.isArray(payload)) {
-             // Trường hợp API chỉ trả về mảng reviews
-            state.reviews = payload;
-            state.pagination = null; // Không có thông tin phân trang
+          // Trường hợp API chỉ trả về mảng reviews
+          state.reviews = payload;
+          state.pagination = null; // Không có thông tin phân trang
         } else {
-             // Trường hợp payload không như mong đợi, có thể xử lý lỗi hoặc clear state
-             state.reviews = [];
-             state.pagination = null;
-             console.warn("Unexpected payload structure for reviews:", payload);
+          // Trường hợp payload không như mong đợi, có thể xử lý lỗi hoặc clear state
+          state.reviews = [];
+          state.pagination = null;
+          console.warn("Unexpected payload structure for reviews:", payload);
         }
       })
       .addCase(fetchReviewsPaginated.rejected, (state, { payload }) => {
@@ -186,10 +202,17 @@ export const reviewSlice = createSlice({
       .addCase(createProductReview.fulfilled, (state, { payload }) => {
         state.loadingStates.createReview = false;
         state.error = null;
-        if (payload && typeof payload === 'object' && Object.keys(payload).length > 0) {
-            console.log("Review created successfully:", payload);
+        if (
+          payload &&
+          typeof payload === "object" &&
+          Object.keys(payload).length > 0
+        ) {
+          console.log("Review created successfully:", payload);
         } else {
-             console.warn("Create product review fulfilled but received invalid payload:", payload);
+          console.warn(
+            "Create product review fulfilled but received invalid payload:",
+            payload
+          );
         }
       })
       .addCase(createProductReview.rejected, (state, { payload }) => {
@@ -224,12 +247,15 @@ export const reviewSlice = createSlice({
         state.isLoading = false;
         state.error = null;
         // Cập nhật review trong danh sách reviews nếu payload hợp lệ và có id trùng khớp
-        if (payload && typeof payload === 'object' && payload.id) {
-            state.reviews = state.reviews.map(review =>
-                review.id === payload.id ? payload : review // Cập nhật review với dữ liệu mới từ payload
-            );
+        if (payload && typeof payload === "object" && payload.id) {
+          state.reviews = state.reviews.map(
+            (review) => (review.id === payload.id ? payload : review) // Cập nhật review với dữ liệu mới từ payload
+          );
         } else {
-             console.warn("Update product review fulfilled but received invalid payload or missing ID:", payload);
+          console.warn(
+            "Update product review fulfilled but received invalid payload or missing ID:",
+            payload
+          );
         }
       })
       .addCase(updateProductReview.rejected, (state, { payload }) => {
@@ -245,7 +271,7 @@ export const reviewSlice = createSlice({
         state.isLoading = false;
         state.error = null;
         // Lọc bỏ review đã xóa khỏi danh sách reviews dựa vào ID
-        state.reviews = state.reviews.filter(review => review.id !== payload);
+        state.reviews = state.reviews.filter((review) => review.id !== payload);
       })
       .addCase(deleteProductReview.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -263,43 +289,68 @@ export const reviewSlice = createSlice({
           state.reviews = payload;
         } else if (payload && Array.isArray(payload.content)) {
           state.reviews = payload.content;
-        } else if (payload && typeof payload === 'object' && Object.keys(payload).length > 0) {
+        } else if (
+          payload &&
+          typeof payload === "object" &&
+          Object.keys(payload).length > 0
+        ) {
           // If the API returns a single review object, put it in an array
           state.reviews = [payload];
         } else {
           state.reviews = [];
-          console.warn("Unexpected payload structure for product reviews:", payload);
+          console.warn(
+            "Unexpected payload structure for product reviews:",
+            payload
+          );
         }
       })
- .addCase(fetchReviewsByIdPaginated.pending, (state) => {
-  state.isLoading = true;
-  state.error = null;
-})
-.addCase(fetchReviewsByIdPaginated.fulfilled, (state, { payload }) => {
-  state.isLoading = false;
-  state.error = null;
-  if (payload && payload.content && Array.isArray(payload.content)) {
-    state.reviews = payload.content;
-    state.pagination = {
-      totalPages: payload.totalPages,
-      totalElements: payload.totalElements,
-    };
-  } else if (Array.isArray(payload)) {
-    state.reviews = payload;
-    state.pagination = null;
-  } else {
-    state.reviews = [];
-    state.pagination = null;
-    console.warn("Unexpected payload structure for reviews:", payload);
-  }
-})
-.addCase(fetchReviewsByIdPaginated.rejected, (state, { payload }) => {
-  state.isLoading = false;
-  state.error = payload;
-  state.reviews = [];
-  state.pagination = null;
-})
+      .addCase(fetchReviewsByIdPaginated.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchReviewsByIdPaginated.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        if (payload && payload.content && Array.isArray(payload.content)) {
+          state.reviews = payload.content;
+          state.pagination = {
+            totalPages: payload.totalPages,
+            totalElements: payload.totalElements,
+          };
+        } else if (Array.isArray(payload)) {
+          state.reviews = payload;
+          state.pagination = null;
+        } else {
+          state.reviews = [];
+          state.pagination = null;
+          console.warn("Unexpected payload structure for reviews:", payload);
+        }
+      })
+      .addCase(fetchReviewsByIdPaginated.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        state.reviews = [];
+        state.pagination = null;
+      })
+      // Thêm xử lý cho averageRating
+      .addCase(averageRating.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+    .addCase(averageRating.fulfilled, (state, { payload, meta }) => {
+      state.isLoading = false;
+      state.error = null;
+      // Xử lý cả hai trường hợp: payload là số hoặc object với averageRating
+      const rating = typeof payload === "object" ? payload.averageRating : payload;
+      state.averageRating[meta.arg] = rating || 0; // Sử dụng productId làm key
+    })
+      .addCase(averageRating.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        console.error("Error fetching average rating:", payload);
+      }
+      );
   },
 });
 
-export default reviewSlice.reducer; 
+export default reviewSlice.reducer;

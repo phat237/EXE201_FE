@@ -8,10 +8,9 @@ let userLocal = null;
 if (currentUserStr) {
   try {
     userLocal = JSON.parse(currentUserStr);
-    console.log("Parsed currentUser from localStorage:", userLocal); // Debug
   } catch (e) {
     console.error("Lỗi parse currentUser từ localStorage:", e);
-    localStorage.removeItem("currentUser"); // Xóa nếu parse thất bại
+    localStorage.removeItem("currentUser"); 
   }
 } else {
   console.log("Không tìm thấy currentUser trong localStorage");

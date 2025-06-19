@@ -12,6 +12,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ReportIcon from "@mui/icons-material/Report";
 import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
+import { averageRating } from "../../../store/slices/reviewSlice"; // Import averageRating thunk
 import "./HomePage.css";
 import { Link, useNavigate } from "react-router-dom";
 import image1 from "../../../assets/Lovepik_com-450122121-Person giving online reviews .png";
@@ -29,12 +30,20 @@ const ScrollToTop = () => {
 
 export default function HomePage() {
   const dispatch = useDispatch();
-  const { allProducts, isLoading, error } = useSelector(
-    (state) => state.product
-  );
+
+  const {
+    allProducts,
+    isLoading: productsLoading,
+    error: productsError,
+  } = useSelector((state) => state.product);
+  const {
+    averageRating: ratings,
+    isLoading: ratingsLoading,
+    error: ratingsError,
+  } = useSelector((state) => state.review);
 
   useEffect(() => {
-    // Lấy 8 sản phẩm, sắp xếp theo createdAt giảm dần
+    // Fetch 8 products, sorted by createdAt descending
     dispatch(
       fetchAllProductsPaginated({
         page: 0,
@@ -46,19 +55,24 @@ export default function HomePage() {
       .unwrap()
       .then((data) => {
         console.log("Products API response:", data);
+        // Fetch average rating for each product
+        data.content.forEach((product) => {
+          dispatch(averageRating(product.id));
+        });
       })
       .catch((err) => {
         console.error("Products API error:", err);
       });
   }, [dispatch]);
+  console.log("Current ratings:", ratings);
 
-  // Sản phẩm mới nhất: lấy 4 sản phẩm đầu tiên (đã sắp xếp theo createdAt)
+  // Latest products: first 4 products (already sorted by createdAt)
   const newestProducts = allProducts ? allProducts.slice(0, 4) : [];
 
-  // Sản phẩm được đánh giá cao nhất: sắp xếp theo averageRating và lấy 4 sản phẩm
+  // Highly rated products: sort by average rating and take first 4
   const highlyRatedProducts = allProducts
     ? [...allProducts]
-        .sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0))
+        .sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0))
         .slice(0, 4)
     : [];
 
@@ -82,18 +96,18 @@ export default function HomePage() {
         "Người dùng có thể phản hồi và báo cáo các đánh giá không phù hợp để duy trì chất lượng nội dung.",
     },
   ];
-
   const renderStars = (rating) => {
     const totalStars = 5;
-    const filledStars = Math.round(rating || 0);
+    const displayRating = rating !== undefined ? Math.round(rating) : 0;
+    const filledStars = displayRating;
     const emptyStars = totalStars - filledStars;
 
     return (
       <Box className="star-rating">
         <span className="filled-stars">{"★".repeat(filledStars)}</span>
         <span className="empty-stars">{"☆".repeat(emptyStars)}</span>
-        <Typography component="span" className="rating-count">
-          ({rating || 0})
+        <Typography component="span" className="rating-count" sx={{ marginLeft: "8px" }}>
+        
         </Typography>
       </Box>
     );
@@ -179,23 +193,27 @@ export default function HomePage() {
             <Typography variant="h2" className="latest-products-title">
               Sản phẩm mới nhất
             </Typography>
-            <Button 
-              variant="outlined" 
-              className="view-all-button" 
-              component={Link} 
+            <Button
+              variant="outlined"
+              className="view-all-button"
+              component={Link}
               to="/san-pham"
               onClick={() => window.scrollTo(0, 0)}
             >
               Xem tất cả
             </Button>
           </Box>
-          {isLoading ? (
+          {productsLoading || ratingsLoading ? (
             <Typography sx={{ marginLeft: "50%" }}>
               <Loading />
             </Typography>
-          ) : error ? (
+          ) : productsError || ratingsError ? (
             <Typography color="error">
-              Lỗi khi tải sản phẩm: {error?.message || error}
+              Lỗi khi tải dữ liệu:{" "}
+              {productsError?.message ||
+                productsError ||
+                ratingsError?.message ||
+                ratingsError}
             </Typography>
           ) : newestProducts.length > 0 ? (
             <Box className="latest-products-cards">
@@ -221,11 +239,11 @@ export default function HomePage() {
                           {product.name}
                         </Typography>
                         <Typography className="product-card-description">
-                          {product.description || "Không có mô tả."}
+                          {product.category || "Không có mô tả."}
                         </Typography>
                       </Box>
                       <Box className="product-card-rating">
-                        {renderStars(product.averageRating)}
+                        {renderStars(ratings[product.id])}
                       </Box>
                     </CardContent>
                   </Card>
@@ -242,23 +260,27 @@ export default function HomePage() {
             <Typography variant="h2" className="highly-rated-products-title">
               Sản phẩm được đánh giá cao nhất
             </Typography>
-            <Button 
-              variant="outlined" 
-              className="view-all-button" 
-              component={Link} 
+            <Button
+              variant="outlined"
+              className="view-all-button"
+              component={Link}
               to="/san-pham"
               onClick={() => window.scrollTo(0, 0)}
             >
               Xem tất cả
             </Button>
           </Box>
-          {isLoading ? (
+          {productsLoading || ratingsLoading ? (
             <Typography sx={{ marginLeft: "50%" }}>
               <Loading />
             </Typography>
-          ) : error ? (
+          ) : productsError || ratingsError ? (
             <Typography color="error">
-              Lỗi khi tải sản phẩm: {error?.message || error}
+              Lỗi khi tải dữ liệu:{" "}
+              {productsError?.message ||
+                productsError ||
+                ratingsError?.message ||
+                ratingsError}
             </Typography>
           ) : highlyRatedProducts.length > 0 ? (
             <Box className="highly-rated-products-cards">
@@ -284,11 +306,11 @@ export default function HomePage() {
                           {product.name}
                         </Typography>
                         <Typography className="product-card-description">
-                          {product.description || "Không có mô tả."}
+                          {product.category || "Không có mô tả."}
                         </Typography>
                       </Box>
                       <Box className="product-card-rating">
-                        {renderStars(product.averageRating)}
+                        {renderStars(ratings[product.id])}
                       </Box>
                     </CardContent>
                   </Card>
