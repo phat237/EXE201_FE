@@ -25,6 +25,7 @@ import "./ProductPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import LoadingProduct from "../../../components/Loading/LoadingProduct";
+import { Link } from "react-router-dom";
 
 // Categories from the provided list
 const categories = [
@@ -94,10 +95,11 @@ function ProductCard({ product }) {
         <Button
           variant="contained"
           className="products-card-button"
-          href={`/san-pham/${product.id}`}
           component="a"
         >
-          Xem Chi Tiết
+          <Link to={`/san-pham/${product.id}`} className="products-card-link">
+            Xem Chi Tiết
+          </Link>
         </Button>
       </CardContent>
     </Card>
