@@ -66,7 +66,7 @@ export default function HeaderLog() {
         <div className="container">
           <div className="header-left">
             <Link to="/" className="logo">
-              <span>Reviewon</span>
+              <span>TrustReview</span>
             </Link>
 
             <nav className="nav-desktop">

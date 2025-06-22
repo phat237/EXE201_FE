@@ -96,22 +96,33 @@ export default function HomePage() {
         "Người dùng có thể phản hồi và báo cáo các đánh giá không phù hợp để duy trì chất lượng nội dung.",
     },
   ];
-  const renderStars = (rating) => {
-    const totalStars = 5;
-    const displayRating = rating !== undefined ? Math.round(rating) : 0;
-    const filledStars = displayRating;
-    const emptyStars = totalStars - filledStars;
 
-    return (
-      <Box className="star-rating">
-        <span className="filled-stars">{"★".repeat(filledStars)}</span>
-        <span className="empty-stars">{"☆".repeat(emptyStars)}</span>
-        <Typography component="span" className="rating-count" sx={{ marginLeft: "8px" }}>
-        
-        </Typography>
-      </Box>
-    );
-  };
+  const renderStars = (rating = 0) => {
+  const totalStars = 5;
+  const filled = Math.floor(rating); // sao đầy
+  const hasHalf = rating - filled >= 0.25 && rating - filled < 0.75; // có nửa sao không
+  const empty = totalStars - filled - (hasHalf ? 1 : 0);
+
+  return (
+    <Box className="star-rating" sx={{ display: "flex", alignItems: "center" }}>
+      <span className="filled-stars" style={{ color: "#fbc02d", fontSize: "20px" }}>
+        {"★".repeat(filled)}
+      </span>
+      {hasHalf && (
+        <span className="half-star" style={{ color: "#fbc02d", fontSize: "20px" }}>
+          ⯨
+        </span>
+      )}
+      <span className="empty-stars" style={{ color: "#ccc", fontSize: "20px" }}>
+        {"☆".repeat(empty)}
+      </span>
+      <Typography component="span" sx={{ ml: 1, fontSize: "1rem" }}>
+        {rating.toFixed(1)}
+      </Typography>
+    </Box>
+  );
+};
+
 
   useEffect(() => {
     const observer = new IntersectionObserver(

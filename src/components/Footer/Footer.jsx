@@ -96,7 +96,7 @@ const Footer = () => {
             <ul>
               <li className="footer-contact-item">
                 <Mail fontSize="small" className="footer-contact-icon" />
-                <span>@TrustReview .vn</span>
+                <span>official.trustreview@gmail.com</span>
               </li>
               <li className="footer-contact-item">
                 <Phone fontSize="small" className="footer-contact-icon" />

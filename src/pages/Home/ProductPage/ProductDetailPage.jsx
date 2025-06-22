@@ -476,8 +476,11 @@ export default function ProductDetailPage() {
                   icon={<StarIcon className="product-star-icon" />}
                   emptyIcon={<StarIcon className="product-star-icon-empty" />}
                 />
-                <Typography variant="caption" sx={{ ml: 1 }}>
-                  ({enrichedProduct.rating || 0} sao)
+                <Typography variant="caption" sx={{ ml: 1, fontSize: "1.2rem" }}>
+                  {enrichedProduct.rating || 0}
+                </Typography>
+                <Typography variant="caption" sx={{ ml: 1, fontSize: "0.8rem" }}>
+                  ({enrichedProduct.reviewCount} đánh giá)
                 </Typography>
               </Box>
             </Box>
@@ -532,7 +535,7 @@ export default function ProductDetailPage() {
                       <Typography variant="h3" className="product-rating-score">
                         {enrichedProduct.rating || 0}
                       </Typography>
-                      <Box className="product-rating-stars">
+                      <Box className="product-rating-stars" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Rating
                           value={enrichedProduct.rating || 0}
                           readOnly
