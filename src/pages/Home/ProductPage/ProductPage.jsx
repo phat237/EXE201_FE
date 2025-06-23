@@ -53,7 +53,7 @@ function ProductCard({ product }) {
 
   return (
     <Card className="products-card">
-      <a href={`/san-pham/${product.id}`} className="products-card-link">
+      <Link to={`/san-pham/${product.id}`} className="products-card-link">
         <Box className="products-card-image">
           <img
             src={product.sourceUrl || "/placeholder.svg"}
@@ -61,7 +61,7 @@ function ProductCard({ product }) {
             className="products-image"
           />
         </Box>
-      </a>
+      </Link>
       <CardContent className="products-card-content">
         <Box className="products-card-header">
           <Box className="products-card-rating">
