@@ -63,6 +63,11 @@ function ProductCard({ product }) {
         </Box>
       </a>
       <CardContent className="products-card-content">
+        <a href={`/san-pham/${product.id}`} className="products-card-link">
+          <Typography variant="subtitle2" className="products-card-name">
+            {product.name}
+          </Typography>
+        </a>
         <Box className="products-card-header">
           <Box className="products-card-rating">
             <Rating
@@ -73,6 +78,9 @@ function ProductCard({ product }) {
               emptyIcon={<StarIcon className="products-star-icon-empty" />}
             />
             <Typography variant="caption" className="products-review-count">
+              {product.averageRating || 0}
+            </Typography>
+            <Typography variant="caption" className="products-review-count">
               ({product.reviewCount || 0})
             </Typography>
           </Box>
@@ -82,11 +90,6 @@ function ProductCard({ product }) {
             </Box>
           )}
         </Box>
-        <a href={`/san-pham/${product.id}`} className="products-card-link">
-          <Typography variant="subtitle2" className="products-card-name">
-            {product.name}
-          </Typography>
-        </a>
         <Box className="products-card-footer">
           <Typography variant="caption" className="products-card-category">
             {categoryName}
