@@ -92,6 +92,20 @@ export const fetchAllProductsPaginated = createAsyncThunk(
   }
 );
 
+export const fetchSortedRating = createAsyncThunk(
+  "product/fetchSortedRating",
+  async( {page, size},{rejectWithValue}) => {
+    try {
+      const response = await fetcher.get(`/products/sorted-by-rating?page=${page}&size=${size}`)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      )
+    }
+  }
+)
+
 export const productSlice = createSlice({
   name: "product",
   initialState: {
@@ -100,6 +114,9 @@ export const productSlice = createSlice({
     allProductsPagination: null,
     isLoading: false,
     error: null,
+    topRatedProducts: [],
+    isLoadingTopRated: false,
+    errorTopRated: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -170,7 +187,21 @@ export const productSlice = createSlice({
         state.error = payload;
         state.allProducts = [];
         state.allProductsPagination = null;
-      });
+      })
+      .addCase(fetchSortedRating.pending, (state) => {
+        state.isLoadingTopRated = true;
+        state.errorTopRated = null;
+      })
+      .addCase(fetchSortedRating.fulfilled, (state, {payload}) => {
+        state.isLoadingTopRated = false;
+        state.errorTopRated = null;
+        state.topRatedProducts = payload.content;
+      })
+      .addCase(fetchSortedRating.rejected, (state, {payload}) => {
+        state.isLoadingTopRated = false;
+        state.errorTopRated = payload;
+        state.topRatedProducts = [];
+      })
   },
 });
 
