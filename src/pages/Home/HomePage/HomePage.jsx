@@ -11,7 +11,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ReportIcon from "@mui/icons-material/Report";
-import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
+import { fetchAllProductsPaginated, fetchSortedRating } from "../../../store/slices/productSlice";
 import { averageRating } from "../../../store/slices/reviewSlice"; // Import averageRating thunk
 import "./HomePage.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -35,7 +35,17 @@ export default function HomePage() {
     allProducts,
     isLoading: productsLoading,
     error: productsError,
-  } = useSelector((state) => state.product);
+    topRatedProducts,
+    isLoadingTopRated,
+    errorTopRated
+  } = useSelector((state) => ({
+    allProducts: state.product.allProducts,
+    isLoading: state.product.isLoading,
+    error: state.product.error,
+    topRatedProducts: state.product.topRatedProducts,
+    isLoadingTopRated: state.product.isLoadingTopRated,
+    errorTopRated: state.product.errorTopRated
+  }));
   const {
     averageRating: ratings,
     isLoading: ratingsLoading,
@@ -63,18 +73,16 @@ export default function HomePage() {
       .catch((err) => {
         console.error("Products API error:", err);
       });
+    // Fetch top 4 rated products
+    dispatch(fetchSortedRating({ page: 0, size: 4 }));
   }, [dispatch]);
   console.log("Current ratings:", ratings);
 
   // Latest products: first 4 products (already sorted by createdAt)
   const newestProducts = allProducts ? allProducts.slice(0, 4) : [];
 
-  // Highly rated products: sort by average rating and take first 4
-  const highlyRatedProducts = allProducts
-    ? [...allProducts]
-        .sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0))
-        .slice(0, 4)
-    : [];
+  // Highly rated products: lấy từ topRatedProducts (đã bị ghi đè bởi fetchSortedRating)
+  const highlyRatedProducts = topRatedProducts ? topRatedProducts.slice(0, 4) : [];
 
   const featuresData = [
     {
@@ -274,17 +282,13 @@ export default function HomePage() {
               Xem tất cả
             </Button>
           </Box>
-          {productsLoading || ratingsLoading ? (
+          {isLoadingTopRated ? (
             <Typography sx={{ marginLeft: "50%" }}>
               <Loading />
             </Typography>
-          ) : productsError || ratingsError ? (
+          ) : errorTopRated ? (
             <Typography color="error">
-              Lỗi khi tải dữ liệu:{" "}
-              {productsError?.message ||
-                productsError ||
-                ratingsError?.message ||
-                ratingsError}
+              Lỗi khi tải dữ liệu: {errorTopRated?.message || errorTopRated}
             </Typography>
           ) : highlyRatedProducts.length > 0 ? (
             <Box className="highly-rated-products-cards">
@@ -298,10 +302,7 @@ export default function HomePage() {
                     <CardMedia
                       component="img"
                       height="200"
-                      image={
-                        product.sourceUrl ||
-                        "https://via.placeholder.com/300x200"
-                      }
+                      image={product.sourceUrl || "https://via.placeholder.com/300x200"}
                       alt={product.name}
                     />
                     <CardContent>
@@ -314,7 +315,7 @@ export default function HomePage() {
                         </Typography>
                       </Box>
                       <Box className="product-card-rating">
-                        {renderStars(ratings[product.id])}
+                        {renderStars(product.averageRating)}
                       </Box>
                     </CardContent>
                   </Card>
