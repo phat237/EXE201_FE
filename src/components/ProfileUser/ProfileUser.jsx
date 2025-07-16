@@ -31,6 +31,9 @@ import {
   LocationOn,
 } from "@mui/icons-material";
 import "./ProfileUser.css";
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { fetchReviewStats } from '../../store/slices/reviewSlice';
 
 export default function UserProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -41,6 +44,13 @@ export default function UserProfilePage() {
     marketing: false,
   });
   const [tabValue, setTabValue] = useState("overview");
+  const dispatch = useDispatch();
+  const reviewStats = useSelector(state => state.review.reviewStats);
+  useEffect(() => {
+    if (tabValue === 'overview') {
+      dispatch(fetchReviewStats());
+    }
+  }, [dispatch, tabValue]);
 
   // Sample user data
   const user = {
@@ -261,7 +271,7 @@ export default function UserProfilePage() {
                     <Typography variant="body2">Tổng đánh giá</Typography>
                   </div>
                   <Typography variant="body1">
-                    {user.stats.totalReviews}
+                    {reviewStats?.totalReviews ?? 0}
                   </Typography>
                 </div>
                 <div className="profile-user-stats-item">
@@ -270,7 +280,7 @@ export default function UserProfilePage() {
                     <Typography variant="body2">Lượt hữu ích</Typography>
                   </div>
                   <Typography variant="body1">
-                    {user.stats.helpfulVotes}
+                    {reviewStats?.helpfulCount ?? 0}
                   </Typography>
                 </div>
                 <div className="profile-user-stats-item">
@@ -279,7 +289,7 @@ export default function UserProfilePage() {
                     <Typography variant="body2">Đánh giá TB</Typography>
                   </div>
                   <Typography variant="body1">
-                    {user.stats.averageRating}/5
+                    {reviewStats?.averageRating ?? 0}/5
                   </Typography>
                 </div>
                 <div className="profile-user-stats-item">
@@ -288,7 +298,7 @@ export default function UserProfilePage() {
                     <Typography variant="body2">Đã xác minh</Typography>
                   </div>
                   <Typography variant="body1">
-                    {user.stats.verifiedReviews}
+                    {reviewStats?.verifiedCount ?? 0}
                   </Typography>
                 </div>
               </CardContent>
