@@ -27,13 +27,13 @@ import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import LoadingProduct from "../../../components/Loading/LoadingProduct";
 import { Link } from "react-router-dom";
 
-// Categories from the provided list
+// Categories
 const categories = [
   { id: 1, name: "Điện Thoại", value: "DIEN_THOAI" },
   { id: 2, name: "Laptop", value: "LAPTOP" },
   { id: 3, name: "Máy Tính", value: "MAY_TINH" },
   { id: 4, name: "Điện Tử Gia Dụng", value: "DIEN_TU_GIA_DUNG" },
-  { id: 5, name: "Phụ Kien Công Nghệ", value: "PHU_KIEN_CONG_NGHE" },
+  { id: 5, name: "Phụ Kiện Công Nghệ", value: "PHU_KIEN_CONG_NGHE" },
   { id: 6, name: "Thời Trang", value: "THOI_TRANG" },
   { id: 7, name: "Mỹ Phẩm Làm Đẹp", value: "MY_PHAM_LAM_DEP" },
   { id: 8, name: "Mẹ và Bé", value: "ME_VA_BE" },
@@ -113,9 +113,11 @@ export default function ProductsPage() {
   const [tabValue, setTabValue] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // State để lưu từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(18);
+
   const dispatch = useDispatch();
   const {
     allProducts: products,
@@ -124,19 +126,45 @@ export default function ProductsPage() {
     error,
   } = useSelector((state) => state.product);
 
+  // Fetch all products across all pages on component mount
   useEffect(() => {
-    dispatch(
-      fetchAllProductsPaginated({
-        page,
-        size: 18,
-        categories:
-          selectedCategories.length > 0
-            ? selectedCategories.join(",")
-            : undefined,
-      })
-    );
-  }, [dispatch, page, selectedCategories]);
+    const fetchAllProducts = async () => {
+      const totalPages = pagination?.totalPages || 8; // Default to 8 if pagination is not yet available
+      const fetchedProducts = [];
 
+      for (let p = 0; p < totalPages; p++) {
+        try {
+          const response = await dispatch(
+            fetchAllProductsPaginated({
+              page: p,
+              size: 50, // API page size from provided data
+            })
+          ).unwrap();
+          fetchedProducts.push(...response.content);
+        } catch (err) {
+          console.error(`Error fetching page ${p}:`, err);
+        }
+      }
+
+      // Update Redux state with all products (optional, depending on your needs)
+      dispatch({
+        type: "product/fetchAllProductsPaginated/fulfilled",
+        payload: {
+          content: fetchedProducts,
+          totalPages: Math.ceil(fetchedProducts.length / itemsPerPage),
+          totalElements: fetchedProducts.length,
+          number: 0,
+          size: itemsPerPage,
+          first: true,
+          last: false,
+        },
+      });
+    };
+
+    fetchAllProducts();
+  }, [dispatch]);
+
+  // Handle tab change
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
     setPage(0);
@@ -151,11 +179,10 @@ export default function ProductsPage() {
       xe_co_phu_tung: ["XE_CO_PHU_TUNG"],
       dich_vu_khac: ["DICH_VU", "KHAC"],
     };
-    setSelectedCategories(
-      newValue === "all" ? [] : categoryMap[newValue] || []
-    );
+    setSelectedCategories(newValue === "all" ? [] : categoryMap[newValue] || []);
   };
 
+  // Handle category checkbox change
   const handleCategoryChange = (categoryValue) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryValue)
@@ -165,6 +192,7 @@ export default function ProductsPage() {
     setPage(0);
   };
 
+  // Handle rating checkbox change
   const handleRatingChange = (rating) => {
     setSelectedRatings((prev) =>
       prev.includes(rating)
@@ -174,15 +202,18 @@ export default function ProductsPage() {
     setPage(0);
   };
 
+  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
-    setPage(0); // Reset về trang đầu khi tìm kiếm
+    setPage(0);
   };
 
+  // Handle pagination
   const handlePageChange = (event, newPage) => {
     setPage(newPage - 1);
   };
 
+  // Toggle category visibility
   const handleShowMoreCategories = () => {
     setShowAllCategories(true);
   };
@@ -191,25 +222,32 @@ export default function ProductsPage() {
     setShowAllCategories(false);
   };
 
-  // Filter sản phẩm dựa trên danh mục, số sao và từ khóa tìm kiếm (client-side)
-  const filteredProducts = products?.filter((product) => {
-    const matchesCategory =
-      selectedCategories.length === 0 ||
-      selectedCategories.includes(product.category);
-    const matchesRating =
-      selectedRatings.length === 0 ||
-      selectedRatings.includes(
-        Math.floor(product.averageRating || 0).toString()
-      );
-    const matchesSearch =
-      searchQuery === "" ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesRating && matchesSearch;
-  });
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, 5);
 
-  const visibleCategories = showAllCategories
-    ? categories
-    : categories.slice(0, 5);
+  // Client-side filtering
+  const filteredProducts = products
+    .filter((product) =>
+      selectedCategories.length === 0
+        ? true
+        : selectedCategories.includes(product.category)
+    )
+    .filter((product) =>
+      selectedRatings.length === 0
+        ? true
+        : selectedRatings.includes(Math.floor(product.averageRating || 0).toString())
+    )
+    .filter((product) =>
+      searchQuery
+        ? product.name.toLowerCase().includes(searchQuery.toLowerCase())
+        : true
+    );
+
+  // Client-side pagination
+  const paginatedProducts = filteredProducts.slice(
+    page * itemsPerPage,
+    (page + 1) * itemsPerPage
+  );
+  const totalFilteredPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   return (
     <Box className="products-container">
@@ -229,10 +267,7 @@ export default function ProductsPage() {
           <Card className="products-filter-card">
             <CardContent className="products-filter-content">
               <Box className="products-filter-section">
-                <Typography
-                  variant="subtitle1"
-                  className="products-filter-title"
-                >
+                <Typography variant="subtitle1" className="products-filter-title">
                   Danh Mục
                 </Typography>
                 <Box className="products-filter-categories">
@@ -272,10 +307,7 @@ export default function ProductsPage() {
               </Box>
 
               <Box className="products-filter-section">
-                <Typography
-                  variant="subtitle1"
-                  className="products-filter-title"
-                >
+                <Typography variant="subtitle1" className="products-filter-title">
                   Đánh Giá
                 </Typography>
                 <Box className="products-filter-ratings">
@@ -294,9 +326,7 @@ export default function ProductsPage() {
                           value={rating}
                           readOnly
                           icon={<StarIcon className="products-star-icon" />}
-                          emptyIcon={
-                            <StarIcon className="products-star-icon-empty" />
-                          }
+                          emptyIcon={<StarIcon className="products-star-icon-empty" />}
                         />
                       }
                       className="products-filter-checkbox"
@@ -361,16 +391,16 @@ export default function ProductsPage() {
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {error}
                 </Typography>
-              ) : filteredProducts && filteredProducts.length > 0 ? (
+              ) : paginatedProducts.length > 0 ? (
                 <Box className="products-grid">
-                  {filteredProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </Box>
               ) : (
                 <Typography>Không tìm thấy sản phẩm nào.</Typography>
               )}
-              {!isLoading && pagination && pagination.totalPages > 1 && (
+              {!isLoading && totalFilteredPages > 1 && (
                 <Box
                   className="products-pagination"
                   sx={{
@@ -381,7 +411,7 @@ export default function ProductsPage() {
                   }}
                 >
                   <Pagination
-                    count={pagination.totalPages}
+                    count={totalFilteredPages}
                     page={page + 1}
                     onChange={handlePageChange}
                     color="primary"
