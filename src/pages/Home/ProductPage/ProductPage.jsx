@@ -27,7 +27,7 @@ import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import LoadingProduct from "../../../components/Loading/LoadingProduct";
 import { Link } from "react-router-dom";
 
-// Categories from the provided list
+// Categories (unchanged)
 const categories = [
   { id: 1, name: "Điện Thoại", value: "DIEN_THOAI" },
   { id: 2, name: "Laptop", value: "LAPTOP" },
@@ -113,9 +113,11 @@ export default function ProductsPage() {
   const [tabValue, setTabValue] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // State để lưu từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(18); // Number of products per page
+
   const dispatch = useDispatch();
   const {
     allProducts: products,
@@ -124,22 +126,29 @@ export default function ProductsPage() {
     error,
   } = useSelector((state) => state.product);
 
+  // Calculate total pages based on backend pagination data
+  const totalPages = pagination?.totalPages || 1;
+
+  // Fetch products from the backend
   useEffect(() => {
     dispatch(
       fetchAllProductsPaginated({
         page,
-        size: 18,
+        size: itemsPerPage, // Fetch only the needed products per page
         categories:
           selectedCategories.length > 0
             ? selectedCategories.join(",")
             : undefined,
+        search: searchQuery || undefined,
       })
     );
-  }, [dispatch, page, selectedCategories]);
+  }, [dispatch, page, selectedCategories, searchQuery, itemsPerPage]);
 
+  // Remove the aggressive page reset logic
+  // Instead, handle invalid page numbers in handlePageChange
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    setPage(0);
+    setPage(0); // Reset to first page when changing tabs
     const categoryMap = {
       dien_thoai_laptop: ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
       dien_tu_phu_kien: ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
@@ -162,7 +171,7 @@ export default function ProductsPage() {
         ? prev.filter((cat) => cat !== categoryValue)
         : [...prev, categoryValue]
     );
-    setPage(0);
+    setPage(0); // Reset to first page when changing categories
   };
 
   const handleRatingChange = (rating) => {
@@ -171,16 +180,19 @@ export default function ProductsPage() {
         ? prev.filter((r) => r !== rating)
         : [...prev, rating]
     );
-    setPage(0);
+    setPage(0); // Reset to first page when changing ratings
   };
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
-    setPage(0); // Reset về trang đầu khi tìm kiếm
+    setPage(0); // Reset to first page when searching
   };
 
   const handlePageChange = (event, newPage) => {
-    setPage(newPage - 1);
+    const newPageIndex = newPage - 1; // Convert to 0-based index
+    if (newPageIndex >= 0 && newPageIndex < totalPages) {
+      setPage(newPageIndex);
+    }
   };
 
   const handleShowMoreCategories = () => {
@@ -191,25 +203,17 @@ export default function ProductsPage() {
     setShowAllCategories(false);
   };
 
-  // Filter sản phẩm dựa trên danh mục, số sao và từ khóa tìm kiếm (client-side)
-  const filteredProducts = products?.filter((product) => {
-    const matchesCategory =
-      selectedCategories.length === 0 ||
-      selectedCategories.includes(product.category);
-    const matchesRating =
-      selectedRatings.length === 0 ||
-      selectedRatings.includes(
-        Math.floor(product.averageRating || 0).toString()
-      );
-    const matchesSearch =
-      searchQuery === "" ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesRating && matchesSearch;
-  });
-
   const visibleCategories = showAllCategories
     ? categories
     : categories.slice(0, 5);
+
+  // Apply client-side rating filter if needed
+  const filteredProducts = products?.filter((product) =>
+    selectedRatings.length === 0 ||
+    selectedRatings.includes(
+      Math.floor(product.averageRating || 0).toString()
+    )
+  ) || [];
 
   return (
     <Box className="products-container">
@@ -361,7 +365,7 @@ export default function ProductsPage() {
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {error}
                 </Typography>
-              ) : filteredProducts && filteredProducts.length > 0 ? (
+              ) : filteredProducts.length > 0 ? (
                 <Box className="products-grid">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
@@ -370,7 +374,7 @@ export default function ProductsPage() {
               ) : (
                 <Typography>Không tìm thấy sản phẩm nào.</Typography>
               )}
-              {!isLoading && pagination && pagination.totalPages > 1 && (
+              {!isLoading && totalPages > 1 && (
                 <Box
                   className="products-pagination"
                   sx={{
@@ -381,7 +385,7 @@ export default function ProductsPage() {
                   }}
                 >
                   <Pagination
-                    count={pagination.totalPages}
+                    count={totalPages}
                     page={page + 1}
                     onChange={handlePageChange}
                     color="primary"
