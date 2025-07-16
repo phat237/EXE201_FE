@@ -27,13 +27,13 @@ import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import LoadingProduct from "../../../components/Loading/LoadingProduct";
 import { Link } from "react-router-dom";
 
-// Categories (unchanged)
+// Categories
 const categories = [
   { id: 1, name: "Điện Thoại", value: "DIEN_THOAI" },
   { id: 2, name: "Laptop", value: "LAPTOP" },
   { id: 3, name: "Máy Tính", value: "MAY_TINH" },
   { id: 4, name: "Điện Tử Gia Dụng", value: "DIEN_TU_GIA_DUNG" },
-  { id: 5, name: "Phụ Kien Công Nghệ", value: "PHU_KIEN_CONG_NGHE" },
+  { id: 5, name: "Phụ Kiện Công Nghệ", value: "PHU_KIEN_CONG_NGHE" },
   { id: 6, name: "Thời Trang", value: "THOI_TRANG" },
   { id: 7, name: "Mỹ Phẩm Làm Đẹp", value: "MY_PHAM_LAM_DEP" },
   { id: 8, name: "Mẹ và Bé", value: "ME_VA_BE" },
@@ -116,7 +116,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(18); // Number of products per page
+  const [itemsPerPage, setItemsPerPage] = useState(18);
 
   const dispatch = useDispatch();
   const {
@@ -126,29 +126,48 @@ export default function ProductsPage() {
     error,
   } = useSelector((state) => state.product);
 
-  // Calculate total pages based on backend pagination data
-  const totalPages = pagination?.totalPages || 1;
-
-  // Fetch products from the backend
+  // Fetch all products across all pages on component mount
   useEffect(() => {
-    dispatch(
-      fetchAllProductsPaginated({
-        page,
-        size: itemsPerPage, // Fetch only the needed products per page
-        categories:
-          selectedCategories.length > 0
-            ? selectedCategories.join(",")
-            : undefined,
-        search: searchQuery || undefined,
-      })
-    );
-  }, [dispatch, page, selectedCategories, searchQuery, itemsPerPage]);
+    const fetchAllProducts = async () => {
+      const totalPages = pagination?.totalPages || 8; // Default to 8 if pagination is not yet available
+      const fetchedProducts = [];
 
-  // Remove the aggressive page reset logic
-  // Instead, handle invalid page numbers in handlePageChange
+      for (let p = 0; p < totalPages; p++) {
+        try {
+          const response = await dispatch(
+            fetchAllProductsPaginated({
+              page: p,
+              size: 50, // API page size from provided data
+            })
+          ).unwrap();
+          fetchedProducts.push(...response.content);
+        } catch (err) {
+          console.error(`Error fetching page ${p}:`, err);
+        }
+      }
+
+      // Update Redux state with all products (optional, depending on your needs)
+      dispatch({
+        type: "product/fetchAllProductsPaginated/fulfilled",
+        payload: {
+          content: fetchedProducts,
+          totalPages: Math.ceil(fetchedProducts.length / itemsPerPage),
+          totalElements: fetchedProducts.length,
+          number: 0,
+          size: itemsPerPage,
+          first: true,
+          last: false,
+        },
+      });
+    };
+
+    fetchAllProducts();
+  }, [dispatch]);
+
+  // Handle tab change
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    setPage(0); // Reset to first page when changing tabs
+    setPage(0);
     const categoryMap = {
       dien_thoai_laptop: ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
       dien_tu_phu_kien: ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
@@ -160,41 +179,41 @@ export default function ProductsPage() {
       xe_co_phu_tung: ["XE_CO_PHU_TUNG"],
       dich_vu_khac: ["DICH_VU", "KHAC"],
     };
-    setSelectedCategories(
-      newValue === "all" ? [] : categoryMap[newValue] || []
-    );
+    setSelectedCategories(newValue === "all" ? [] : categoryMap[newValue] || []);
   };
 
+  // Handle category checkbox change
   const handleCategoryChange = (categoryValue) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryValue)
         ? prev.filter((cat) => cat !== categoryValue)
         : [...prev, categoryValue]
     );
-    setPage(0); // Reset to first page when changing categories
+    setPage(0);
   };
 
+  // Handle rating checkbox change
   const handleRatingChange = (rating) => {
     setSelectedRatings((prev) =>
       prev.includes(rating)
         ? prev.filter((r) => r !== rating)
         : [...prev, rating]
     );
-    setPage(0); // Reset to first page when changing ratings
+    setPage(0);
   };
 
+  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
-    setPage(0); // Reset to first page when searching
+    setPage(0);
   };
 
+  // Handle pagination
   const handlePageChange = (event, newPage) => {
-    const newPageIndex = newPage - 1; // Convert to 0-based index
-    if (newPageIndex >= 0 && newPageIndex < totalPages) {
-      setPage(newPageIndex);
-    }
+    setPage(newPage - 1);
   };
 
+  // Toggle category visibility
   const handleShowMoreCategories = () => {
     setShowAllCategories(true);
   };
@@ -203,17 +222,32 @@ export default function ProductsPage() {
     setShowAllCategories(false);
   };
 
-  const visibleCategories = showAllCategories
-    ? categories
-    : categories.slice(0, 5);
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, 5);
 
-  // Apply client-side rating filter if needed
-  const filteredProducts = products?.filter((product) =>
-    selectedRatings.length === 0 ||
-    selectedRatings.includes(
-      Math.floor(product.averageRating || 0).toString()
+  // Client-side filtering
+  const filteredProducts = products
+    .filter((product) =>
+      selectedCategories.length === 0
+        ? true
+        : selectedCategories.includes(product.category)
     )
-  ) || [];
+    .filter((product) =>
+      selectedRatings.length === 0
+        ? true
+        : selectedRatings.includes(Math.floor(product.averageRating || 0).toString())
+    )
+    .filter((product) =>
+      searchQuery
+        ? product.name.toLowerCase().includes(searchQuery.toLowerCase())
+        : true
+    );
+
+  // Client-side pagination
+  const paginatedProducts = filteredProducts.slice(
+    page * itemsPerPage,
+    (page + 1) * itemsPerPage
+  );
+  const totalFilteredPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   return (
     <Box className="products-container">
@@ -233,10 +267,7 @@ export default function ProductsPage() {
           <Card className="products-filter-card">
             <CardContent className="products-filter-content">
               <Box className="products-filter-section">
-                <Typography
-                  variant="subtitle1"
-                  className="products-filter-title"
-                >
+                <Typography variant="subtitle1" className="products-filter-title">
                   Danh Mục
                 </Typography>
                 <Box className="products-filter-categories">
@@ -276,10 +307,7 @@ export default function ProductsPage() {
               </Box>
 
               <Box className="products-filter-section">
-                <Typography
-                  variant="subtitle1"
-                  className="products-filter-title"
-                >
+                <Typography variant="subtitle1" className="products-filter-title">
                   Đánh Giá
                 </Typography>
                 <Box className="products-filter-ratings">
@@ -298,9 +326,7 @@ export default function ProductsPage() {
                           value={rating}
                           readOnly
                           icon={<StarIcon className="products-star-icon" />}
-                          emptyIcon={
-                            <StarIcon className="products-star-icon-empty" />
-                          }
+                          emptyIcon={<StarIcon className="products-star-icon-empty" />}
                         />
                       }
                       className="products-filter-checkbox"
@@ -365,16 +391,16 @@ export default function ProductsPage() {
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {error}
                 </Typography>
-              ) : filteredProducts.length > 0 ? (
+              ) : paginatedProducts.length > 0 ? (
                 <Box className="products-grid">
-                  {filteredProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </Box>
               ) : (
                 <Typography>Không tìm thấy sản phẩm nào.</Typography>
               )}
-              {!isLoading && totalPages > 1 && (
+              {!isLoading && totalFilteredPages > 1 && (
                 <Box
                   className="products-pagination"
                   sx={{
@@ -385,7 +411,7 @@ export default function ProductsPage() {
                   }}
                 >
                   <Pagination
-                    count={totalPages}
+                    count={totalFilteredPages}
                     page={page + 1}
                     onChange={handlePageChange}
                     color="primary"
