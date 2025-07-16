@@ -22,7 +22,18 @@ export default function CustomPagination({
   sx,
 }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center", mt: 2, ...sx }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 2,
+        mt: 2,
+        flexWrap: 'nowrap',
+        ...sx,
+      }}
+    >
       <Pagination
         color="primary"
         page={page}
@@ -34,6 +45,13 @@ export default function CustomPagination({
         boundaryCount={1}
         siblingCount={1}
         sx={{
+          '& .MuiPagination-ul': {
+            flexDirection: 'row',
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
           '& .MuiPaginationItem-root': {
             color: '#888',
             fontWeight: 400,
@@ -65,7 +83,7 @@ export default function CustomPagination({
         }}
       />
       {showPageSize && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
           <Typography variant="body2">Hiển thị:</Typography>
           <Select
             size="small"

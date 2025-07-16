@@ -162,6 +162,22 @@ export const fetchReviewHelpfulCount = createAsyncThunk(
   }
 );
 
+export const fetchReviewStats = createAsyncThunk(
+  "review/fetchReviewStats",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(
+        "https://trustreviews.onrender.com/reviews/stats"
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 export const reviewSlice = createSlice({
   name: "review",
   initialState: {
@@ -175,6 +191,7 @@ export const reviewSlice = createSlice({
       helpfulReviews: {}, // Map lưu trạng thái loading của từng review khi đánh dấu hữu ích
       reportReviews: {}, // Map lưu trạng thái loading của từng review khi báo cáo
     },
+    reviewStats: null, // Thêm state lưu thống kê
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -378,6 +395,21 @@ export const reviewSlice = createSlice({
       })
       .addCase(fetchReviewHelpfulCount.rejected, (state, action) => {
         state.error = action.payload || "Lỗi khi lấy số lượng like của review";
+      })
+      // Thêm xử lý cho fetchReviewStats
+      .addCase(fetchReviewStats.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchReviewStats.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.reviewStats = payload;
+      })
+      .addCase(fetchReviewStats.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+        state.reviewStats = null;
       });
   },
 });

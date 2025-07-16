@@ -11,6 +11,7 @@ import {
   CrownOutlined,
   MoneyCollectOutlined,
   ShoppingOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -44,7 +45,12 @@ const PartnerLayout = () => {
       icon: <ShoppingOutlined />,
       label: 'Gói nâng cấp có sẵn',
     },
-        {
+    {
+      key: '/partner/products',
+      icon: <ShoppingCartOutlined />,
+      label: 'Sản phẩm',
+    },
+    {
       key: '/partner/deposit',
       icon: <MoneyCollectOutlined />,
       label: 'Nạp Tiền',

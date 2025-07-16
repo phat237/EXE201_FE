@@ -28,6 +28,7 @@ import CheckoutSucess from "../pages/Home/Checkout/CheckoutSucess";
 import CheckoutFail from "../pages/Home/Checkout/CheckoutFail";
 import Voucher from '../pages/Admin/Voucher/Voucher';         
 import PaymentCallback from "../pages/Home/Checkout/PaymentCallback";
+import PartnerProducts from '../pages/Partner/PartnerProducts';
 
 export default function useRouterElements() {
   const element = useRoutes([ 
@@ -163,6 +164,10 @@ export default function useRouterElements() {
         {
           path: PATH.PARTNER_AVAILABLE_PACKAGES,
           element: <AvailablePackages />,
+        },
+        {
+          path: 'products',
+          element: <PartnerProducts />,
         },
         ],
     },
