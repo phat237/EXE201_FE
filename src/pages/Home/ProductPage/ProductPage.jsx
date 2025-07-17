@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import LoadingProduct from "../../../components/Loading/LoadingProduct";
 import { Link } from "react-router-dom";
+import { searchApi } from "../../../store/slices/searchSlice";
 
 // Categories
 const categories = [
@@ -126,6 +127,14 @@ export default function ProductsPage() {
     error,
   } = useSelector((state) => state.product);
 
+  // Lấy state search từ redux
+  const {
+    searchResults,
+    isLoading: isSearchLoading,
+    error: searchError,
+    pagination: searchPagination,
+  } = useSelector((state) => state.search);
+
   // Fetch all products across all pages on component mount
   useEffect(() => {
     const fetchAllProducts = async () => {
@@ -202,15 +211,22 @@ export default function ProductsPage() {
     setPage(0);
   };
 
-  // Handle search input change
+  // Xử lý search input
   const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
+    const value = event.target.value;
+    setSearchQuery(value);
     setPage(0);
+    if (value.trim() !== "") {
+      dispatch(searchApi({ keyword: value, page: 0, size: itemsPerPage }));
+    }
   };
 
-  // Handle pagination
+  // Xử lý phân trang
   const handlePageChange = (event, newPage) => {
     setPage(newPage - 1);
+    if (searchQuery.trim() !== "") {
+      dispatch(searchApi({ keyword: searchQuery, page: newPage - 1, size: itemsPerPage }));
+    }
   };
 
   // Toggle category visibility
@@ -248,6 +264,15 @@ export default function ProductsPage() {
     (page + 1) * itemsPerPage
   );
   const totalFilteredPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  // Chọn dữ liệu để hiển thị
+  const isSearching = searchQuery.trim() !== "";
+  const productsToShow = isSearching ? searchResults : paginatedProducts;
+  const totalPagesToShow = isSearching
+    ? (searchPagination?.totalPages || 1)
+    : totalFilteredPages;
+  const loadingToShow = isSearching ? isSearchLoading : isLoading;
+  const errorToShow = isSearching ? searchError : error;
 
   return (
     <Box className="products-container">
@@ -383,24 +408,24 @@ export default function ProductsPage() {
 
           <Box className="products-tabs-content">
             <Box className="products-tab-panel">
-              {isLoading ? (
+              {loadingToShow ? (
                 <Typography>
                   <LoadingProduct />
                 </Typography>
-              ) : error ? (
+              ) : errorToShow ? (
                 <Typography color="error">
-                  Lỗi khi tải sản phẩm: {error}
+                  Lỗi khi tải sản phẩm: {errorToShow}
                 </Typography>
-              ) : paginatedProducts.length > 0 ? (
+              ) : productsToShow.length > 0 ? (
                 <Box className="products-grid">
-                  {paginatedProducts.map((product) => (
+                  {productsToShow.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </Box>
               ) : (
                 <Typography>Không tìm thấy sản phẩm nào.</Typography>
               )}
-              {!isLoading && totalFilteredPages > 1 && (
+              {!loadingToShow && totalPagesToShow > 1 && (
                 <Box
                   className="products-pagination"
                   sx={{
@@ -411,7 +436,7 @@ export default function ProductsPage() {
                   }}
                 >
                   <Pagination
-                    count={totalFilteredPages}
+                    count={totalPagesToShow}
                     page={page + 1}
                     onChange={handlePageChange}
                     color="primary"
