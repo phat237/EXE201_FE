@@ -36,6 +36,11 @@ const PartnerLayout = () => {
       label: 'Trang chủ',
     },
     {
+      key: '/partner',
+      icon: <HomeOutlined />,
+      label: 'Dashboard',
+    },
+    {
       key: '/partner/upgrade-packages',
       icon: <CrownOutlined />,
       label: 'Gói nâng cấp đã mua',

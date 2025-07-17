@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Card, Row, Col, Statistic, Table } from 'antd';
 import {
   ShoppingCartOutlined,
@@ -6,8 +7,21 @@ import {
   StarOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
+import { averageRating, reviewTotalByBrand, totalCoutByPartner, totalViewProductByBrand } from '../../../store/slices/dashboardParnerSlice';
 
 const PartnerDashboard = () => {
+  const dispatch = useDispatch();
+  const { totalViewProductByBrand: totalViews, isLoading, totalCoutByPartner: totalCount, reviewTotalByBrand: totalReview, averageRating: totalAverage } = useSelector(
+    (state) => state.dashboard
+  );
+
+  useEffect(() => {
+    dispatch(totalViewProductByBrand());
+    dispatch(totalCoutByPartner());
+    dispatch(reviewTotalByBrand())
+    dispatch(averageRating())
+  }, [dispatch]);
+
   const recentOrders = [
     {
       key: '1',
@@ -67,7 +81,7 @@ const PartnerDashboard = () => {
           <Card>
             <Statistic
               title="Tổng sản phẩm"
-              value={45}
+              value={isLoading ? '...' : totalCount}
               prefix={<ShoppingCartOutlined />}
             />
           </Card>
@@ -75,17 +89,8 @@ const PartnerDashboard = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Tổng đơn hàng"
-              value={128}
-              prefix={<DollarOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
               title="Đánh giá trung bình"
-              value={4.5}
+              value={isLoading ? '...' : totalAverage}
               prefix={<StarOutlined />}
               precision={1}
             />
@@ -94,9 +99,18 @@ const PartnerDashboard = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Lượt xem"
-              value={2560}
+              title="Lượt xem theo thương hiệu"
+              value={isLoading ? '...' : totalViews}
               prefix={<EyeOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Tổng đánh giá"
+              value={isLoading ? '...' : totalReview}
+              prefix={<StarOutlined />}
             />
           </Card>
         </Col>
