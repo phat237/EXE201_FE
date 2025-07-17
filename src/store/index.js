@@ -7,7 +7,7 @@ import transactionReducer from "./slices/transactionSlice";
 import checkoutReducer from "./slices/checkoutSlice";
 import partnerPackageReducer from "./slices/partnerPackageSlice"
 import voucherReducer from "./slices/voucherSlice"
-
+import searchReducer from "./slices/searchSlice";
 // tạo store
 export const store = configureStore({
   reducer: {
@@ -19,7 +19,8 @@ export const store = configureStore({
     checkout: checkoutReducer,
     review: reviewReducer,  
     partnerPackage: partnerPackageReducer,
-    vouchers: voucherReducer, 
+    vouchers: voucherReducer,
+    search: searchReducer,
   },
 });
 
