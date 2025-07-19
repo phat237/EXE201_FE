@@ -1,13 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { fetcher } from "../../apis/fetcher";
-import { fetchReviewsByIdPaginated } from "./reviewSlice"; // Import action để lấy đánh giá
-
-// Hàm tính averageRating từ danh sách reviews
-const calculateAverageRating = (reviews) => {
-  if (!reviews || reviews.length === 0) return 0;
-  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-  return Number((sum / reviews.length).toFixed(1));
-};
+import { averageRating } from "./reviewSlice"; // Chỉ import averageRating
 
 export const fetchProductApiById = createAsyncThunk(
   "product/fetchProductApi",
@@ -28,7 +21,6 @@ export const createProductApi = createAsyncThunk(
   async ({ data, category }, { rejectWithValue }) => {
     try {
       const response = await fetcher.post(`/products/${category}`, data);
-
       if (
         !response.data ||
         typeof response.data !== "object" ||
@@ -51,28 +43,52 @@ export const createProductApi = createAsyncThunk(
 
 export const fetchAllProductsPaginated = createAsyncThunk(
   "product/fetchAllProductsPaginated",
-  async ({ page, size, categories }, { rejectWithValue, dispatch }) => {
+  async ({ page, size, categories, ratings, sortBy }, { rejectWithValue, dispatch }) => {
     try {
-      let url = `https://trustreviews.onrender.com/products/${page}/{size}/paging?size=${size}`;
-      if (categories) {
-        url += `&categories=${categories}`;
+      let url = `https://trustreviews.onrender.com/products/${page}/${size}/paging?size=${size}`;
+      if (categories && categories.length > 0) {
+        url += `&categories=${categories.join(",")}`;
       }
+      if (ratings && ratings.length > 0) {
+        url += `&ratings=${ratings.join(",")}`;
+      }
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
+      }
+      
+      console.log("Calling API with URL:", url);
+      console.log("API parameters:", { page, size, categories, ratings, sortBy });
+      
       const response = await fetcher.get(url);
-
-      // Fetch đánh giá cho từng sản phẩm để tính averageRating
+      console.log("API response:", response.data);
+      
+      // Kiểm tra categories của các sản phẩm trả về
       const products = response.data.content || [];
+      console.log("Products returned:", products.length);
+      console.log("Categories in response:", products.map(p => ({ id: p.id, name: p.name, category: p.category })));
+      
+      // Kiểm tra xem có sản phẩm nào thuộc category được filter không
+      if (categories && categories.length > 0) {
+        const filteredProducts = products.filter(p => categories.includes(p.category));
+        console.log("Products matching filter categories:", filteredProducts.length);
+        console.log("Matching products:", filteredProducts.map(p => ({ id: p.id, name: p.name, category: p.category })));
+      }
+
+      // Fetch average rating for each product
       const enrichedProducts = await Promise.all(
         products.map(async (product) => {
           try {
-            const reviewsResponse = await dispatch(
-              fetchReviewsByIdPaginated({ id: product.id, page: 0, size: 100 }) // Lấy tất cả đánh giá
+            const ratingResponse = await dispatch(
+              averageRating(product.id)
             ).unwrap();
-            const reviews = reviewsResponse.content || [];
-            const averageRating = calculateAverageRating(reviews);
-            return { ...product, averageRating, reviewCount: reviews.length };
+            return {
+              ...product,
+              averageRating: ratingResponse.averageRating || 0,
+              reviewCount: ratingResponse.reviewCount || 0,
+            };
           } catch (error) {
             console.error(
-              `Error fetching reviews for product ${product.id}:`,
+              `Error fetching average rating for product ${product.id}:`,
               error
             );
             return { ...product, averageRating: 0, reviewCount: 0 };
@@ -85,6 +101,7 @@ export const fetchAllProductsPaginated = createAsyncThunk(
         content: enrichedProducts,
       };
     } catch (error) {
+      console.error("API error:", error);
       return rejectWithValue(
         error.response ? error.response.data : error.message
       );
@@ -94,17 +111,19 @@ export const fetchAllProductsPaginated = createAsyncThunk(
 
 export const fetchSortedRating = createAsyncThunk(
   "product/fetchSortedRating",
-  async( {page, size},{rejectWithValue}) => {
+  async ({ page, size }, { rejectWithValue }) => {
     try {
-      const response = await fetcher.get(`/products/sorted-by-rating?page=${page}&size=${size}`)
-      return response.data
+      const response = await fetcher.get(
+        `/products/sorted-by-rating?page=${page}&size=${size}`
+      );
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response ? error.response.data : error.message
-      )
+      );
     }
   }
-)
+);
 
 export const productSlice = createSlice({
   name: "product",
@@ -145,7 +164,6 @@ export const productSlice = createSlice({
         } else {
           state.product = payload;
         }
-        console.log("Fulfilled payload:", JSON.stringify(payload, null, 2));
       })
       .addCase(createProductApi.rejected, (state, { payload }) => {
         state.isLoading = false;
@@ -154,8 +172,6 @@ export const productSlice = createSlice({
       .addCase(fetchAllProductsPaginated.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-        state.allProducts = [];
-        state.allProductsPagination = null;
       })
       .addCase(fetchAllProductsPaginated.fulfilled, (state, { payload }) => {
         state.isLoading = false;
@@ -170,9 +186,6 @@ export const productSlice = createSlice({
             first: payload.first,
             last: payload.last,
           };
-        } else if (Array.isArray(payload)) {
-          state.allProducts = payload;
-          state.allProductsPagination = null;
         } else {
           state.allProducts = [];
           state.allProductsPagination = null;
@@ -192,16 +205,16 @@ export const productSlice = createSlice({
         state.isLoadingTopRated = true;
         state.errorTopRated = null;
       })
-      .addCase(fetchSortedRating.fulfilled, (state, {payload}) => {
+      .addCase(fetchSortedRating.fulfilled, (state, { payload }) => {
         state.isLoadingTopRated = false;
         state.errorTopRated = null;
         state.topRatedProducts = payload.content;
       })
-      .addCase(fetchSortedRating.rejected, (state, {payload}) => {
+      .addCase(fetchSortedRating.rejected, (state, { payload }) => {
         state.isLoadingTopRated = false;
         state.errorTopRated = payload;
         state.topRatedProducts = [];
-      })
+      });
   },
 });
 
