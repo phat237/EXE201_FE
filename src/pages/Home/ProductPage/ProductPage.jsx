@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Button,
   Card,
@@ -18,7 +18,6 @@ import {
 import {
   Star as StarIcon,
   Search as SearchIcon,
-  FilterList as FilterIcon,
   Verified as VerifiedIcon,
 } from "@mui/icons-material";
 import "./ProductPage.css";
@@ -27,6 +26,7 @@ import { fetchAllProductsPaginated } from "../../../store/slices/productSlice";
 import LoadingProduct from "../../../components/Loading/LoadingProduct";
 import { Link } from "react-router-dom";
 import { searchApi } from "../../../store/slices/searchSlice";
+import { debounce } from "lodash";
 
 // Categories
 const categories = [
@@ -117,7 +117,8 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(18);
+  const [itemsPerPage] = useState(18);
+  const [sortBy, setSortBy] = useState("popular");
 
   const dispatch = useDispatch();
   const {
@@ -126,8 +127,6 @@ export default function ProductsPage() {
     isLoading,
     error,
   } = useSelector((state) => state.product);
-
-  // Lấy state search từ redux
   const {
     searchResults,
     isLoading: isSearchLoading,
@@ -135,48 +134,92 @@ export default function ProductsPage() {
     pagination: searchPagination,
   } = useSelector((state) => state.search);
 
-  // Fetch all products across all pages on component mount
+  // Fetch products for the current page
   useEffect(() => {
-    const fetchAllProducts = async () => {
-      const totalPages = pagination?.totalPages || 8; // Default to 8 if pagination is not yet available
-      const fetchedProducts = [];
-
-      for (let p = 0; p < totalPages; p++) {
-        try {
-          const response = await dispatch(
-            fetchAllProductsPaginated({
-              page: p,
-              size: 50, // API page size from provided data
-            })
-          ).unwrap();
-          fetchedProducts.push(...response.content);
-        } catch (err) {
-          console.error(`Error fetching page ${p}:`, err);
-        }
-      }
-
-      // Update Redux state with all products (optional, depending on your needs)
-      dispatch({
-        type: "product/fetchAllProductsPaginated/fulfilled",
-        payload: {
-          content: fetchedProducts,
-          totalPages: Math.ceil(fetchedProducts.length / itemsPerPage),
-          totalElements: fetchedProducts.length,
-          number: 0,
+    console.log("Fetching products with filters:", {
+      page,
+      size: itemsPerPage,
+      categories: selectedCategories,
+      ratings: selectedRatings,
+      sortBy,
+      searchQuery
+    });
+    
+    if (searchQuery.trim() === "") {
+      dispatch(
+        fetchAllProductsPaginated({
+          page,
           size: itemsPerPage,
-          first: true,
-          last: false,
-        },
-      });
-    };
+          categories: selectedCategories,
+          ratings: selectedRatings,
+          sortBy,
+        })
+      );
+    }
+  }, [dispatch, page, itemsPerPage, selectedCategories, selectedRatings, sortBy]);
 
-    fetchAllProducts();
-  }, [dispatch]);
+  // Debounced search handler chỉ cho việc thay đổi search query
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value) => {
+        if (value.trim() !== "") {
+          dispatch(
+            searchApi({
+              keyword: value,
+              page: 0,
+              size: itemsPerPage,
+            })
+          );
+        }
+      }, 300),
+    [dispatch, itemsPerPage]
+  );
+
+  // Handle search input change
+  useEffect(() => {
+    if (searchQuery.trim() !== "") {
+      debouncedSearch(searchQuery);
+    }
+  }, [searchQuery, debouncedSearch]);
+
+  // Khi thay đổi filter và có search query, gọi lại search API với filter mới
+  useEffect(() => {
+    if (searchQuery.trim() !== "") {
+      dispatch(
+        searchApi({
+          keyword: searchQuery,
+          page: 0,
+          size: itemsPerPage,
+        })
+      );
+    }
+  }, [selectedCategories, selectedRatings, sortBy, searchQuery, dispatch, itemsPerPage]);
+
+  // Cleanup debounced function
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  // Debug: Log tất cả categories có sẵn
+  useEffect(() => {
+    if (products.length > 0) {
+      const allCategories = [...new Set(products.map(p => p.category))];
+      console.log("All available categories in database:", allCategories);
+      console.log("Categories count:", allCategories.map(cat => ({
+        category: cat,
+        count: products.filter(p => p.category === cat).length
+      })));
+    }
+  }, [products]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
+    console.log("Tab changed to:", newValue);
     setTabValue(newValue);
     setPage(0);
+    setSearchQuery(""); // Clear search query when changing tabs
     const categoryMap = {
       dien_thoai_laptop: ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
       dien_tu_phu_kien: ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
@@ -188,17 +231,23 @@ export default function ProductsPage() {
       xe_co_phu_tung: ["XE_CO_PHU_TUNG"],
       dich_vu_khac: ["DICH_VU", "KHAC"],
     };
-    setSelectedCategories(newValue === "all" ? [] : categoryMap[newValue] || []);
+    const newCategories = newValue === "all" ? [] : categoryMap[newValue] || [];
+    console.log("Setting categories to:", newCategories);
+    setSelectedCategories(newCategories);
   };
 
   // Handle category checkbox change
   const handleCategoryChange = (categoryValue) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryValue)
+    console.log("Category checkbox changed:", categoryValue);
+    setSelectedCategories((prev) => {
+      const newCategories = prev.includes(categoryValue)
         ? prev.filter((cat) => cat !== categoryValue)
-        : [...prev, categoryValue]
-    );
+        : [...prev, categoryValue];
+      console.log("New categories:", newCategories);
+      return newCategories;
+    });
     setPage(0);
+    setSearchQuery(""); // Clear search query when changing category filter
   };
 
   // Handle rating checkbox change
@@ -209,24 +258,25 @@ export default function ProductsPage() {
         : [...prev, rating]
     );
     setPage(0);
+    setSearchQuery(""); // Clear search query when changing rating filter
   };
 
-  // Xử lý search input
+  // Handle search input
   const handleSearchChange = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
     setPage(0);
-    if (value.trim() !== "") {
-      dispatch(searchApi({ keyword: value, page: 0, size: itemsPerPage }));
-    }
   };
 
-  // Xử lý phân trang
+  // Handle sort change
+  const handleSortChange = (event) => {
+    setSortBy(event.target.value);
+    setPage(0);
+  };
+
+  // Handle page change
   const handlePageChange = (event, newPage) => {
     setPage(newPage - 1);
-    if (searchQuery.trim() !== "") {
-      dispatch(searchApi({ keyword: searchQuery, page: newPage - 1, size: itemsPerPage }));
-    }
   };
 
   // Toggle category visibility
@@ -240,39 +290,33 @@ export default function ProductsPage() {
 
   const visibleCategories = showAllCategories ? categories : categories.slice(0, 5);
 
-  // Client-side filtering
-  const filteredProducts = products
-    .filter((product) =>
-      selectedCategories.length === 0
-        ? true
-        : selectedCategories.includes(product.category)
-    )
-    .filter((product) =>
-      selectedRatings.length === 0
-        ? true
-        : selectedRatings.includes(Math.floor(product.averageRating || 0).toString())
-    )
-    .filter((product) =>
-      searchQuery
-        ? product.name.toLowerCase().includes(searchQuery.toLowerCase())
-        : true
-    );
+  // Memoized filtered products
+  const filteredProducts = useMemo(() => {
+    let productsToShow = searchQuery.trim() !== "" ? searchResults : products;
+    
+    // Client-side filtering nếu backend không hỗ trợ
+    if (selectedCategories.length > 0) {
+      productsToShow = productsToShow.filter(product => 
+        selectedCategories.includes(product.category)
+      );
+    }
+    
+    if (selectedRatings.length > 0) {
+      productsToShow = productsToShow.filter(product => {
+        const rating = Math.round(product.averageRating || 0);
+        return selectedRatings.includes(rating.toString());
+      });
+    }
+    
+    return productsToShow;
+  }, [products, searchResults, searchQuery, selectedCategories, selectedRatings]);
 
-  // Client-side pagination
-  const paginatedProducts = filteredProducts.slice(
-    page * itemsPerPage,
-    (page + 1) * itemsPerPage
-  );
-  const totalFilteredPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
-  // Chọn dữ liệu để hiển thị
-  const isSearching = searchQuery.trim() !== "";
-  const productsToShow = isSearching ? searchResults : paginatedProducts;
-  const totalPagesToShow = isSearching
+  const totalPagesToShow = searchQuery.trim() !== ""
     ? (searchPagination?.totalPages || 1)
-    : totalFilteredPages;
-  const loadingToShow = isSearching ? isSearchLoading : isLoading;
-  const errorToShow = isSearching ? searchError : error;
+    : (pagination?.totalPages || 1);
+
+  const loadingToShow = searchQuery.trim() !== "" ? isSearchLoading : isLoading;
+  const errorToShow = searchQuery.trim() !== "" ? searchError : error;
 
   return (
     <Box className="products-container">
@@ -379,7 +423,11 @@ export default function ProductsPage() {
               <Typography variant="caption" className="products-sort-label">
                 Sắp xếp theo:
               </Typography>
-              <Select defaultValue="popular" className="products-sort-select">
+              <Select
+                value={sortBy}
+                onChange={handleSortChange}
+                className="products-sort-select"
+              >
                 <MenuItem value="popular">Phổ biến nhất</MenuItem>
                 <MenuItem value="rating">Đánh giá cao nhất</MenuItem>
                 <MenuItem value="newest">Mới nhất</MenuItem>
@@ -416,9 +464,9 @@ export default function ProductsPage() {
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {errorToShow}
                 </Typography>
-              ) : productsToShow.length > 0 ? (
+              ) : filteredProducts.length > 0 ? (
                 <Box className="products-grid">
-                  {productsToShow.map((product) => (
+                  {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </Box>
