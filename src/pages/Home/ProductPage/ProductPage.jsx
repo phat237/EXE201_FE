@@ -82,7 +82,7 @@ function ProductCard({ product }) {
               {product.averageRating || 0}
             </Typography>
             <Typography variant="caption" className="products-review-count">
-              ({product.reviewCount || 0})
+              ({product.reviewCount || 0} đánh giá)
             </Typography>
           </Box>
           {product.isVerified && (

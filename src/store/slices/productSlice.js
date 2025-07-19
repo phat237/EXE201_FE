@@ -84,7 +84,7 @@ export const fetchAllProductsPaginated = createAsyncThunk(
             return {
               ...product,
               averageRating: ratingResponse.averageRating || 0,
-              reviewCount: ratingResponse.reviewCount || 0,
+              reviewCount: ratingResponse.totalReviewers || 0, // Lấy đúng trường
             };
           } catch (error) {
             console.error(
