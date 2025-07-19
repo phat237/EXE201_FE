@@ -1,15 +1,58 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { fetcher } from "../../apis/fetcher";
+import { averageRating } from "./reviewSlice"; // Import averageRating
 
 export const searchApi = createAsyncThunk(
   "search/searchApi",
-  async ({ keyword, page = 0, size = 10 }, { rejectWithValue }) => {
+  async ({ keyword, page = 0, size = 10, categories = [], ratings = [], sortBy = "popular" }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await fetcher(
-        `/products/search/paging?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`
+      let url = `/products/search/paging?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`;
+      
+      // Thêm filter parameters nếu có
+      if (categories && categories.length > 0) {
+        url += `&categories=${categories.join(",")}`;
+      }
+      if (ratings && ratings.length > 0) {
+        url += `&ratings=${ratings.join(",")}`;
+      }
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
+      }
+      
+      console.log("Search API URL:", url);
+      console.log("Search parameters:", { keyword, page, size, categories, ratings, sortBy });
+      
+      const response = await fetcher(url);
+      console.log("Search API response:", response);
+      
+      const products = response.content || response.data?.content || [];
+      
+      // Fetch average rating for each product (giống như trong productSlice)
+      const enrichedProducts = await Promise.all(
+        products.map(async (product) => {
+          try {
+            const ratingResponse = await dispatch(
+              averageRating(product.id)
+            ).unwrap();
+            return {
+              ...product,
+              averageRating: ratingResponse.averageRating || 0,
+              reviewCount: ratingResponse.reviewCount || 0,
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching average rating for product ${product.id}:`,
+              error
+            );
+            return { ...product, averageRating: 0, reviewCount: 0 };
+          }
+        })
       );
-      console.log("API response in slice:", response);
-      return response;
+
+      return {
+        ...response,
+        content: enrichedProducts,
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
