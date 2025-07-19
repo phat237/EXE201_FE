@@ -168,11 +168,14 @@ export default function ProductsPage() {
               keyword: value,
               page: 0,
               size: itemsPerPage,
+              categories: selectedCategories,
+              ratings: selectedRatings,
+              sortBy,
             })
           );
         }
       }, 300),
-    [dispatch, itemsPerPage]
+    [dispatch, itemsPerPage, selectedCategories, selectedRatings, sortBy]
   );
 
   // Handle search input change
@@ -190,6 +193,9 @@ export default function ProductsPage() {
           keyword: searchQuery,
           page: 0,
           size: itemsPerPage,
+          categories: selectedCategories,
+          ratings: selectedRatings,
+          sortBy,
         })
       );
     }
@@ -218,8 +224,7 @@ export default function ProductsPage() {
   const handleTabChange = (event, newValue) => {
     console.log("Tab changed to:", newValue);
     setTabValue(newValue);
-    setPage(0);
-    setSearchQuery(""); // Clear search query when changing tabs
+    // Không clear search query khi thay đổi tab
     const categoryMap = {
       dien_thoai_laptop: ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
       dien_tu_phu_kien: ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
@@ -246,8 +251,7 @@ export default function ProductsPage() {
       console.log("New categories:", newCategories);
       return newCategories;
     });
-    setPage(0);
-    setSearchQuery(""); // Clear search query when changing category filter
+    // Không clear search query khi thay đổi category filter
   };
 
   // Handle rating checkbox change
@@ -257,27 +261,47 @@ export default function ProductsPage() {
         ? prev.filter((r) => r !== rating)
         : [...prev, rating]
     );
-    setPage(0);
-    setSearchQuery(""); // Clear search query when changing rating filter
+    // Không clear search query khi thay đổi rating filter
   };
 
   // Handle search input
   const handleSearchChange = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
-    setPage(0);
+    // setPage(0); // Đã có useEffect handle
   };
 
   // Handle sort change
   const handleSortChange = (event) => {
     setSortBy(event.target.value);
-    setPage(0);
+    // setPage(0); // Đã có useEffect handle
   };
 
   // Handle page change
   const handlePageChange = (event, newPage) => {
     setPage(newPage - 1);
   };
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [selectedCategories, selectedRatings, sortBy, searchQuery]);
+
+  // Handle page change for search
+  useEffect(() => {
+    if (searchQuery.trim() !== "" && page > 0) {
+      dispatch(
+        searchApi({
+          keyword: searchQuery,
+          page,
+          size: itemsPerPage,
+          categories: selectedCategories,
+          ratings: selectedRatings,
+          sortBy,
+        })
+      );
+    }
+  }, [page, searchQuery, dispatch, itemsPerPage, selectedCategories, selectedRatings, sortBy]);
 
   // Toggle category visibility
   const handleShowMoreCategories = () => {
@@ -290,30 +314,54 @@ export default function ProductsPage() {
 
   const visibleCategories = showAllCategories ? categories : categories.slice(0, 5);
 
-  // Memoized filtered products
+  // Memoized filtered products with pagination
   const filteredProducts = useMemo(() => {
     let productsToShow = searchQuery.trim() !== "" ? searchResults : products;
     
-    // Client-side filtering nếu backend không hỗ trợ
-    if (selectedCategories.length > 0) {
-      productsToShow = productsToShow.filter(product => 
-        selectedCategories.includes(product.category)
-      );
-    }
-    
-    if (selectedRatings.length > 0) {
-      productsToShow = productsToShow.filter(product => {
-        const rating = Math.round(product.averageRating || 0);
-        return selectedRatings.includes(rating.toString());
-      });
+    // Nếu có search query và có filter, áp dụng client-side filtering
+    // vì có thể API search không hỗ trợ filter parameters
+    if (searchQuery.trim() !== "" && (selectedCategories.length > 0 || selectedRatings.length > 0)) {
+      if (selectedCategories.length > 0) {
+        productsToShow = productsToShow.filter(product => 
+          selectedCategories.includes(product.category)
+        );
+      }
+      
+      if (selectedRatings.length > 0) {
+        productsToShow = productsToShow.filter(product => {
+          const rating = Math.round(product.averageRating || 0);
+          return selectedRatings.includes(rating.toString());
+        });
+      }
     }
     
     return productsToShow;
   }, [products, searchResults, searchQuery, selectedCategories, selectedRatings]);
 
-  const totalPagesToShow = searchQuery.trim() !== ""
-    ? (searchPagination?.totalPages || 1)
-    : (pagination?.totalPages || 1);
+  // Memoized paginated products
+  const paginatedProducts = useMemo(() => {
+    // Nếu có search query và có client-side filtering, áp dụng pagination
+    if (searchQuery.trim() !== "" && (selectedCategories.length > 0 || selectedRatings.length > 0)) {
+      const startIndex = page * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filteredProducts.slice(startIndex, endIndex);
+    }
+    // Nếu không có client-side filtering, sử dụng kết quả từ API
+    return filteredProducts;
+  }, [filteredProducts, page, itemsPerPage, searchQuery, selectedCategories, selectedRatings]);
+
+  const totalPagesToShow = useMemo(() => {
+    if (searchQuery.trim() !== "") {
+      // Nếu có client-side filtering, tính toán lại số trang
+      if (selectedCategories.length > 0 || selectedRatings.length > 0) {
+        const filteredCount = filteredProducts.length;
+        return Math.ceil(filteredCount / itemsPerPage);
+      }
+      // Nếu không có filter, sử dụng pagination từ API
+      return searchPagination?.totalPages || 1;
+    }
+    return pagination?.totalPages || 1;
+  }, [searchQuery, selectedCategories, selectedRatings, filteredProducts, itemsPerPage, searchPagination, pagination]);
 
   const loadingToShow = searchQuery.trim() !== "" ? isSearchLoading : isLoading;
   const errorToShow = searchQuery.trim() !== "" ? searchError : error;
@@ -464,14 +512,14 @@ export default function ProductsPage() {
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {errorToShow}
                 </Typography>
-              ) : filteredProducts.length > 0 ? (
+              ) : filteredProducts.length === 0 ? (
+                <Typography>Không tìm thấy sản phẩm nào.</Typography>
+              ) : (
                 <Box className="products-grid">
-                  {filteredProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </Box>
-              ) : (
-                <Typography>Không tìm thấy sản phẩm nào.</Typography>
               )}
               {!loadingToShow && totalPagesToShow > 1 && (
                 <Box
