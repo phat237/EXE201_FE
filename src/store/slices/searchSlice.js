@@ -19,11 +19,10 @@ export const searchApi = createAsyncThunk(
         url += `&sortBy=${sortBy}`;
       }
       
-      console.log("Search API URL:", url);
-      console.log("Search parameters:", { keyword, page, size, categories, ratings, sortBy });
+     
       
       const response = await fetcher(url);
-      console.log("Search API response:", response);
+    
       
       const products = response.content || response.data?.content || [];
       
@@ -37,13 +36,9 @@ export const searchApi = createAsyncThunk(
             return {
               ...product,
               averageRating: ratingResponse.averageRating || 0,
-              reviewCount: ratingResponse.reviewCount || 0,
+              reviewCount: ratingResponse.totalReviewers || 0, // Lấy đúng trường
             };
-          } catch (error) {
-            console.error(
-              `Error fetching average rating for product ${product.id}:`,
-              error
-            );
+          } catch {
             return { ...product, averageRating: 0, reviewCount: 0 };
           }
         })
@@ -59,10 +54,23 @@ export const searchApi = createAsyncThunk(
   }
 );
 
+export const searchCategory = createAsyncThunk(
+  "search/searchCategory",
+  async({category,page, size }, {rejectWithValue}) => {
+    try {
+      const response = await fetcher.get(`/products/search-by-category?category=${category}&page=${page}&size=${size}`)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+)
+
 const searchSlice = createSlice({
   name: "search",
   initialState: {
     searchResults: [],
+    searchCategory: {},
     pagination: null,
     isLoading: false,
     error: null,
@@ -87,7 +95,19 @@ const searchSlice = createSlice({
       .addCase(searchApi.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Lỗi không xác định";
-      });
+      })
+      .addCase(searchCategory.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(searchCategory.fulfilled, (state, {payload}) => {
+        state.isLoading = false;
+        state.error = null;
+        state.searchCategory = payload; // payload nên có content, totalPages
+      })
+      .addCase(searchCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || "Lỗi không xác định";
+      })
   },
 });
 
