@@ -12,7 +12,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ReportIcon from "@mui/icons-material/Report";
 import { fetchAllProductsPaginated, fetchSortedRating } from "../../../store/slices/productSlice";
-import { averageRating } from "../../../store/slices/reviewSlice"; // Import averageRating thunk
+import { averageRating } from "../../../store/slices/reviewSlice";
 import "./HomePage.css";
 import { Link, useNavigate } from "react-router-dom";
 import image1 from "../../../assets/Lovepik_com-450122121-Person giving online reviews .png";
@@ -52,8 +52,8 @@ export default function HomePage() {
     error: ratingsError,
   } = useSelector((state) => state.review);
 
+  // Gọi fetchAllProductsPaginated khi mount để lấy sản phẩm mới nhất
   useEffect(() => {
-    // Fetch 8 products, sorted by createdAt descending
     dispatch(
       fetchAllProductsPaginated({
         page: 0,
@@ -61,21 +61,23 @@ export default function HomePage() {
         sortBy: "createdAt",
         sortDir: "desc",
       })
-    )
-      .unwrap()
-      .then((data) => {
-        console.log("Products API response:", data);
-        // Fetch average rating for each product
-        data.content.forEach((product) => {
-          dispatch(averageRating(product.id));
-        });
-      })
-      .catch((err) => {
-        console.error("Products API error:", err);
+    );
+  }, [dispatch]);
+
+  // Gọi averageRating cho từng sản phẩm topRatedProducts khi có dữ liệu
+  useEffect(() => {
+    if (topRatedProducts && topRatedProducts.length > 0) {
+      topRatedProducts.forEach((product) => {
+        dispatch(averageRating(product.id));
       });
-    // Fetch top 4 rated products
+    }
+  }, [topRatedProducts, dispatch]);
+
+  // Gọi fetchSortedRating khi mount để lấy sản phẩm được đánh giá cao nhất
+  useEffect(() => {
     dispatch(fetchSortedRating({ page: 0, size: 4 }));
   }, [dispatch]);
+
   console.log("Current ratings:", ratings);
 
   // Latest products: first 4 products (already sorted by createdAt)
@@ -292,35 +294,41 @@ export default function HomePage() {
             </Typography>
           ) : highlyRatedProducts.length > 0 ? (
             <Box className="highly-rated-products-cards">
-              {highlyRatedProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  to={`/san-pham/${product.id}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <Card className="product-card">
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={product.sourceUrl || "https://via.placeholder.com/300x200"}
-                      alt={product.name}
-                    />
-                    <CardContent>
-                      <Box>
-                        <Typography variant="h6" className="product-card-title">
-                          {product.name}
-                        </Typography>
-                        <Typography className="product-card-description">
-                          {product.category || "Không có mô tả."}
-                        </Typography>
-                      </Box>
-                      <Box className="product-card-rating">
-                        {renderStars(product.averageRating)}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+              {highlyRatedProducts.map((product) => {
+                const productRating = ratings[product.id];
+                const avg = typeof productRating === 'object' ? productRating.averageRating : productRating;
+                const reviewers = typeof productRating === 'object' ? productRating.totalReviewers : 0;
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/san-pham/${product.id}`}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Card className="product-card">
+                      <CardMedia
+                        component="img"
+                        height="200"
+                        image={product.sourceUrl || "https://via.placeholder.com/300x200"}
+                        alt={product.name}
+                      />
+                      <CardContent>
+                        <Box>
+                          <Typography variant="h6" className="product-card-title">
+                            {product.name}
+                          </Typography>
+                          <Typography className="product-card-description">
+                            {product.category || "Không có mô tả."}
+                          </Typography>
+                        </Box>
+                        <Box className="product-card-rating">
+                          {renderStars(avg || 0)}
+                         
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </Box>
           ) : (
             <Typography>Không có sản phẩm được đánh giá cao.</Typography>
@@ -342,3 +350,4 @@ export default function HomePage() {
     </>
   );
 }
+

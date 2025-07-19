@@ -27,6 +27,7 @@ import LoadingProduct from "../../../components/Loading/LoadingProduct";
 import { Link } from "react-router-dom";
 import { searchApi } from "../../../store/slices/searchSlice";
 import { debounce } from "lodash";
+import { searchCategory } from "../../../store/slices/searchSlice";
 
 // Categories
 const categories = [
@@ -132,6 +133,7 @@ export default function ProductsPage() {
     isLoading: isSearchLoading,
     error: searchError,
     pagination: searchPagination,
+    searchCategory: searchCategoryResult,
   } = useSelector((state) => state.search);
 
   // Fetch products for the current page
@@ -239,6 +241,23 @@ export default function ProductsPage() {
     const newCategories = newValue === "all" ? [] : categoryMap[newValue] || [];
     console.log("Setting categories to:", newCategories);
     setSelectedCategories(newCategories);
+    setPage(0);
+    if (searchQuery.trim() === "") {
+      if (newCategories.length === 1) {
+        dispatch(searchCategory({
+          category: newCategories[0],
+          page: 0,
+          size: itemsPerPage
+        }));
+      } else if (newCategories.length > 1) {
+        // Nếu nhiều category, chỉ lấy category đầu tiên (hoặc sửa lại nếu API hỗ trợ nhiều category)
+        dispatch(searchCategory({
+          category: newCategories[0],
+          page: 0,
+          size: itemsPerPage
+        }));
+      }
+    }
   };
 
   // Handle category checkbox change
@@ -249,6 +268,22 @@ export default function ProductsPage() {
         ? prev.filter((cat) => cat !== categoryValue)
         : [...prev, categoryValue];
       console.log("New categories:", newCategories);
+      if (searchQuery.trim() === "") {
+        if (newCategories.length === 1) {
+          dispatch(searchCategory({
+            category: newCategories[0],
+            page: 0,
+            size: itemsPerPage
+          }));
+        } else if (newCategories.length > 1) {
+          // Nếu nhiều category, chỉ lấy category đầu tiên (hoặc sửa lại nếu API hỗ trợ nhiều category)
+          dispatch(searchCategory({
+            category: newCategories[0],
+            page: 0,
+            size: itemsPerPage
+          }));
+        }
+      }
       return newCategories;
     });
     // Không clear search query khi thay đổi category filter
@@ -316,27 +351,14 @@ export default function ProductsPage() {
 
   // Memoized filtered products with pagination
   const filteredProducts = useMemo(() => {
-    let productsToShow = searchQuery.trim() !== "" ? searchResults : products;
-    
-    // Nếu có search query và có filter, áp dụng client-side filtering
-    // vì có thể API search không hỗ trợ filter parameters
-    if (searchQuery.trim() !== "" && (selectedCategories.length > 0 || selectedRatings.length > 0)) {
-      if (selectedCategories.length > 0) {
-        productsToShow = productsToShow.filter(product => 
-          selectedCategories.includes(product.category)
-        );
-      }
-      
-      if (selectedRatings.length > 0) {
-        productsToShow = productsToShow.filter(product => {
-          const rating = Math.round(product.averageRating || 0);
-          return selectedRatings.includes(rating.toString());
-        });
-      }
+    if (searchQuery.trim() !== "") {
+      return searchResults;
     }
-    
-    return productsToShow;
-  }, [products, searchResults, searchQuery, selectedCategories, selectedRatings]);
+    if (selectedCategories.length > 0 && searchCategoryResult?.content) {
+      return searchCategoryResult.content;
+    }
+    return products;
+  }, [products, searchResults, searchQuery, selectedCategories, searchCategoryResult]);
 
   // Memoized paginated products
   const paginatedProducts = useMemo(() => {
@@ -360,8 +382,11 @@ export default function ProductsPage() {
       // Nếu không có filter, sử dụng pagination từ API
       return searchPagination?.totalPages || 1;
     }
+    if (selectedCategories.length > 0 && searchCategoryResult?.totalPages) {
+      return searchCategoryResult.totalPages;
+    }
     return pagination?.totalPages || 1;
-  }, [searchQuery, selectedCategories, selectedRatings, filteredProducts, itemsPerPage, searchPagination, pagination]);
+  }, [searchQuery, selectedCategories, selectedRatings, filteredProducts, itemsPerPage, searchPagination, pagination, searchCategoryResult]);
 
   const loadingToShow = searchQuery.trim() !== "" ? isSearchLoading : isLoading;
   const errorToShow = searchQuery.trim() !== "" ? searchError : error;
