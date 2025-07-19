@@ -226,7 +226,6 @@ export default function ProductsPage() {
   const handleTabChange = (event, newValue) => {
     console.log("Tab changed to:", newValue);
     setTabValue(newValue);
-    // Không clear search query khi thay đổi tab
     const categoryMap = {
       dien_thoai_laptop: ["DIEN_THOAI", "LAPTOP", "MAY_TINH"],
       dien_tu_phu_kien: ["DIEN_TU_GIA_DUNG", "PHU_KIEN_CONG_NGHE"],
@@ -239,54 +238,56 @@ export default function ProductsPage() {
       dich_vu_khac: ["DICH_VU", "KHAC"],
     };
     const newCategories = newValue === "all" ? [] : categoryMap[newValue] || [];
-    console.log("Setting categories to:", newCategories);
     setSelectedCategories(newCategories);
     setPage(0);
     if (searchQuery.trim() === "") {
       if (newCategories.length === 1) {
-        dispatch(searchCategory({
-          category: newCategories[0],
-          page: 0,
-          size: itemsPerPage
-        }));
+        dispatch(
+          searchCategory({
+            category: newCategories[0],
+            page: 0,
+            size: itemsPerPage,
+          })
+        );
       } else if (newCategories.length > 1) {
-        // Nếu nhiều category, chỉ lấy category đầu tiên (hoặc sửa lại nếu API hỗ trợ nhiều category)
-        dispatch(searchCategory({
-          category: newCategories[0],
-          page: 0,
-          size: itemsPerPage
-        }));
+        dispatch(
+          searchCategory({
+            category: newCategories[0],
+            page: 0,
+            size: itemsPerPage,
+          })
+        );
       }
     }
   };
 
   // Handle category checkbox change
   const handleCategoryChange = (categoryValue) => {
-    console.log("Category checkbox changed:", categoryValue);
     setSelectedCategories((prev) => {
       const newCategories = prev.includes(categoryValue)
         ? prev.filter((cat) => cat !== categoryValue)
         : [...prev, categoryValue];
-      console.log("New categories:", newCategories);
       if (searchQuery.trim() === "") {
         if (newCategories.length === 1) {
-          dispatch(searchCategory({
-            category: newCategories[0],
-            page: 0,
-            size: itemsPerPage
-          }));
+          dispatch(
+            searchCategory({
+              category: newCategories[0],
+              page: 0,
+              size: itemsPerPage,
+            })
+          );
         } else if (newCategories.length > 1) {
-          // Nếu nhiều category, chỉ lấy category đầu tiên (hoặc sửa lại nếu API hỗ trợ nhiều category)
-          dispatch(searchCategory({
-            category: newCategories[0],
-            page: 0,
-            size: itemsPerPage
-          }));
+          dispatch(
+            searchCategory({
+              category: newCategories[0],
+              page: 0,
+              size: itemsPerPage,
+            })
+          );
         }
       }
       return newCategories;
     });
-    // Không clear search query khi thay đổi category filter
   };
 
   // Handle rating checkbox change
@@ -296,20 +297,17 @@ export default function ProductsPage() {
         ? prev.filter((r) => r !== rating)
         : [...prev, rating]
     );
-    // Không clear search query khi thay đổi rating filter
   };
 
   // Handle search input
   const handleSearchChange = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
-    // setPage(0); // Đã có useEffect handle
   };
 
   // Handle sort change
   const handleSortChange = (event) => {
     setSortBy(event.target.value);
-    // setPage(0); // Đã có useEffect handle
   };
 
   // Handle page change
@@ -351,13 +349,24 @@ export default function ProductsPage() {
 
   // Memoized filtered products with pagination
   const filteredProducts = useMemo(() => {
+    let productsToShow;
     if (searchQuery.trim() !== "") {
-      return searchResults;
+      productsToShow = searchResults;
+    } else if (selectedCategories.length > 0 && searchCategoryResult?.content) {
+      productsToShow = searchCategoryResult.content;
+    } else {
+      productsToShow = products;
     }
-    if (selectedCategories.length > 0 && searchCategoryResult?.content) {
-      return searchCategoryResult.content;
-    }
-    return products;
+
+    // Luôn lấy số sao và lượt review từ products gốc (API chính)
+    return (productsToShow || []).map((p) => {
+      const productFromMain = products.find((main) => main.id === p.id);
+      return {
+        ...p,
+        averageRating: productFromMain?.averageRating ?? productFromMain?.rating ?? 0,
+        reviewCount: productFromMain?.reviewCount ?? (Array.isArray(productFromMain?.reviews) ? productFromMain.reviews.length : 0),
+      };
+    });
   }, [products, searchResults, searchQuery, selectedCategories, searchCategoryResult]);
 
   // Memoized paginated products
@@ -390,6 +399,24 @@ export default function ProductsPage() {
 
   const loadingToShow = searchQuery.trim() !== "" ? isSearchLoading : isLoading;
   const errorToShow = searchQuery.trim() !== "" ? searchError : error;
+
+  // Thêm useEffect để phân trang cho searchCategory
+  useEffect(() => {
+    if (
+      searchQuery.trim() === "" &&
+      selectedCategories.length > 0 &&
+      page >= 0
+    ) {
+      // Hiện tại chỉ lấy category đầu tiên, có thể sửa lại nếu API hỗ trợ nhiều category
+      dispatch(
+        searchCategory({
+          category: selectedCategories[0],
+          page: page,
+          size: itemsPerPage,
+        })
+      );
+    }
+  }, [searchQuery, selectedCategories, page, itemsPerPage, dispatch]);
 
   return (
     <Box className="products-container">
@@ -556,25 +583,82 @@ export default function ProductsPage() {
                     alignItems: "center",
                   }}
                 >
-                  <Pagination
-                    count={totalPagesToShow}
-                    page={page + 1}
-                    onChange={handlePageChange}
-                    color="primary"
-                    siblingCount={0}
-                    boundaryCount={1}
-                    sx={{
-                      "& .MuiPagination-ul": {
-                        flexDirection: "row",
-                        display: "flex",
-                        gap: "8px",
-                      },
-                      "& .MuiPaginationItem-root": {
-                        display: "inline-flex",
-                        margin: "0 4px",
-                      },
-                    }}
-                  />
+                  {/* Custom Pagination: chỉ hiển thị 3 số trang liên tiếp, style nhẹ nhàng */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        minWidth: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        borderColor: "#e0e0e0",
+                        color: "#888",
+                        p: 0,
+                        fontWeight: 600,
+                        boxShadow: "none",
+                        '&:hover': { borderColor: '#bdbdbd', background: '#f5f5f5' },
+                      }}
+                      disabled={page === 0}
+                      onClick={() => handlePageChange(null, page)}
+                    >
+                      &lt;
+                    </Button>
+                    {(() => {
+                      let start = Math.max(1, page + 1 - 1);
+                      let end = Math.min(totalPagesToShow, start + 2);
+                      if (end - start < 2) start = Math.max(1, end - 2);
+                      const pages = [];
+                      for (let i = start; i <= end; i++) {
+                        pages.push(i);
+                      }
+                      return pages.map((p) => (
+                        <Button
+                          key={p}
+                          size="small"
+                          variant={p === page + 1 ? "contained" : "outlined"}
+                          color={p === page + 1 ? "primary" : "inherit"}
+                          sx={{
+                            minWidth: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            p: 0,
+                            fontWeight: p === page + 1 ? 700 : 500,
+                            background: p === page + 1 ? undefined : "#fff",
+                            color: p === page + 1 ? undefined : "#888",
+                            borderColor: "#e0e0e0",
+                            boxShadow: "none",
+                            '&:hover': {
+                              background: p === page + 1 ? undefined : "#f5f5f5",
+                              borderColor: "#bdbdbd",
+                            },
+                          }}
+                          onClick={() => handlePageChange(null, p)}
+                        >
+                          {p}
+                        </Button>
+                      ));
+                    })()}
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        minWidth: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        borderColor: "#e0e0e0",
+                        color: "#888",
+                        p: 0,
+                        fontWeight: 600,
+                        boxShadow: "none",
+                        '&:hover': { borderColor: '#bdbdbd', background: '#f5f5f5' },
+                      }}
+                      disabled={page + 1 === totalPagesToShow}
+                      onClick={() => handlePageChange(null, page + 2)}
+                    >
+                      &gt;
+                    </Button>
+                  </Box>
                 </Box>
               )}
             </Box>
