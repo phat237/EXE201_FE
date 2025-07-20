@@ -162,6 +162,20 @@ export const fetchReviewHelpfulCount = createAsyncThunk(
   }
 );
 
+export const fetchReviewLiked = createAsyncThunk(
+  "review/fetchReviewLiked",
+  async (reviewId, { rejectWithValue }) => {
+    try {
+      const response = await fetcher.get(`/reviews/liked/${reviewId}`);
+      return response.data; // Giả định trả về true/false hoặc object có trường liked
+    } catch (error) {
+      return rejectWithValue(
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+);
+
 export const fetchReviewStats = createAsyncThunk(
   "review/fetchReviewStats",
   async (_, { rejectWithValue }) => {
@@ -395,6 +409,24 @@ export const reviewSlice = createSlice({
       })
       .addCase(fetchReviewHelpfulCount.rejected, (state, action) => {
         state.error = action.payload || "Lỗi khi lấy số lượng like của review";
+      })
+      // Thêm xử lý cho fetchReviewLiked
+      .addCase(fetchReviewLiked.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchReviewLiked.fulfilled, (state, { payload, meta }) => {
+        state.isLoading = false;
+        state.error = null;
+        // Lưu trạng thái liked vào loadingStates.helpfulReviews hoặc một state riêng nếu muốn
+        if (!state.loadingStates.helpfulReviews) state.loadingStates.helpfulReviews = {};
+        state.loadingStates.helpfulReviews[meta.arg] = payload;
+      })
+      .addCase(fetchReviewLiked.rejected, (state, { payload, meta }) => {
+        state.isLoading = false;
+        state.error = payload;
+        if (!state.loadingStates.helpfulReviews) state.loadingStates.helpfulReviews = {};
+        state.loadingStates.helpfulReviews[meta.arg] = false;
       })
       // Thêm xử lý cho fetchReviewStats
       .addCase(fetchReviewStats.pending, (state) => {

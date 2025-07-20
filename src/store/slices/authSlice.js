@@ -71,6 +71,25 @@ export const loginApi = createAsyncThunk(
   }
 );
 
+export const accountCurrentApi = createAsyncThunk(
+  "auth/accountCurrentApi",
+  async (_, { rejectWithValue, getState }) => {
+    const state = getState();
+    const currentUser = state.auth.currentUser;
+    const accessToken = currentUser?.token || currentUser?.accessToken;
+    try {
+      const response = await fetcher.get("/accounts/accountCurrent", {
+        headers: {
+          Authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -149,6 +168,18 @@ export const authSlice = createSlice({
         state.currentUser = payload; // Lưu payload (data)
       })
       .addCase(registerParnerApi.rejected, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = payload;
+      })
+      .addCase(accountCurrentApi.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(accountCurrentApi.fulfilled, (state, { payload }) => {
+        state.isLoading = false;
+        state.error = null;
+        state.currentUser = payload;
+      })
+      .addCase(accountCurrentApi.rejected, (state, { payload }) => {
         state.isLoading = false;
         state.error = payload;
       });

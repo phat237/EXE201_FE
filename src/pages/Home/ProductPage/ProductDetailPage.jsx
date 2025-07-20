@@ -11,6 +11,7 @@ import {
   markReviewHelpful,
   averageRating,
   fetchReviewHelpfulCount,
+  fetchReviewLiked, // Thêm import
 } from "../../../store/slices/reviewSlice";
 import {
   Button,
@@ -161,9 +162,13 @@ export default function ProductDetailPage() {
         if (typeof review.helpfulCount !== "number") {
           dispatch(fetchReviewHelpfulCount(review.id));
         }
+        // Gọi fetchReviewLiked nếu chưa có trạng thái
+        if (loadingStates.helpfulReviews[review.id] === undefined) {
+          dispatch(fetchReviewLiked(review.id));
+        }
       });
     }
-  }, [reviews, dispatch]);
+  }, [reviews, dispatch, loadingStates.helpfulReviews]);
 
   useEffect(() => {
     if (productId) {
@@ -337,6 +342,12 @@ export default function ProductDetailPage() {
           [reviewId]: { ...prev[reviewId], helpful: newStatus },
         }));
         dispatch(fetchReviewHelpfulCount(reviewId));
+        // Cập nhật trạng thái liked ngay lập tức để đổi màu nút like
+        dispatch({
+          type: 'review/fetchReviewLiked/fulfilled',
+          payload: newStatus,
+          meta: { arg: reviewId }
+        });
         addNotification(
           newStatus
             ? "Bạn vừa đánh dấu một đánh giá là hữu ích!"
@@ -647,24 +658,24 @@ export default function ProductDetailPage() {
                                 variant="text"
                                 className={`product-review-helpful${helpfulClicked[review.id] ? " helpful-animate" : ""}`}
                                 startIcon={
-                                  <ThumbUpIcon className="product-icon" style={{ color: helpfulStatus[review.id]?.helpful ? "red" : "#666" }} />
+                                  <ThumbUpIcon className="product-icon" style={{ color: loadingStates.helpfulReviews[review.id] ? "red" : "#666" }} />
                                 }
                                 onClick={() =>
                                   handleMarkHelpful(
                                     review.id,
-                                    helpfulStatus[review.id]?.helpful || false
+                                    loadingStates.helpfulReviews[review.id] || false
                                   )
                                 }
-                                disabled={loadingStates.helpfulReviews[review.id]}
+                                disabled={loadingStates.helpfulReviews[review.id] === undefined || loadingStates.helpfulReviews[review.id] === null || loadingStates.helpfulReviews[review.id] === 'loading'}
                                 style={{
-                                  color: helpfulStatus[review.id]?.helpful ? "red" : "#666",
-                                  fontWeight: helpfulStatus[review.id]?.helpful ? 700 : 400,
+                                  color: loadingStates.helpfulReviews[review.id] ? "red" : "#666",
+                                  fontWeight: loadingStates.helpfulReviews[review.id] ? 700 : 400,
                                   transition: "color 0.2s, transform 0.2s",
                                   transform: helpfulClicked[review.id] ? "scale(1.2)" : "none"
                                 }}
                               >
-                                {loadingStates.helpfulReviews[review.id]
-                                  ? "Đang xử lý..."
+                                {loadingStates.helpfulReviews[review.id] === undefined || loadingStates.helpfulReviews[review.id] === null || loadingStates.helpfulReviews[review.id] === 'loading'
+                                  ? "Đang kiểm tra..."
                                   : `${review.helpfulCount || 0} hữu ích`}
                               </Button>
                               <Button

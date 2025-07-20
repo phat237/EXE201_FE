@@ -34,6 +34,7 @@ import "./ProfileUser.css";
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { fetchReviewStats } from '../../store/slices/reviewSlice';
+import { accountCurrentApi } from '../../store/slices/authSlice';
 
 export default function UserProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -46,29 +47,18 @@ export default function UserProfilePage() {
   const [tabValue, setTabValue] = useState("overview");
   const dispatch = useDispatch();
   const reviewStats = useSelector(state => state.review.reviewStats);
+  const user = useSelector(state => state.auth.currentUser);
+  const isLoadingUser = useSelector(state => state.auth.isLoading);
+
+  useEffect(() => {
+    dispatch(accountCurrentApi());
+  }, [dispatch]);
+
   useEffect(() => {
     if (tabValue === 'overview') {
       dispatch(fetchReviewStats());
     }
   }, [dispatch, tabValue]);
-
-  // Sample user data
-  const user = {
-    id: "1",
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "0123456789",
-    avatar: "/placeholder.svg?height=100&width=100",
-    joinDate: "15/03/2023",
-    location: "Hà Nội, Việt Nam",
-    bio: "Tôi thích chia sẻ những trải nghiệm thực tế về các sản phẩm để giúp mọi người đưa ra quyết định mua sắm tốt hơn.",
-    stats: {
-      totalReviews: 24,
-      helpfulVotes: 156,
-      averageRating: 4.2,
-      verifiedReviews: 18,
-    },
-  };
 
   // Sample reviews data
   const recentReviews = [
@@ -143,11 +133,11 @@ export default function UserProfilePage() {
                 <div className="profile-user-avatar-section">
                   <div className="profile-user-avatar-container">
                     <Avatar
-                      src={user.avatar}
-                      alt={user.name}
+                      src={user?.avatar || undefined}
+                      alt={user?.displayName || user?.username || ''}
                       className="profile-user-avatar"
                     >
-                      {user.name.charAt(0)}
+                      {(user?.displayName || user?.username || '').charAt(0)}
                     </Avatar>
                     {isEditing && (
                       <IconButton className="profile-user-avatar-edit">
@@ -159,13 +149,13 @@ export default function UserProfilePage() {
                     {isEditing ? (
                       <div className="profile-user-edit-fields">
                         <TextField
-                          defaultValue={user.name}
+                          defaultValue={user?.displayName || user?.username || ''}
                           label="Họ và tên"
                           fullWidth
                           margin="normal"
                         />
                         <TextField
-                          defaultValue={user.bio}
+                          defaultValue={user?.bio || ''}
                           label="Giới thiệu về bạn"
                           multiline
                           rows={3}
@@ -175,9 +165,9 @@ export default function UserProfilePage() {
                       </div>
                     ) : (
                       <div>
-                        <Typography variant="h6">{user.name}</Typography>
+                        <Typography variant="h6">{user?.displayName || user?.username}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {user.bio}
+                          {user?.bio || ''}
                         </Typography>
                       </div>
                     )}
@@ -189,7 +179,7 @@ export default function UserProfilePage() {
                     <Typography variant="subtitle2">Email</Typography>
                     {isEditing ? (
                       <TextField
-                        defaultValue={user.email}
+                        defaultValue={user?.email || ''}
                         type="email"
                         fullWidth
                         margin="normal"
@@ -197,7 +187,7 @@ export default function UserProfilePage() {
                     ) : (
                       <div className="profile-user-info-display">
                         <Email className="profile-user-info-icon" />
-                        <Typography variant="body2">{user.email}</Typography>
+                        <Typography variant="body2">{user?.email}</Typography>
                       </div>
                     )}
                   </div>
@@ -205,7 +195,7 @@ export default function UserProfilePage() {
                     <Typography variant="subtitle2">Số điện thoại</Typography>
                     {isEditing ? (
                       <TextField
-                        defaultValue={user.phone}
+                        defaultValue={user?.phone || ''}
                         type="tel"
                         fullWidth
                         margin="normal"
@@ -213,7 +203,7 @@ export default function UserProfilePage() {
                     ) : (
                       <div className="profile-user-info-display">
                         <Phone className="profile-user-info-icon" />
-                        <Typography variant="body2">{user.phone}</Typography>
+                        <Typography variant="body2">{user?.phone || 'Chưa cập nhật'}</Typography>
                       </div>
                     )}
                   </div>
@@ -221,14 +211,14 @@ export default function UserProfilePage() {
                     <Typography variant="subtitle2">Ngày tham gia</Typography>
                     <div className="profile-user-info-display">
                       <CalendarToday className="profile-user-info-icon" />
-                      <Typography variant="body2">{user.joinDate}</Typography>
+                      <Typography variant="body2">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''}</Typography>
                     </div>
                   </div>
                   <div className="profile-user-info-item">
                     <Typography variant="subtitle2">Địa điểm</Typography>
                     {isEditing ? (
                       <TextField
-                        defaultValue={user.location}
+                        defaultValue={user?.location || ''}
                         label="Thành phố, Quốc gia"
                         fullWidth
                         margin="normal"
@@ -236,7 +226,7 @@ export default function UserProfilePage() {
                     ) : (
                       <div className="profile-user-info-display">
                         <LocationOn className="profile-user-info-icon" />
-                        <Typography variant="body2">{user.location}</Typography>
+                        <Typography variant="body2">{user?.location || 'Chưa cập nhật'}</Typography>
                       </div>
                     )}
                   </div>
