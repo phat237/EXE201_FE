@@ -91,9 +91,7 @@ export default function BusinessPage() {
             chuyên sâu
           </Typography>
         </Box>
-        <Button variant="contained" component={Link} to="/doanh-nghiep/dang-ky">
-          Đăng Ký Ngay
-        </Button>
+    
       </Box>
 
       <Box className="business-why-section">

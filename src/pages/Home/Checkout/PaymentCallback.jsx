@@ -34,6 +34,7 @@ export default function PaymentCallback() {
       cancel,
       partnerId,
       transactionId,
+      packageId,
       rawQuery: location.search, // URL gốc
     });
 
@@ -43,14 +44,20 @@ export default function PaymentCallback() {
         const isSuccess = status === "PAID" && (!code || code === "00") && cancel !== "true";
 
         if (isSuccess) {
+          if (!packageId) {
+            toast.error("Thiếu packageId, không thể xác nhận giao dịch!");
+            navigate("/");
+            return;
+          }
           // Gọi API xác nhận thanh toán thành công
+          await dispatch(checkoutSuccessApi({ orderCode, partnerId, packageId })).unwrap();
           await dispatch(checkoutSuccessApi({ orderCode, partnerId, packageId })).unwrap();
           toast.success("Thanh toán thành công!");
           // Chuyển hướng tới trang thành công với đủ tham số từ URL
           navigate(
             `/checkout/success?orderCode=${orderCode}` +
             `&partnerId=${partnerId}` +
-            `&packageId=${searchParams.get("packageId") || ''}` +
+            `&packageId=${packageId}` +
             `&code=${code || ''}` +
             `&id=${transactionId}` +
             `&cancel=${cancel || ''}` +
@@ -61,9 +68,7 @@ export default function PaymentCallback() {
           await dispatch(checkoutFailApi({ orderCode })).unwrap();
           toast.error("Thanh toán thất bại!");
           // Chuyển hướng tới trang thất bại
-          navigate(
-            `/checkout/fail?orderId=${orderCode}&amount=499000&package=premium&method=credit_card&transactionId=${transactionId}`
-          );
+          navigate(`/checkout/fail${location.search}`);
         }
       } catch (error) {
         console.error("Lỗi xử lý callback thanh toán:", error);

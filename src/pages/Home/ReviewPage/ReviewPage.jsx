@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchReviewsPaginated, markReviewHelpful } from "../../../store/slices/reviewSlice";
+import { getFeedbackPartner, createFeedbackPartner } from '../../../store/slices/feedbackSlice';
+import { selectUserRole } from '../../../store/slices/authSlice';
 import {
   Button,
   Card,
@@ -28,8 +30,46 @@ import {
 } from "@mui/icons-material";
 import "./ReviewPage.css";
 
+function FeedbackButton({ reviewId }) {
+  const dispatch = useDispatch();
+  const [canFeedback, setCanFeedback] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [feedbacked, setFeedbacked] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    dispatch(getFeedbackPartner({ reviewId }))
+      .unwrap()
+      .then((res) => setCanFeedback(res === true))
+      .catch(() => setCanFeedback(false))
+      .finally(() => setLoading(false));
+  }, [dispatch, reviewId]);
+
+  const handleFeedback = () => {
+    setLoading(true);
+    dispatch(createFeedbackPartner({ reviewId }))
+      .unwrap()
+      .then(() => {
+        setFeedbacked(true);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  if (loading) return <Button disabled>Đang kiểm tra...</Button>;
+  if (feedbacked) return <Button disabled>Đã phản hồi</Button>;
+  if (!canFeedback) return null;
+
+  return (
+    <Button variant="contained" color="primary" onClick={handleFeedback} sx={{ ml: 1 }}>
+      Phản hồi
+    </Button>
+  );
+}
+
 function ReviewCard({ review, dispatch }) {
   const [isHelpfulLoading, setIsHelpfulLoading] = useState(false);
+  const userRole = useSelector(selectUserRole);
 
   const handleHelpfulClick = async () => {
     if (isHelpfulLoading) return;
@@ -118,6 +158,8 @@ function ReviewCard({ review, dispatch }) {
                 >
                   Báo cáo
                 </Button>
+                {/* Nút phản hồi chỉ hiện với partner */}
+                {userRole === 'PARTNER' && <FeedbackButton reviewId={review.id} />}
               </Box>
             </Box>
           </Box>

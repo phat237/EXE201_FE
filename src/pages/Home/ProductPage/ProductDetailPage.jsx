@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   fetchProductApiById,
-  fetchAllProductsPaginated,
+  // fetchAllProductsPaginated, // xoá dòng này
 } from "../../../store/slices/productSlice";
 import {
   fetchReviewsByIdPaginated,
@@ -45,6 +45,8 @@ import { useParams } from "react-router-dom";
 import { useNotification } from "../../../Context/NotificationContext";
 import { toast } from "react-hot-toast";
 import LoadingDetail from "../../../components/Loading/LoadingDetail";
+import { getFeedbackPartner, createFeedbackPartner, getAllFeedback } from '../../../store/slices/feedbackSlice';
+import { selectUserRole } from '../../../store/slices/authSlice';
 
 // Hardcode dữ liệu bổ sung
 const hardcodedProductData = {
@@ -62,10 +64,82 @@ const hardcodedProductData = {
   },
 };
 
+function FeedbackForm({ reviewId, userRole }) {
+  const dispatch = useDispatch();
+  const [canFeedback, setCanFeedback] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [feedbacked, setFeedbacked] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [content, setContent] = useState("");
+
+  useEffect(() => {
+    if (userRole !== 'PARTNER') {
+      setCanFeedback(false);
+      return;
+    }
+    setLoading(true);
+    dispatch(getFeedbackPartner({ reviewId }))
+      .unwrap()
+      .then((res) => setCanFeedback(res === true))
+      .catch(() => setCanFeedback(false))
+      .finally(() => setLoading(false));
+  }, [dispatch, reviewId, userRole]);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => { setOpen(false); setContent(""); };
+
+  const handleSubmit = () => {
+    setLoading(true);
+    dispatch(createFeedbackPartner({ reviewId, content }))
+      .unwrap()
+      .then(() => {
+        setFeedbacked(true);
+        dispatch(getAllFeedback()); // Gọi lại để cập nhật phản hồi
+        handleClose();
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  if (userRole !== 'PARTNER') return <Button disabled>Bạn không có quyền phản hồi</Button>;
+  if (loading) return <Button disabled>Đang kiểm tra...</Button>;
+  if (feedbacked) return <Button disabled>Đã phản hồi</Button>;
+  if (!canFeedback) return null;
+
+  return (
+    <>
+      <Button variant="contained" color="primary" onClick={handleOpen} sx={{ ml: 1 }}>
+        Phản hồi
+      </Button>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Phản hồi đánh giá</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nội dung phản hồi"
+            type="text"
+            fullWidth
+            multiline
+            minRows={3}
+            value={content}
+            onChange={e => setContent(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Hủy</Button>
+          <Button onClick={handleSubmit} disabled={!content || loading} variant="contained">Gửi</Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
+
 export default function ProductDetailPage() {
   const { id: productId } = useParams();
   const navigate = useNavigate();
-  const [selectedImage, setSelectedImage] = useState(0);
+  // Xoá selectedImage, setSelectedImage, setSize
+  // const [selectedImage, setSelectedImage] = useState(0);
   const [tabValue, setTabValue] = useState("reviews");
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -75,7 +149,7 @@ export default function ProductDetailPage() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [helpfulStatus, setHelpfulStatus] = useState({});
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(50);
+  // const [size, setSize] = useState(50);
   const [currentPage, setCurrentPage] = useState(0);
   const reviewsPerPage = 5;
   const reviewsSectionRef = useRef(null);
@@ -84,6 +158,8 @@ export default function ProductDetailPage() {
   const dispatch = useDispatch();
   const { addNotification } = useNotification();
   const { currentUser } = useSelector((state) => state.auth);
+  const userRole = useSelector(selectUserRole);
+  const feedbackPartner = useSelector(state => state.feedbackPartner.feedbackPartner || []);
 
   const {
     product,
@@ -110,22 +186,25 @@ export default function ProductDetailPage() {
     if (productId) {
       dispatch(fetchProductApiById({ id: productId }))
         .unwrap()
-        .then((data) => {
-          console.log("Product API response data:", data);
-        })
+        // .then((data) => {
+        //   console.log("Product API response data:", data);
+        // })
         .catch((err) => {
           console.error("Product API error:", err);
         });
 
-      dispatch(fetchReviewsByIdPaginated({ id: productId, page, size }))
+      dispatch(fetchReviewsByIdPaginated({ id: productId, page, size: 50 }))
         .unwrap()
-        .then((data) => {
-        })
+        // .then((data) => {})
         .catch((err) => {
           console.error("Reviews API error:", err);
         });
     }
-  }, [dispatch, productId, page, size, currentUser, navigate]);
+  }, [dispatch, productId, page, currentUser, navigate]);
+
+  useEffect(() => {
+    dispatch(getAllFeedback());
+  }, [dispatch]);
 
   // useEffect(() => {
   //   if (product?.category) {
@@ -193,7 +272,7 @@ export default function ProductDetailPage() {
       return { positive: 0, neutral: 0, negative: 0 };
     }
 
-    reviews.forEach((review, index) => {
+    reviews.forEach((review /*, index */) => {
       const comment = review.aicomment ? review.aicomment.toLowerCase() : "";
       const content = review.content ? review.content.toLowerCase() : "";
       const rating = review.rating || 0;
@@ -312,12 +391,13 @@ export default function ProductDetailPage() {
     console.log("reviewData gửi lên:", reviewPayload);
     dispatch(createProductReview({ productId, reviewData: reviewPayload }))
       .unwrap()
-      .then((data) => {
+      .then(() => {
         setSnackbarMessage("Đánh giá được gửi thành công!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
         handleCloseReviewDialog();
-        dispatch(fetchReviewsByIdPaginated({ id: productId, page: 0, size }));
+        dispatch(fetchReviewsByIdPaginated({ id: productId, page: 0, size: 50 }));
+        dispatch(averageRating(productId)); // <-- Thêm dòng này để cập nhật averageRating
       })
       .catch((error) => {
         setSnackbarMessage(error || "Có lỗi xảy ra khi gửi đánh giá");
@@ -636,6 +716,26 @@ export default function ProductDetailPage() {
                               Nhận xét AI: {review.aicomment}
                             </Typography>
                           )}
+                          {/* Phản hồi partner */}
+                          {Array.isArray(feedbackPartner) && feedbackPartner.filter(fb => String(fb.reviewId) === String(review.id)).length > 0 && (
+                            <Box sx={{ mt: 1, mb: 1, background: "#f5f5fa", borderRadius: 2, p: 1 }}>
+                              <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 600 }}>
+                                Phản hồi từ đối tác:
+                              </Typography>
+                              {feedbackPartner.filter(fb => String(fb.reviewId) === String(review.id)).map(fb => (
+                                <Typography key={fb.id} variant="body2" sx={{ ml: 2, color: "#6517ce" }}>
+                                  {(() => {
+                                    try {
+                                      const obj = JSON.parse(fb.content);
+                                      return obj.content || '';
+                                    } catch {
+                                      return fb.content;
+                                    }
+                                  })()}
+                                </Typography>
+                              ))}
+                            </Box>
+                          )}
                           <Box className="product-review-footer">
                             <Box className="product-review-footer-left">
                               {review.verifiedByAI && (
@@ -682,7 +782,7 @@ export default function ProductDetailPage() {
                                 variant="text"
                                 className="product-review-report"
                                 startIcon={
-                                  <FlagIcon className="product-icon" />
+                                  <FlagIcon className="product-icon" style={{ color: helpfulStatus[review.id]?.reported ? "red" : "inherit" }} />
                                 }
                                 onClick={() =>
                                   handleReport(
@@ -703,6 +803,8 @@ export default function ProductDetailPage() {
                                   ? "Đang xử lý..."
                                   : "Báo cáo"}
                               </Button>
+                              {/* Nút phản hồi chỉ hiện với partner */}
+                              {userRole === 'PARTNER' && <FeedbackForm reviewId={review.id} userRole={userRole} />}
                             </Box>
                           </Box>
                         </CardContent>
