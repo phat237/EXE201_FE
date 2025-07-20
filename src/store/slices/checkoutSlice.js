@@ -3,12 +3,14 @@ import { fetcher } from "../../apis/fetcher";
 
 export const checkoutSuccessApi = createAsyncThunk(
   "checkout/checkoutSuccessApi",
-  async ({ orderCode, partnerId }, { rejectWithValue, getState }) => {
+  async ({ orderCode, partnerId, packageId }, { rejectWithValue, getState }) => {
     try {
       const state = getState();
       const token = state.auth.currentUser?.token || state.auth.currentUser?.accessToken;
+      // Log thông tin gửi lên để debug
+      console.log("[checkoutSuccessApi] orderCode:", orderCode, "partnerId:", partnerId, "packageId:", packageId, "token:", token);
       const response = await fetcher.post(
-        `/transactions/success/${orderCode}/${partnerId}`,
+        `/transactions/success/${orderCode}/${partnerId}/${packageId}`,
         {},
         {
           headers: {
@@ -18,7 +20,7 @@ export const checkoutSuccessApi = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.error("Lỗi API deposit:", error.response?.data || error.message);
+      console.error("[checkoutSuccessApi] Lỗi API deposit:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -30,6 +32,8 @@ export const checkoutFailApi = createAsyncThunk(
     try {
       const state = getState();
       const token = state.auth.currentUser?.token || state.auth.currentUser?.accessToken;
+      // Log thông tin gửi lên để debug
+      console.log("[checkoutFailApi] orderCode:", orderCode, "token:", token);
       const response = await fetcher.post(
         `/transactions/fail/${orderCode}`,
         {},
@@ -41,7 +45,7 @@ export const checkoutFailApi = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.error("Lỗi API deposit:", error.response?.data || error.message);
+      console.error("[checkoutFailApi] Lỗi API deposit:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data || error.message);
     }
   }
