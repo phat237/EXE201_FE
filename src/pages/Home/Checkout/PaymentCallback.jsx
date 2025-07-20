@@ -21,7 +21,10 @@ export default function PaymentCallback() {
     const cancel = searchParams.get("cancel");
     const partnerId = searchParams.get("partnerId") || "unknown"; // Mặc định nếu thiếu
     const transactionId = searchParams.get("id") || `TXN_${Date.now()}`; // Mặc định nếu thiếu
-    const packageId = searchParams.get("packageId");
+    let packageId = searchParams.get("packageId");
+    if (!packageId) {
+      packageId = localStorage.getItem("lastPackageId");
+    }
 
     // Ghi log để kiểm tra tham số
     console.log("Tham số callback thanh toán:", {
