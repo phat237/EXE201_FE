@@ -112,6 +112,8 @@ function ProductCard({ product }) {
 }
 
 export default function ProductsPage() {
+  console.log("ProductPage component rendering");
+  
   const [tabValue, setTabValue] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
@@ -159,6 +161,20 @@ export default function ProductsPage() {
       );
     }
   }, [dispatch, page, itemsPerPage, selectedCategories, selectedRatings, sortBy]);
+
+  // Fetch initial data when component mounts
+  useEffect(() => {
+    console.log("Component mounted, fetching initial data");
+    dispatch(
+      fetchAllProductsPaginated({
+        page: 0,
+        size: itemsPerPage,
+        categories: [],
+        ratings: [],
+        sortBy: "popular",
+      })
+    );
+  }, [dispatch, itemsPerPage]);
 
   // Debounced search handler chỉ cho việc thay đổi search query
   const debouncedSearch = useMemo(
@@ -358,8 +374,24 @@ export default function ProductsPage() {
       productsToShow = products;
     }
 
-    // Luôn lấy số sao và lượt review từ products gốc (API chính)
+    console.log("filteredProducts debug:", {
+      searchQuery: searchQuery.trim(),
+      selectedCategories,
+      searchResultsLength: searchResults?.length,
+      searchCategoryResultContent: searchCategoryResult?.content?.length,
+      productsLength: products?.length,
+      productsToShowLength: productsToShow?.length
+    });
+
+    // Nếu productsToShow đã có averageRating (từ searchApi hoặc searchCategory), sử dụng luôn
+    // Nếu không, lấy từ products gốc
     return (productsToShow || []).map((p) => {
+      // Nếu sản phẩm đã có averageRating từ API search, sử dụng luôn
+      if (p.averageRating !== undefined) {
+        return p;
+      }
+      
+      // Nếu không, tìm trong products gốc
       const productFromMain = products.find((main) => main.id === p.id);
       return {
         ...p,
@@ -381,6 +413,13 @@ export default function ProductsPage() {
     return filteredProducts;
   }, [filteredProducts, page, itemsPerPage, searchQuery, selectedCategories, selectedRatings]);
 
+  console.log("paginatedProducts debug:", {
+    paginatedProductsLength: paginatedProducts?.length,
+    filteredProductsLength: filteredProducts?.length,
+    page,
+    itemsPerPage
+  });
+
   const totalPagesToShow = useMemo(() => {
     if (searchQuery.trim() !== "") {
       // Nếu có client-side filtering, tính toán lại số trang
@@ -397,8 +436,19 @@ export default function ProductsPage() {
     return pagination?.totalPages || 1;
   }, [searchQuery, selectedCategories, selectedRatings, filteredProducts, itemsPerPage, searchPagination, pagination, searchCategoryResult]);
 
-  const loadingToShow = searchQuery.trim() !== "" ? isSearchLoading : isLoading;
-  const errorToShow = searchQuery.trim() !== "" ? searchError : error;
+  const loadingToShow = searchQuery.trim() !== "" ? isSearchLoading : 
+                       selectedCategories.length > 0 ? isSearchLoading : isLoading;
+  const errorToShow = searchQuery.trim() !== "" ? searchError : 
+                     selectedCategories.length > 0 ? searchError : error;
+
+  console.log("Loading state debug:", {
+    searchQuery: searchQuery.trim(),
+    selectedCategoriesLength: selectedCategories.length,
+    isSearchLoading,
+    isLoading,
+    loadingToShow,
+    errorToShow
+  });
 
   // Thêm useEffect để phân trang cho searchCategory
   useEffect(() => {
@@ -564,7 +614,7 @@ export default function ProductsPage() {
                 <Typography color="error">
                   Lỗi khi tải sản phẩm: {errorToShow}
                 </Typography>
-              ) : filteredProducts.length === 0 ? (
+              ) : paginatedProducts.length === 0 ? (
                 <Typography>Không tìm thấy sản phẩm nào.</Typography>
               ) : (
                 <Box className="products-grid">
