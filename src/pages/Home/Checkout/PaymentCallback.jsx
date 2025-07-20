@@ -42,9 +42,15 @@ export default function PaymentCallback() {
           // Gọi API xác nhận thanh toán thành công
           await dispatch(checkoutSuccessApi({ orderCode, partnerId })).unwrap();
           toast.success("Thanh toán thành công!");
-          // Chuyển hướng tới trang thành công
+          // Chuyển hướng tới trang thành công với đủ tham số từ URL
           navigate(
-            `/checkout/success?orderId=${orderCode}&amount=499000&package=premium&method=credit_card&transactionId=${transactionId}`
+            `/checkout/success?orderCode=${orderCode}` +
+            `&partnerId=${partnerId}` +
+            `&packageId=${searchParams.get("packageId") || ''}` +
+            `&code=${code || ''}` +
+            `&id=${transactionId}` +
+            `&cancel=${cancel || ''}` +
+            `&status=${status}`
           );
         } else {
           // Gọi API xác nhận thanh toán thất bại
