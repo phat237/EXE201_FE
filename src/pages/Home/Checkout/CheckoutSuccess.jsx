@@ -19,77 +19,22 @@ import "./CheckoutPayment.css";
 export default function CheckoutSuccess() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const [paymentInfo, setPaymentInfo] = useState({
-    orderId: "",
-    amount: "",
-    package: "",
-    paymentMethod: "",
-    transactionId: "",
-    date: "",
-  });
+  // Lấy tham số từ URL
+  const searchParams = new URLSearchParams(location.search);
+  const orderCode = searchParams.get("orderCode");
+  const partnerId = searchParams.get("partnerId");
+  const packageId = searchParams.get("packageId");
+  const code = searchParams.get("code");
+  const id = searchParams.get("id");
+  const cancel = searchParams.get("cancel");
+  const status = searchParams.get("status");
 
   useEffect(() => {
-    // Lấy tham số từ URL
-    const searchParams = new URLSearchParams(location.search);
-    const orderId = searchParams.get("orderId");
-    const urlAmount = searchParams.get("amount");
-    const urlPackage = searchParams.get("package");
-    const urlPaymentMethod = searchParams.get("method");
-    const urlTransactionId = searchParams.get("transactionId") || searchParams.get("id");
-
-    // Lấy dữ liệu từ localStorage
-    const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
-    const partnerId = currentUser.id || "unknown";
-    const savedTransaction = JSON.parse(localStorage.getItem("lastTransaction")) || {};
-
-    // Ưu tiên dữ liệu từ localStorage, fallback sang URL
-    const orderCode = savedTransaction.orderCode || orderId;
-    const amount = savedTransaction.amount || urlAmount || "0";
-    const packageType = savedTransaction.package || urlPackage || "unknown";
-    const paymentMethod = savedTransaction.method || urlPaymentMethod || "unknown";
-    const transactionId = savedTransaction.transactionId || urlTransactionId || `TXN_${Date.now()}`;
-
-    // Ghi log để debug
-    console.log("Tham số checkout/success:", {
-      orderId,
-      orderCode,
-      amount,
-      package: packageType,
-      paymentMethod,
-      transactionId,
-      partnerId,
-      rawQuery: location.search,
-      savedTransaction,
-    });
-
-    // Gọi API xác nhận thanh toán
-    const confirmPayment = async () => {
-      if (!orderCode || !partnerId || partnerId === "unknown") {
-        console.warn("Thiếu orderCode hoặc partnerId, không gọi API checkoutSuccessApi");
-        toast.error("Dữ liệu giao dịch không đầy đủ, vui lòng liên hệ hỗ trợ!");
-        return;
-      }
-
-      try {
-        await dispatch(checkoutSuccessApi({ orderCode, partnerId })).unwrap();
-        toast.success("Thanh toán đã được xác nhận!");
-      } catch (error) {
-        console.error("Lỗi xác nhận thanh toán:", error);
-        toast.error(`Xác nhận thanh toán thất bại: ${error.message || "Vui lòng liên hệ hỗ trợ!"}`);
-      }
-    };
-
-    confirmPayment();
-
-    setPaymentInfo({
-      orderId: orderCode || "N/A",
-      amount,
-      package: packageType,
-      paymentMethod,
-      transactionId,
-      date: new Date().toLocaleDateString("vi-VN"),
-    });
-  }, [location.search, dispatch]);
+    // Gọi API xác nhận thanh toán nếu cần
+    if (orderCode && partnerId) {
+      dispatch(checkoutSuccessApi({ orderCode, partnerId }));
+    }
+  }, [orderCode, partnerId, dispatch]);
 
   const getPackageName = (packageType) => {
     const packageMap = {
@@ -143,7 +88,7 @@ export default function CheckoutSuccess() {
                   Mã đơn hàng
                 </Typography>
                 <Typography variant="body2" className="checkout-payment-value">
-                  {paymentInfo.orderId}
+                  {orderCode}
                 </Typography>
               </Grid>
               <Grid item size={6} sm={6}>
@@ -151,7 +96,7 @@ export default function CheckoutSuccess() {
                   Mã giao dịch
                 </Typography>
                 <Typography variant="body2" className="checkout-payment-value checkout-payment-code">
-                  {paymentInfo.transactionId}
+                  {id}
                 </Typography>
               </Grid>
               <Grid item size={6} sm={6}>
@@ -161,36 +106,41 @@ export default function CheckoutSuccess() {
                 <Box className="checkout-payment-flex">
                   <Inventory className="checkout-payment-icon" />
                   <Typography variant="body2" className="checkout-payment-value">
-                    {getPackageName(paymentInfo.package)}
+                    {packageId}
                   </Typography>
                 </Box>
               </Grid>
               <Grid item size={6} sm={6}>
                 <Typography variant="caption" className="checkout-payment-label">
-                  Số tiền
-                </Typography>
-                <Typography variant="h6" className="checkout-payment-amount">
-                  {Number(paymentInfo.amount).toLocaleString()} VNĐ
-                </Typography>
-              </Grid>
-              <Grid item size={6} sm={6}>
-                <Typography variant="caption" className="checkout-payment-label">
-                  Phương thức thanh toán
+                  Mã code
                 </Typography>
                 <Typography variant="body2" className="checkout-payment-value">
-                  {getPaymentMethodName(paymentInfo.paymentMethod)}
+                  {code}
                 </Typography>
               </Grid>
               <Grid item size={6} sm={6}>
                 <Typography variant="caption" className="checkout-payment-label">
-                  Ngày thanh toán
+                  Partner ID
                 </Typography>
-                <Box className="checkout-payment-flex">
-                  <CalendarToday className="checkout-payment-icon" />
-                  <Typography variant="body2" className="checkout-payment-value">
-                    {paymentInfo.date}
-                  </Typography>
-                </Box>
+                <Typography variant="body2" className="checkout-payment-value">
+                  {partnerId}
+                </Typography>
+              </Grid>
+              <Grid item size={6} sm={6}>
+                <Typography variant="caption" className="checkout-payment-label">
+                  Cancel
+                </Typography>
+                <Typography variant="body2" className="checkout-payment-value">
+                  {cancel}
+                </Typography>
+              </Grid>
+              <Grid item size={6} sm={6}>
+                <Typography variant="caption" className="checkout-payment-label">
+                  Trạng thái
+                </Typography>
+                <Typography variant="body2" className="checkout-payment-value">
+                  {status}
+                </Typography>
               </Grid>
             </Grid>
             <Box className="checkout-payment-status">

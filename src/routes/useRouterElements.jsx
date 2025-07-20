@@ -24,7 +24,7 @@ import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 import ProfileUser from "../components/ProfileUser/ProfileUser";
 import Reviews from "../pages/Partner/Reviews/Reviews"; 
 import PartnerRegister from "../pages/Auth/Register/PartnerRegister"; 
-import CheckoutSucess from "../pages/Home/Checkout/CheckoutSucess";
+import CheckoutSuccess from "../pages/Home/Checkout/CheckoutSuccess";
 import CheckoutFail from "../pages/Home/Checkout/CheckoutFail";
 import Voucher from '../pages/Admin/Voucher/Voucher';         
 import PaymentCallback from "../pages/Home/Checkout/PaymentCallback";
@@ -89,7 +89,7 @@ export default function useRouterElements() {
         },
         {
           path: PATH.CHECKOUTSUCCESS,
-          element: <CheckoutSucess />,
+          element: <CheckoutSuccess />,
         },
         {
           path: PATH.CHECKOUTFAIL,
