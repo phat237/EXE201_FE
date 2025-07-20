@@ -3,10 +3,18 @@ import { fetcher } from "../../apis/fetcher";
 
 export const checkoutSuccessApi = createAsyncThunk(
   "checkout/checkoutSuccessApi",
-  async ({ orderCode, partnerId }, { rejectWithValue }) => {
+  async ({ orderCode, partnerId }, { rejectWithValue, getState }) => {
     try {
+      const state = getState();
+      const token = state.auth.currentUser?.token || state.auth.currentUser?.accessToken;
       const response = await fetcher.post(
-        `/transactions/success/${orderCode}/${partnerId}`
+        `/transactions/success/${orderCode}/${partnerId}`,
+        {},
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -18,9 +26,19 @@ export const checkoutSuccessApi = createAsyncThunk(
 
 export const checkoutFailApi = createAsyncThunk(
   "checkout/checkoutFailApi",
-  async ({ orderCode }, { rejectWithValue }) => {
+  async ({ orderCode }, { rejectWithValue, getState }) => {
     try {
-      const response = await fetcher.post(`/transactions/fail/${orderCode}`);
+      const state = getState();
+      const token = state.auth.currentUser?.token || state.auth.currentUser?.accessToken;
+      const response = await fetcher.post(
+        `/transactions/fail/${orderCode}`,
+        {},
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Lỗi API deposit:", error.response?.data || error.message);
