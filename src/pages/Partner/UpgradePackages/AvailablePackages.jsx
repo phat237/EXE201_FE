@@ -63,9 +63,11 @@ const AvailablePackages = () => {
         orderCode: response.orderCode,
         amount: response.amount,
         package: transactionData.packageType,
+        packageId: transactionData.packageId, // Lưu thêm packageId
         method: 'payos',
         transactionId: response.paymentLinkId,
       }));
+      localStorage.setItem('lastPackageId', transactionData.packageId); // Lưu riêng packageId
 
       // Chuyển hướng đến checkoutUrl của PayOS
       if (response.checkoutUrl) {
