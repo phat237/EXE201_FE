@@ -21,6 +21,7 @@ export default function PaymentCallback() {
     const cancel = searchParams.get("cancel");
     const partnerId = searchParams.get("partnerId") || "unknown"; // Mặc định nếu thiếu
     const transactionId = searchParams.get("id") || `TXN_${Date.now()}`; // Mặc định nếu thiếu
+    const packageId = searchParams.get("packageId");
 
     // Ghi log để kiểm tra tham số
     console.log("Tham số callback thanh toán:", {
@@ -40,7 +41,7 @@ export default function PaymentCallback() {
 
         if (isSuccess) {
           // Gọi API xác nhận thanh toán thành công
-          await dispatch(checkoutSuccessApi({ orderCode, partnerId })).unwrap();
+          await dispatch(checkoutSuccessApi({ orderCode, partnerId, packageId })).unwrap();
           toast.success("Thanh toán thành công!");
           // Chuyển hướng tới trang thành công với đủ tham số từ URL
           navigate(
