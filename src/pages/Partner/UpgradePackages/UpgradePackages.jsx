@@ -16,55 +16,32 @@ const UpgradePackages = () => {
 
   const columns = [
     {
-      title: 'Tên gói',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => <strong>{text}</strong>,
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
     },
     {
-      title: 'Ngày mua',
-      dataIndex: 'purchaseDate',
-      key: 'purchaseDate',
-      render: (date) => new Date(date).toLocaleDateString('vi-VN'),
+      title: 'Ngày bắt đầu',
+      dataIndex: 'startDate',
+      key: 'startDate',
+      render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '',
     },
     {
-      title: 'Ngày hết hạn',
-      dataIndex: 'expiryDate',
-      key: 'expiryDate',
-      render: (date) => new Date(date).toLocaleDateString('vi-VN'),
-    },
-    {
-      title: 'Giá',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price) => `${price.toLocaleString('vi-VN')}đ`,
+      title: 'Ngày kết thúc',
+      dataIndex: 'endDate',
+      key: 'endDate',
+      render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '',
     },
     {
       title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag
-          color={status === 'ACTIVE' ? 'green' : 'red'}
-          icon={status === 'ACTIVE' ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-        >
-          {status === 'ACTIVE' ? 'Đang hoạt động' : 'Hết hạn'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Tính năng',
-      dataIndex: 'features',
-      key: 'features',
-      render: (features) => (
-        <Space direction="vertical">
-          {features?.map((feature, index) => (
-            <Tag key={index} color="blue">
-              {feature}
-            </Tag>
-          ))}
-        </Space>
-      ),
+      dataIndex: 'active',
+      key: 'active',
+      render: (active) =>
+        active ? (
+          <Tag color="green" icon={<CheckCircleOutlined />}>Đang hoạt động</Tag>
+        ) : (
+          <Tag color="red" icon={<ClockCircleOutlined />}>Hết hạn</Tag>
+        ),
     },
   ];
 
@@ -97,7 +74,6 @@ const UpgradePackages = () => {
           columns={columns}
           dataSource={packages}
           pagination={false}
-          scroll={{ x: true }}
           rowKey="id"
         />
       </Card>

@@ -9,6 +9,7 @@ import partnerPackageReducer from "./slices/partnerPackageSlice"
 import voucherReducer from "./slices/voucherSlice"
 import searchReducer from "./slices/searchSlice";
 import  dashboardParnerSlice  from "./slices/dashboardParnerSlice";
+import feedbackSlice from "./slices/feedbackSlice"
 // tạo store
 export const store = configureStore({
   reducer: {
@@ -22,7 +23,8 @@ export const store = configureStore({
     partnerPackage: partnerPackageReducer,
     vouchers: voucherReducer,
     search: searchReducer,
-    dashboard: dashboardParnerSlice
+    dashboard: dashboardParnerSlice,
+    feedbackPartner: feedbackSlice
   },
 });
 
