@@ -31,10 +31,10 @@ export default function CheckoutSuccess() {
 
   useEffect(() => {
     // Gọi API xác nhận thanh toán nếu cần
-    if (orderCode && partnerId) {
-      dispatch(checkoutSuccessApi({ orderCode, partnerId }));
+    if (orderCode && partnerId && packageId) {
+      dispatch(checkoutSuccessApi({ orderCode, partnerId, packageId }));
     }
-  }, [orderCode, partnerId, dispatch]);
+  }, [orderCode, partnerId, packageId, dispatch]);
 
   const getPackageName = (packageType) => {
     const packageMap = {
