@@ -56,10 +56,34 @@ export const searchApi = createAsyncThunk(
 
 export const searchCategory = createAsyncThunk(
   "search/searchCategory",
-  async({category,page, size }, {rejectWithValue}) => {
+  async({category,page, size }, {rejectWithValue, dispatch}) => {
     try {
       const response = await fetcher.get(`/products/search-by-category?category=${category}&page=${page}&size=${size}`)
-      return response.data
+      
+      const products = response.data.content || response.data?.content || [];
+      
+      // Fetch average rating for each product (giống như trong searchApi)
+      const enrichedProducts = await Promise.all(
+        products.map(async (product) => {
+          try {
+            const ratingResponse = await dispatch(
+              averageRating(product.id)
+            ).unwrap();
+            return {
+              ...product,
+              averageRating: ratingResponse.averageRating || 0,
+              reviewCount: ratingResponse.totalReviewers || 0, // Lấy đúng trường
+            };
+          } catch {
+            return { ...product, averageRating: 0, reviewCount: 0 };
+          }
+        })
+      );
+
+      return {
+        ...response.data,
+        content: enrichedProducts,
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }

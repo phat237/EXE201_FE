@@ -56,22 +56,19 @@ export const fetchAllProductsPaginated = createAsyncThunk(
         url += `&sortBy=${sortBy}`;
       }
       
-      console.log("Calling API with URL:", url);
-      console.log("API parameters:", { page, size, categories, ratings, sortBy });
+    
       
       const response = await fetcher.get(url);
-      console.log("API response:", response.data);
+
       
       // Kiểm tra categories của các sản phẩm trả về
       const products = response.data.content || [];
-      console.log("Products returned:", products.length);
-      console.log("Categories in response:", products.map(p => ({ id: p.id, name: p.name, category: p.category })));
+
       
       // Kiểm tra xem có sản phẩm nào thuộc category được filter không
       if (categories && categories.length > 0) {
         const filteredProducts = products.filter(p => categories.includes(p.category));
-        console.log("Products matching filter categories:", filteredProducts.length);
-        console.log("Matching products:", filteredProducts.map(p => ({ id: p.id, name: p.name, category: p.category })));
+      
       }
 
       // Fetch average rating for each product

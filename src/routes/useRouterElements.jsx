@@ -18,7 +18,7 @@ import { useRoutes } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import ReviewPage from "../pages/Home/ReviewPage/ReviewPage";
 import FormReview from "../pages/Home/ReviewPage/FormReview";
-import ProductPaege from "../pages/Home/ProductPage/ProductPage";
+import ProductPage from "../pages/Home/ProductPage/ProductPage";
 import ProductDetailPage from "../pages/Home/ProductPage/ProductDetailPage";
 import BusinessPage from "../pages/Home/BusinessPage/BusinessPage";
 import ProfileUser from "../components/ProfileUser/ProfileUser";
@@ -69,7 +69,7 @@ export default function useRouterElements() {
         },
         {
           path: PATH.PRODUCT,
-          element: <ProductPaege />,
+          element: <ProductPage />,
         },
         {
           path: PATH.PRODUCT_DETAIL,
@@ -160,7 +160,6 @@ export default function useRouterElements() {
           path: "upgrade-packages",
           element: <PartnerUpgradePackages />,
         },
-      ,
         {
           path: PATH.PARTNER_AVAILABLE_PACKAGES,
           element: <AvailablePackages />,
