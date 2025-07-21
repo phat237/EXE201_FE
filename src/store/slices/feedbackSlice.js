@@ -58,13 +58,28 @@ export const getAllFeedback = createAsyncThunk(
     }
 )
 
+export const fetchPartnerFeedbackByReviewId = createAsyncThunk(
+    "feedbackPartner/fetchPartnerFeedbackByReviewId",
+    async(reviewId, {rejectWithValue}) => {
+        try {
+            const response = await fetcher.get(`/partner-feedback/review/${reviewId}`);
+            return response.data;
+        } catch (error) {
+             return rejectWithValue(
+                error.response ? error.response.data : error.message
+              );
+        }
+    }
+);
 
 
 const feedbackSlice = createSlice({
     name:"feedbackPartner",
     initialState:{
         feedbackPartner:[],
+        canFeedback: {},
         feedbackALL:[],
+        feedbackByReviewId: {},
         isLoading: false,
         error: null,
     },
@@ -73,10 +88,10 @@ const feedbackSlice = createSlice({
 builder.addCase(getFeedbackPartner.pending, (state) => {
     state.isLoading = true
 })
-.addCase(getFeedbackPartner.fulfilled, (state, {payload}) => {
+.addCase(getFeedbackPartner.fulfilled, (state, {payload, meta}) => {
  state.isLoading = false;
  state.error = null;
- state.feedbackPartner = payload
+ state.canFeedback[meta.arg.reviewId] = payload;
 })
 .addCase(getFeedbackPartner.rejected, (state, {payload}) => {
     state.error = payload
@@ -88,7 +103,11 @@ builder.addCase(getFeedbackPartner.pending, (state) => {
 .addCase(createFeedbackPartner.fulfilled, (state, {payload}) => {
  state.isLoading = false;
  state.error = null;
- state.feedbackPartner = payload
+ if (Array.isArray(state.feedbackPartner)) {
+    state.feedbackPartner.push(payload);
+  } else {
+    state.feedbackPartner = [payload];
+  }
 })
 .addCase(createFeedbackPartner.rejected, (state, {payload}) => {
     state.error = payload
@@ -106,6 +125,19 @@ builder.addCase(getFeedbackPartner.pending, (state) => {
     state.error = payload
     state.isLoading = false
 })
+.addCase(fetchPartnerFeedbackByReviewId.pending, (state) => {
+    state.isLoading = true;
+})
+.addCase(fetchPartnerFeedbackByReviewId.fulfilled, (state, action) => {
+    state.isLoading = false;
+    state.error = null;
+    if (!state.feedbackByReviewId) state.feedbackByReviewId = {};
+    state.feedbackByReviewId[action.meta.arg] = action.payload;
+})
+.addCase(fetchPartnerFeedbackByReviewId.rejected, (state, {payload}) => {
+    state.error = payload;
+    state.isLoading = false;
+});
     }
 })
 

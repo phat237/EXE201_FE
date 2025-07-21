@@ -19,7 +19,6 @@ export const store = configureStore({
     review: reviewReducer,
     transaction: transactionReducer,
     checkout: checkoutReducer,
-    review: reviewReducer,  
     partnerPackage: partnerPackageReducer,
     vouchers: voucherReducer,
     search: searchReducer,
