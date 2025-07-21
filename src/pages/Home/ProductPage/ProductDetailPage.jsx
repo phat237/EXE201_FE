@@ -45,7 +45,7 @@ import { useParams } from "react-router-dom";
 import { useNotification } from "../../../Context/NotificationContext";
 import { toast } from "react-hot-toast";
 import LoadingDetail from "../../../components/Loading/LoadingDetail";
-import { getFeedbackPartner, createFeedbackPartner, getAllFeedback } from '../../../store/slices/feedbackSlice';
+import { getFeedbackPartner, createFeedbackPartner, fetchPartnerFeedbackByReviewId } from '../../../store/slices/feedbackSlice';
 import { selectUserRole } from '../../../store/slices/authSlice';
 
 // Hardcode dữ liệu bổ sung
@@ -57,6 +57,8 @@ const hardcodedProductData = {
       "Giá cả hợp lý",
       "Nguyên liệu tươi sạch",
       "Đóng gói tiện lợi",
+
+      
     ],
     weaknesses: ["Hạn sử dụng ngắn", "Không phù hợp với người dị ứng gluten"],
     summary:
@@ -66,24 +68,21 @@ const hardcodedProductData = {
 
 function FeedbackForm({ reviewId, userRole }) {
   const dispatch = useDispatch();
-  const [canFeedback, setCanFeedback] = useState(false);
+  const canFeedback = useSelector(state => state.feedbackPartner.canFeedback[reviewId]);
   const [loading, setLoading] = useState(false);
   const [feedbacked, setFeedbacked] = useState(false);
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
 
   useEffect(() => {
-    if (userRole !== 'PARTNER') {
-      setCanFeedback(false);
+    if (userRole !== 'PARTNER' || canFeedback !== undefined) {
       return;
     }
     setLoading(true);
     dispatch(getFeedbackPartner({ reviewId }))
       .unwrap()
-      .then((res) => setCanFeedback(res === true))
-      .catch(() => setCanFeedback(false))
       .finally(() => setLoading(false));
-  }, [dispatch, reviewId, userRole]);
+  }, [dispatch, reviewId, userRole, canFeedback]);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => { setOpen(false); setContent(""); };
@@ -94,17 +93,17 @@ function FeedbackForm({ reviewId, userRole }) {
       .unwrap()
       .then(() => {
         setFeedbacked(true);
-        dispatch(getAllFeedback()); // Gọi lại để cập nhật phản hồi
         handleClose();
+        dispatch(fetchPartnerFeedbackByReviewId(reviewId))
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
-  if (userRole !== 'PARTNER') return <Button disabled>Bạn không có quyền phản hồi</Button>;
+  if (userRole !== 'PARTNER') return null;
   if (loading) return <Button disabled>Đang kiểm tra...</Button>;
   if (feedbacked) return <Button disabled>Đã phản hồi</Button>;
-  if (!canFeedback) return null;
+  if (canFeedback === false) return null;
 
   return (
     <>
@@ -135,6 +134,46 @@ function FeedbackForm({ reviewId, userRole }) {
   );
 }
 
+function PartnerFeedback({ reviewId }) {
+  const dispatch = useDispatch();
+  const feedbackList = useSelector(state => state.feedbackPartner.feedbackByReviewId?.[reviewId] || []);
+  const isLoading = useSelector(state => state.feedbackPartner.isLoading);
+  const error = useSelector(state => state.feedbackPartner.error);
+  useEffect(() => {
+    dispatch(fetchPartnerFeedbackByReviewId(reviewId));
+  }, [dispatch, reviewId]);
+  if (isLoading) return <Typography>Đang tải phản hồi...</Typography>;
+  if (error) return <Typography>Lỗi khi tải phản hồi.</Typography>;
+  if (!feedbackList.length) return null;
+  return (
+    <Box sx={{ mt: 2, p: 2, background: "#f9f9f9", borderRadius: 2 }}>
+      <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+        Phản hồi từ đối tác
+      </Typography>
+      {feedbackList.map(fb => {
+        let content = fb.content;
+        try {
+          const obj = JSON.parse(content);
+          content = obj.content || content;
+        } catch {}
+        return (
+          <Box key={fb.id} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', mr: 2, mt: 1 }}>P</Avatar>
+            <Box sx={{ flexGrow: 1, p:1, background: "#fff" , borderRadius: 2}}>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {content}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                {fb.createAt && new Date(fb.createAt).toLocaleString()}
+              </Typography>
+            </Box>
+          </Box>
+        );
+      })}
+    </Box>
+  );
+}
+
 export default function ProductDetailPage() {
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -159,7 +198,6 @@ export default function ProductDetailPage() {
   const { addNotification } = useNotification();
   const { currentUser } = useSelector((state) => state.auth);
   const userRole = useSelector(selectUserRole);
-  const feedbackPartner = useSelector(state => state.feedbackPartner.feedbackPartner || []);
 
   const {
     product,
@@ -201,10 +239,6 @@ export default function ProductDetailPage() {
         });
     }
   }, [dispatch, productId, page, currentUser, navigate]);
-
-  useEffect(() => {
-    dispatch(getAllFeedback());
-  }, [dispatch]);
 
   // useEffect(() => {
   //   if (product?.category) {
@@ -717,25 +751,7 @@ export default function ProductDetailPage() {
                             </Typography>
                           )}
                           {/* Phản hồi partner */}
-                          {Array.isArray(feedbackPartner) && feedbackPartner.filter(fb => String(fb.reviewId) === String(review.id)).length > 0 && (
-                            <Box sx={{ mt: 1, mb: 1, background: "#f5f5fa", borderRadius: 2, p: 1 }}>
-                              <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 600 }}>
-                                Phản hồi từ đối tác:
-                              </Typography>
-                              {feedbackPartner.filter(fb => String(fb.reviewId) === String(review.id)).map(fb => (
-                                <Typography key={fb.id} variant="body2" sx={{ ml: 2, color: "#6517ce" }}>
-                                  {(() => {
-                                    try {
-                                      const obj = JSON.parse(fb.content);
-                                      return obj.content || '';
-                                    } catch {
-                                      return fb.content;
-                                    }
-                                  })()}
-                                </Typography>
-                              ))}
-                            </Box>
-                          )}
+                          <PartnerFeedback reviewId={review.id} />
                           <Box className="product-review-footer">
                             <Box className="product-review-footer-left">
                               {review.verifiedByAI && (
