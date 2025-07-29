@@ -10,6 +10,8 @@ import voucherReducer from "./slices/voucherSlice"
 import searchReducer from "./slices/searchSlice";
 import  dashboardParnerSlice  from "./slices/dashboardParnerSlice";
 import feedbackSlice from "./slices/feedbackSlice"
+import transactionDashboardSlice from "./slices/transactionDashboardSlice"
+import reviewDashboardSlice from "./slices/reviewDashboardSlice"
 // tạo store
 export const store = configureStore({
   reducer: {
@@ -23,7 +25,9 @@ export const store = configureStore({
     vouchers: voucherReducer,
     search: searchReducer,
     dashboard: dashboardParnerSlice,
-    feedbackPartner: feedbackSlice
+    feedbackPartner: feedbackSlice,
+    transactionDashboard: transactionDashboardSlice,
+    reviewDashboard: reviewDashboardSlice,
   },
 });
 

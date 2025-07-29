@@ -29,6 +29,7 @@ import CheckoutFail from "../pages/Home/Checkout/CheckoutFail";
 import Voucher from '../pages/Admin/Voucher/Voucher';         
 import PaymentCallback from "../pages/Home/Checkout/PaymentCallback";
 import PartnerProducts from '../pages/Partner/PartnerProducts';
+import DashboardReview from "../pages/Admin/DashboardReview/DashboardReview";
 
 export default function useRouterElements() {
   const element = useRoutes([ 
@@ -131,8 +132,8 @@ export default function useRouterElements() {
           element: <Orders />,
         },
         {
-          path: "settings",
-          element: <Settings />,
+          path: PATH.DASHBOARDREVIEW,
+          element: <DashboardReview />,
         },
         {
           path: "upgrade-packages",

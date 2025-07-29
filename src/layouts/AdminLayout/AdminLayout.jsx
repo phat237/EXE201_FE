@@ -37,6 +37,12 @@ const AdminLayout = () => {
       icon: <HomeWorkOutlined />,
       label: 'Dashboard',
     },
+
+    {
+      key: '/admin/review',
+      icon: <SettingOutlined />,
+      label: 'Rating Statistics',
+    },
     {
       key: '/admin/voucher',
       icon: <GiftOutlined />,
@@ -57,11 +63,7 @@ const AdminLayout = () => {
       icon: <StarOutlined />,
       label: 'Gói nâng cấp',
     },
-    {
-      key: '/admin/settings',
-      icon: <SettingOutlined />,
-      label: 'Settings',
-    },
+   
   ];
 
   return (
