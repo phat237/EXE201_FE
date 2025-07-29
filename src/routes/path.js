@@ -20,6 +20,7 @@ export const PATH = {
   // ADMIN
   ADMIN: "/admin",
   DASHBOARD: "/admin/dashboard",
+  DASHBOARDREVIEW:"/admin/review",
   VOUCHER: "/admin/voucher",
   PRODUCTS: "/admin/products",
   ORDERS: "/admin/orders",
