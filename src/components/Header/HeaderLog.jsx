@@ -172,25 +172,30 @@ export default function HeaderLog() {
                   horizontal: "right",
                 }}
               >
-                {user?.role === "PARTNER" ? (
-                  <MenuItem onClick={handleMenuClose}>
+                <MenuItem onClick={handleMenuClose}>
+                  {user?.role === "ADMIN" ? (
+                    <Link
+                      to="/admin/dashboard"
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      Dashboard Admin
+                    </Link>
+                  ) : user?.role === "PARTNER" ? (
                     <Link
                       to="/partner/upgrade-packages"
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
                       Dashboard Đối Tác
                     </Link>
-                  </MenuItem>
-                ) : (
-                  <MenuItem onClick={handleMenuClose}>
+                  ) : (
                     <Link
                       to={PATH.PROFILEUSER}
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
                       Trang cá nhân
                     </Link>
-                  </MenuItem>
-                )}
+                  )}
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
               </Menu>
             </div>

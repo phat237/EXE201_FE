@@ -9,6 +9,7 @@ import {
   LogoutOutlined,
   StarOutlined,
   GiftOutlined,
+  AccountBookOutlined,
 } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -37,7 +38,11 @@ const AdminLayout = () => {
       icon: <HomeWorkOutlined />,
       label: 'Dashboard',
     },
-
+    {
+      key: '/admin/accounts',
+      icon: <AccountBookOutlined />,
+      label: 'Accounts',
+    },
     {
       key: '/admin/review',
       icon: <SettingOutlined />,
@@ -53,11 +58,7 @@ const AdminLayout = () => {
       icon: <ShoppingCartOutlined />,
       label: 'Products',
     },
-    {
-      key: '/admin/orders',
-      icon: <DollarOutlined />,
-      label: 'Orders',
-    },
+
     {
       key: '/admin/upgrade-packages',
       icon: <StarOutlined />,

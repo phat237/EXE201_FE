@@ -1,292 +1,237 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
-  Table,
-  Tag,
-  Switch,
-  Image,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  message,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Typography,
+  Space,
+  List,
 } from "antd";
-import { useForm, Controller } from "react-hook-form";
-import * as Yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { 
+  EyeOutlined, 
+  ShoppingOutlined, 
+  RiseOutlined, 
+  StarOutlined,
+  TrophyOutlined,
+  BarChartOutlined
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  createProductApi,
-  fetchAllProductsPaginated,
-} from "../../../store/slices/productSlice";
-import AdminSearchSort from "../../../components/Admin/AdminSearchSort";
+  fetchProductViewStatsApi,
+  fetchProductSummaryApi,
+  fetchNewProductGrowthApi,
+  fetchAvgRatingApi,
+  selectViewStats,
+  selectViewStatsLoading,
+  selectSummary,
+  selectSummaryLoading,
+  selectNewProductGrowth,
+  selectNewProductGrowthLoading,
+  selectAvgRating,
+  selectAvgRatingLoading,
+} from "../../../store/slices/productDashboardSlice";
 
-const validationSchema = Yup.object().shape({
-  name: Yup.string()
-    .required("Vui lòng nhập tên sản phẩm")
-    .min(3, "Tên sản phẩm phải có ít nhất 3 ký tự"),
-  brandName: Yup.string()
-    .required("Vui lòng nhập tên thương hiệu")
-    .min(2, "Tên thương hiệu phải có ít nhất 2 ký tự"),
-  sourceUrl: Yup.string()
-    .required("Vui lòng nhập URL nguồn")
-    .url("URL không hợp lệ"),
-  category: Yup.string().required("Vui lòng chọn danh mục"),
-});
 
-const categoryOptions = [
-  { value: "DIEN_THOAI", label: "Điện thoại" },
-  { value: "LAPTOP", label: "Laptop" },
-  { value: "MAY_TINH", label: "Máy tính" },
-  { value: "DIEN_TU_GIA_DUNG", label: "Điện tử gia dụng" },
-  { value: "PHU_KIEN_CONG_NGHE", label: "Phụ kiện công nghệ" },
-  { value: "THOI_TRANG", label: "Thời trang" },
-  { value: "MY_PHAM_LAM_DEP", label: "Mỹ phẩm làm đẹp" },
-  { value: "ME_VA_BE", label: "Mẹ và bé" },
-  { value: "THUC_PHAM_DO_UONG", label: "Thực phẩm đồ uống" },
-  { value: "SACH_VO", label: "Sách vở" },
-  { value: "VAN_PHONG_PHAM", label: "Văn phòng phẩm" },
-  { value: "NOI_THAT_TRANG_TRI", label: "Nội thất trang trí" },
-  { value: "XE_CO_PHU_TUNG", label: "Xe cộ phụ tùng" },
-  { value: "DICH_VU", label: "Dịch vụ" },
-  { value: "KHAC", label: "Khác" },
-];
-
-const baseColumns = [
-  { title: "ID", dataIndex: "key", key: "key", width: 60 },
-  { title: "Tên sản phẩm", dataIndex: "name", key: "name" },
-  {
-    title: "Tên thương hiệu",
-    dataIndex: "brandName",
-    key: "brandName",
-  },
-  {
-    title: "Thời gian tạo",
-    dataIndex: "createdAt",
-    key: "createdAt",
-    render: (date) => new Date(date).toLocaleDateString(),
-  },
-  { title: "Danh mục", dataIndex: "category", key: "category" },
-];
-
-const imageColumn = {
-  title: "Hình ảnh",
-  dataIndex: "image",
-  key: "image",
-  render: (img) => <Image src={img} width={60} alt="product" />,
-};
 
 const Products = () => {
-  const [showImage, setShowImage] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState("desc");
-
   const dispatch = useDispatch();
-  const { allProducts, isLoading, error } = useSelector((state) => state.product);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(validationSchema),
-    defaultValues: { name: "", brandName: "", sourceUrl: "", category: "" },
-  });
+  // Product Dashboard Data
+  const viewStats = useSelector(selectViewStats);
+  const isLoadingViewStats = useSelector(selectViewStatsLoading);
+  const summary = useSelector(selectSummary);
+  const isLoadingSummary = useSelector(selectSummaryLoading);
+  const newProductGrowth = useSelector(selectNewProductGrowth);
+  const isLoadingGrowth = useSelector(selectNewProductGrowthLoading);
+  const avgRating = useSelector(selectAvgRating);
+  const isLoadingRating = useSelector(selectAvgRatingLoading);
 
-  const columns = showImage ? [...baseColumns, imageColumn] : baseColumns;
+  // Gọi 4 API dashboard khi component mount
+  useEffect(() => {
+    dispatch(fetchProductViewStatsApi());
+    dispatch(fetchProductSummaryApi());
+    dispatch(fetchNewProductGrowthApi());
+    dispatch(fetchAvgRatingApi());
+  }, [dispatch]);
 
-  const sortOptions = [
-    { value: "name", label: "Tên sản phẩm" },
-    { value: "brandName", label: "Tên thương hiệu" },
-    { value: "createdAt", label: "Thời gian tạo" },
-    { value: "category", label: "Danh mục" },
-  ];
-
-  const fetchProducts = () => {
-    dispatch(fetchAllProductsPaginated({
-      page: 0,
-      size: 1000,
-      search: searchTerm,
-      sortBy: sortBy,
-      sortOrder: sortOrder,
-    }));
+  // Hàm tính toán tỉ lệ tăng trưởng
+  const calculateGrowthRate = (current, previous) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, [dispatch, searchTerm, sortBy, sortOrder]);
-
-  useEffect(() => {
-    if (error) {
-      message.error(error.message || "Có lỗi xảy ra!");
-    }
-  }, [error]);
-
-  const onSubmit = async (formData) => {
-    const { category, ...data } = formData;
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-
-    if (!currentUser?.token) {
-      message.error("Vui lòng đăng nhập để thêm sản phẩm!");
-      return;
-    }
-
-    try {
-      await dispatch(createProductApi({ data, category })).unwrap();
-      message.success("Thêm sản phẩm thành công!");
-      setIsModalOpen(false);
-      reset();
-      fetchProducts();
-    } catch (err) {
-      message.error(err.message || "Thêm sản phẩm thất bại!");
-      console.error("Submit error:", err);
-    }
+  // Hàm render tỉ lệ tăng trưởng với màu sắc
+  const renderGrowthRate = (rate) => {
+    const isPositive = rate >= 0;
+    const color = isPositive ? '#52c41a' : '#ff4d4f';
+    const icon = isPositive ? <RiseOutlined /> : <RiseOutlined rotate={180} />;
+    
+    return (
+      <span style={{ color, fontWeight: 'bold' }}>
+        {icon} {Math.abs(rate).toFixed(1)}%
+      </span>
+    );
   };
-
-  const dataSource = allProducts.map((item, index) => ({
-    key: item.id || index,
-    name: item.name,
-    brandName: item.brandName,
-    createdAt: item.createdAt,
-    category: item.category,
-    image: item.image || item.sourceUrl,
-  }));
 
   return (
     <div>
-      <h2>Products Management Page</h2>
-      <AdminSearchSort
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        sortBy={sortBy}
-        onSortByChange={setSortBy}
-        sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
-        sortOptions={sortOptions}
-      />
-      <div
-        style={{
-          marginBottom: 16,
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <Switch
-            checked={showImage}
-            onChange={setShowImage}
-            checkedChildren="Hiện hình ảnh"
-            unCheckedChildren="Ẩn hình ảnh"
-          />
-          <span style={{ marginLeft: 8 }}>Hiển thị cột hình ảnh</span>
-        </div>
-        <Button
-          type="primary"
-          onClick={() => setIsModalOpen(true)}
-          disabled={isLoading}
-        >
-          Thêm sản phẩm
-        </Button>
-      </div>
-      <Table
-        columns={columns}
-        dataSource={dataSource}
-        pagination={false}
-        loading={isLoading}
-      />
+      <Typography.Title level={2}>Quản lý Sản phẩm</Typography.Title>
+      
+      {/* 1. Tổng lượt xem và top 5 sản phẩm xem nhiều */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col span={12}>
+          <Card>
+            <Statistic
+              title="Tổng lượt xem"
+              value={viewStats.totalViews}
+              prefix={<EyeOutlined />}
+              loading={isLoadingViewStats}
+              valueStyle={{ color: '#1890ff' }}
+            />
+            <div style={{ marginTop: 8 }}>
+              <Typography.Text type="secondary">
+                Hôm nay: {viewStats.dailyViews} | Tuần này: {viewStats.weeklyViews} | Tháng này: {viewStats.monthlyViews}
+              </Typography.Text>
+            </div>
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card title="Top 5 sản phẩm xem nhiều" loading={isLoadingViewStats}>
+            <List
+              size="small"
+              dataSource={viewStats.topProducts || []}
+              renderItem={(item, index) => (
+                <List.Item>
+                  <Space>
+                    <TrophyOutlined style={{ color: index < 3 ? '#ffd700' : '#d9d9d9' }} />
+                    <Typography.Text strong>{item.name}</Typography.Text>
+                    <Typography.Text type="secondary">{item.views} lượt xem</Typography.Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
+      </Row>
 
-      <Modal
-        title="Thêm sản phẩm mới"
-        open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          reset();
-        }}
-        footer={null}
-      >
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label="Tên sản phẩm"
-            required
-            validateStatus={errors.name ? "error" : ""}
-            help={errors.name?.message}
-          >
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder="Nhập tên sản phẩm" />
+      {/* 2. Tổng số sản phẩm và số sản phẩm theo danh mục */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col span={8}>
+          <Card>
+            <Statistic
+              title="Tổng sản phẩm"
+              value={summary.totalProducts}
+              prefix={<ShoppingOutlined />}
+              loading={isLoadingSummary}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card>
+            <Statistic
+              title="Sản phẩm hoạt động"
+              value={summary.activeProducts}
+              loading={isLoadingSummary}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card>
+            <Statistic
+              title="Tổng danh mục"
+              value={summary.totalCategories}
+              loading={isLoadingSummary}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 3. Tăng trưởng sản phẩm mới */}
+      <Card title="Tăng trưởng sản phẩm mới" style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <Typography.Title level={4}>Tuần này</Typography.Title>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <div>
+                <Typography.Text>Tuần trước: {newProductGrowth.weeklyGrowth?.[0]?.count || 0}</Typography.Text>
+              </div>
+              <div>
+                <Typography.Text>Tuần này: {newProductGrowth.weeklyGrowth?.[1]?.count || 0}</Typography.Text>
+              </div>
+              <div>
+                <Typography.Text>Tỉ lệ: {renderGrowthRate(
+                  calculateGrowthRate(
+                    newProductGrowth.weeklyGrowth?.[1]?.count || 0,
+                    newProductGrowth.weeklyGrowth?.[0]?.count || 0
+                  )
+                )}</Typography.Text>
+              </div>
+            </Space>
+          </Col>
+          <Col span={12}>
+            <Typography.Title level={4}>Tháng này</Typography.Title>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <div>
+                <Typography.Text>Tháng trước: {newProductGrowth.monthlyGrowth?.[0]?.count || 0}</Typography.Text>
+              </div>
+              <div>
+                <Typography.Text>Tháng này: {newProductGrowth.monthlyGrowth?.[1]?.count || 0}</Typography.Text>
+              </div>
+              <div>
+                <Typography.Text>Tỉ lệ: {renderGrowthRate(
+                  calculateGrowthRate(
+                    newProductGrowth.monthlyGrowth?.[1]?.count || 0,
+                    newProductGrowth.monthlyGrowth?.[0]?.count || 0
+                  )
+                )}</Typography.Text>
+              </div>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 4. Đánh giá trung bình theo danh mục */}
+      <Card title="Đánh giá trung bình theo danh mục" style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]}>
+          <Col span={8}>
+            <Statistic
+              title="Đánh giá trung bình tổng"
+              value={avgRating.overallRating}
+              prefix={<StarOutlined />}
+              suffix="/5"
+              precision={1}
+              loading={isLoadingRating}
+              valueStyle={{ color: '#faad14' }}
+            />
+            <Typography.Text type="secondary">
+              Tổng {avgRating.totalReviews} đánh giá
+            </Typography.Text>
+          </Col>
+          <Col span={16}>
+            <Typography.Title level={5}>Phân bố đánh giá theo danh mục</Typography.Title>
+            <List
+              size="small"
+              dataSource={avgRating.ratingDistribution || []}
+              renderItem={(item) => (
+                <List.Item>
+                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <Typography.Text>{item.category}</Typography.Text>
+                    <Space>
+                      <Typography.Text strong>{item.avgRating.toFixed(1)}</Typography.Text>
+                      <StarOutlined style={{ color: '#faad14' }} />
+                      <Typography.Text type="secondary">({item.reviewCount} đánh giá)</Typography.Text>
+                    </Space>
+                  </Space>
+                </List.Item>
               )}
             />
-          </Form.Item>
-          <Form.Item
-            label="Tên thương hiệu"
-            required
-            validateStatus={errors.brandName ? "error" : ""}
-            help={errors.brandName?.message}
-          >
-            <Controller
-              name="brandName"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder="Nhập tên thương hiệu" />
-              )}
-            />
-          </Form.Item>
-          <Form.Item
-            label="URL nguồn"
-            required
-            validateStatus={errors.sourceUrl ? "error" : ""}
-            help={errors.sourceUrl?.message}
-          >
-            <Controller
-              name="sourceUrl"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} placeholder="Nhập URL nguồn" />
-              )}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Danh mục"
-            required
-            validateStatus={errors.category ? "error" : ""}
-            help={errors.category?.message}
-          >
-            <Controller
-              name="category"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  placeholder="Chọn danh mục"
-                  options={categoryOptions}
-                  onChange={(value) => field.onChange(value)}
-                  value={field.value}
-                />
-              )}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={isLoading}>
-              Gửi
-            </Button>
-            <Button
-              style={{ marginLeft: 8 }}
-              onClick={() => {
-                setIsModalOpen(false);
-                reset();
-              }}
-              disabled={isLoading}
-            >
-              Hủy
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+          </Col>
+        </Row>
+      </Card>
     </div>
   );
 };

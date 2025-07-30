@@ -12,6 +12,8 @@ import  dashboardParnerSlice  from "./slices/dashboardParnerSlice";
 import feedbackSlice from "./slices/feedbackSlice"
 import transactionDashboardSlice from "./slices/transactionDashboardSlice"
 import reviewDashboardSlice from "./slices/reviewDashboardSlice"
+import accountReducer from "./slices/accountSlice"
+import productDashboardReducer from "./slices/productDashboardSlice"
 // tạo store
 export const store = configureStore({
   reducer: {
@@ -28,6 +30,8 @@ export const store = configureStore({
     feedbackPartner: feedbackSlice,
     transactionDashboard: transactionDashboardSlice,
     reviewDashboard: reviewDashboardSlice,
+    account: accountReducer,
+    productDashboard: productDashboardReducer,
   },
 });
 

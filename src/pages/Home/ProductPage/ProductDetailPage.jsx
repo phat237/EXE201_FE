@@ -193,6 +193,8 @@ export default function ProductDetailPage() {
   const reviewsPerPage = 5;
   const reviewsSectionRef = useRef(null);
   const [helpfulClicked, setHelpfulClicked] = useState({});
+  // Thêm state loading riêng cho nút báo cáo
+  const [reportLoading, setReportLoading] = useState({});
 
   const dispatch = useDispatch();
   const { addNotification } = useNotification();
@@ -478,6 +480,7 @@ export default function ProductDetailPage() {
   };
 
   const handleReport = (reviewId, currentStatus) => {
+    setReportLoading(prev => ({ ...prev, [reviewId]: true }));
     const newStatus = !currentStatus; // Toggle trạng thái
     dispatch(markReviewHelpful({ reviewId, status: !newStatus })) // Báo cáo là status: false
       .unwrap()
@@ -492,6 +495,9 @@ export default function ProductDetailPage() {
       })
       .catch((err) => {
         addNotification(`Lỗi khi báo cáo: ${err.message || err}`);
+      })
+      .finally(() => {
+        setReportLoading(prev => ({ ...prev, [reviewId]: false }));
       });
   };
 
@@ -806,16 +812,14 @@ export default function ProductDetailPage() {
                                     helpfulStatus[review.id]?.reported || false
                                   )
                                 }
-                                disabled={
-                                  loadingStates.helpfulReviews[review.id]
-                                }
+                                disabled={reportLoading[review.id]}
                                 style={{
                                   color: helpfulStatus[review.id]?.reported
                                     ? "red"
                                     : "inherit",
                                 }}
                               >
-                                {loadingStates.helpfulReviews[review.id]
+                                {reportLoading[review.id]
                                   ? "Đang xử lý..."
                                   : "Báo cáo"}
                               </Button>

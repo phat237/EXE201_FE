@@ -9,7 +9,7 @@ import HomePage from "../pages/Home/HomePage/HomePage";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import PartnerDashboard from "../pages/Partner/Dashboard/PartnerDashboard";
 import Products from "../pages/Admin/Products/Products";
-import Orders from "../pages/Admin/Orders/Orders";
+import Accounts from "../pages/Admin/Accounts/Account";
 import Settings from "../pages/Admin/Settings/Settings";
 import UpgradePackages from "../pages/Admin/UpgradePackages/UpgradePackages";
 import PartnerUpgradePackages from "../pages/Partner/UpgradePackages/UpgradePackages";
@@ -128,8 +128,8 @@ export default function useRouterElements() {
           element: <Products />,
         },
         {
-          path: "orders",
-          element: <Orders />,
+          path: "accounts",
+          element: <Accounts />,
         },
         {
           path: PATH.DASHBOARDREVIEW,
