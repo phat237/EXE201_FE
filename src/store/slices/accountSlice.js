@@ -79,9 +79,12 @@ export const accountSlice = createSlice({
       totalCount: 0
     },
     registrationGrowth: {
-      monthlyGrowth: [],
-      yearlyGrowth: [],
-      totalGrowth: 0
+      previousWeekUserCount: 0,
+      currentWeekUserCount: 0,
+      userGrowthPercentage: 0,
+      previousWeekPartnerCount: 0,
+      currentWeekPartnerCount: 0,
+      partnerGrowthPercentage: 0
     },
     onlineUsers: {
       userCount: 0,
@@ -107,9 +110,12 @@ export const accountSlice = createSlice({
     },
     clearRegistrationGrowth: (state) => {
       state.registrationGrowth = {
-        monthlyGrowth: [],
-        yearlyGrowth: [],
-        totalGrowth: 0
+        previousWeekUserCount: 0,
+        currentWeekUserCount: 0,
+        userGrowthPercentage: 0,
+        previousWeekPartnerCount: 0,
+        currentWeekPartnerCount: 0,
+        partnerGrowthPercentage: 0
       };
       state.growthError = null;
     },
@@ -155,20 +161,26 @@ export const accountSlice = createSlice({
       .addCase(fetchRegistrationGrowthApi.fulfilled, (state, { payload }) => {
         state.isLoadingGrowth = false;
         state.growthError = null;
-        // Giả sử API trả về dữ liệu có cấu trúc như { monthlyGrowth: [], yearlyGrowth: [], totalGrowth: number }
+        // API trả về dữ liệu với cấu trúc mới
         state.registrationGrowth = {
-          monthlyGrowth: payload.monthlyGrowth || [],
-          yearlyGrowth: payload.yearlyGrowth || [],
-          totalGrowth: payload.totalGrowth || 0
+          previousWeekUserCount: payload.previousWeekUserCount || 0,
+          currentWeekUserCount: payload.currentWeekUserCount || 0,
+          userGrowthPercentage: payload.userGrowthPercentage || 0,
+          previousWeekPartnerCount: payload.previousWeekPartnerCount || 0,
+          currentWeekPartnerCount: payload.currentWeekPartnerCount || 0,
+          partnerGrowthPercentage: payload.partnerGrowthPercentage || 0
         };
       })
       .addCase(fetchRegistrationGrowthApi.rejected, (state, { payload }) => {
         state.isLoadingGrowth = false;
         state.growthError = payload;
         state.registrationGrowth = {
-          monthlyGrowth: [],
-          yearlyGrowth: [],
-          totalGrowth: 0
+          previousWeekUserCount: 0,
+          currentWeekUserCount: 0,
+          userGrowthPercentage: 0,
+          previousWeekPartnerCount: 0,
+          currentWeekPartnerCount: 0,
+          partnerGrowthPercentage: 0
         };
       })
       .addCase(fetchOnlineUsersApi.pending, (state) => {
@@ -178,12 +190,14 @@ export const accountSlice = createSlice({
       .addCase(fetchOnlineUsersApi.fulfilled, (state, { payload }) => {
         state.isLoadingOnline = false;
         state.onlineError = null;
-        // Giả sử API trả về dữ liệu có cấu trúc như { userCount: number, partnerCount: number, totalOnline: number, lastUpdated: string }
+        // API trả về dữ liệu với cấu trúc mới
+        const userCount = payload.onlineUserCount || 0;
+        const partnerCount = payload.onlinePartnerCount || 0;
         state.onlineUsers = {
-          userCount: payload.userCount || 0,
-          partnerCount: payload.partnerCount || 0,
-          totalOnline: payload.totalOnline || 0,
-          lastUpdated: payload.lastUpdated || new Date().toISOString()
+          userCount: userCount,
+          partnerCount: partnerCount,
+          totalOnline: userCount + partnerCount,
+          lastUpdated: new Date().toISOString()
         };
       })
       .addCase(fetchOnlineUsersApi.rejected, (state, { payload }) => {

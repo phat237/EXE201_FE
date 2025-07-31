@@ -55,12 +55,6 @@ const Products = () => {
     dispatch(fetchAvgRatingApi());
   }, [dispatch]);
 
-  // Hàm tính toán tỉ lệ tăng trưởng
-  const calculateGrowthRate = (current, previous) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
-
   // Hàm render tỉ lệ tăng trưởng với màu sắc
   const renderGrowthRate = (rate) => {
     const isPositive = rate >= 0;
@@ -106,7 +100,7 @@ const Products = () => {
                   <Space>
                     <TrophyOutlined style={{ color: index < 3 ? '#ffd700' : '#d9d9d9' }} />
                     <Typography.Text strong>{item.name}</Typography.Text>
-                    <Typography.Text type="secondary">{item.views} lượt xem</Typography.Text>
+                    <Typography.Text type="secondary">{item.brandName}</Typography.Text>
                   </Space>
                 </List.Item>
               )}
@@ -115,9 +109,9 @@ const Products = () => {
         </Col>
       </Row>
 
-      {/* 2. Tổng số sản phẩm và số sản phẩm theo danh mục */}
+      {/* 2. Tổng số sản phẩm và tổng danh mục */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col span={8}>
+        <Col span={12}>
           <Card>
             <Statistic
               title="Tổng sản phẩm"
@@ -128,17 +122,7 @@ const Products = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Sản phẩm hoạt động"
-              value={summary.activeProducts}
-              loading={isLoadingSummary}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
+        <Col span={12}>
           <Card>
             <Statistic
               title="Tổng danh mục"
@@ -153,41 +137,17 @@ const Products = () => {
       {/* 3. Tăng trưởng sản phẩm mới */}
       <Card title="Tăng trưởng sản phẩm mới" style={{ marginBottom: 24 }}>
         <Row gutter={[16, 16]}>
-          <Col span={12}>
+          <Col span={24}>
             <Typography.Title level={4}>Tuần này</Typography.Title>
             <Space direction="vertical" style={{ width: '100%' }}>
               <div>
-                <Typography.Text>Tuần trước: {newProductGrowth.weeklyGrowth?.[0]?.count || 0}</Typography.Text>
+                <Typography.Text>Tuần trước: {newProductGrowth.previousWeekCount || 0}</Typography.Text>
               </div>
               <div>
-                <Typography.Text>Tuần này: {newProductGrowth.weeklyGrowth?.[1]?.count || 0}</Typography.Text>
+                <Typography.Text>Tuần này: {newProductGrowth.currentWeekCount || 0}</Typography.Text>
               </div>
               <div>
-                <Typography.Text>Tỉ lệ: {renderGrowthRate(
-                  calculateGrowthRate(
-                    newProductGrowth.weeklyGrowth?.[1]?.count || 0,
-                    newProductGrowth.weeklyGrowth?.[0]?.count || 0
-                  )
-                )}</Typography.Text>
-              </div>
-            </Space>
-          </Col>
-          <Col span={12}>
-            <Typography.Title level={4}>Tháng này</Typography.Title>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <div>
-                <Typography.Text>Tháng trước: {newProductGrowth.monthlyGrowth?.[0]?.count || 0}</Typography.Text>
-              </div>
-              <div>
-                <Typography.Text>Tháng này: {newProductGrowth.monthlyGrowth?.[1]?.count || 0}</Typography.Text>
-              </div>
-              <div>
-                <Typography.Text>Tỉ lệ: {renderGrowthRate(
-                  calculateGrowthRate(
-                    newProductGrowth.monthlyGrowth?.[1]?.count || 0,
-                    newProductGrowth.monthlyGrowth?.[0]?.count || 0
-                  )
-                )}</Typography.Text>
+                <Typography.Text>Tỉ lệ: {renderGrowthRate(newProductGrowth.growthPercentage || 0)}</Typography.Text>
               </div>
             </Space>
           </Col>
