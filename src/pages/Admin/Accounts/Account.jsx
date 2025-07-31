@@ -32,12 +32,6 @@ const Accounts = () => {
     dispatch(fetchOnlineUsersApi());
   }, [dispatch]);
 
-  // Hàm tính toán tỉ lệ tăng trưởng
-  const calculateGrowthRate = (current, previous) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
-
   // Hàm render tỉ lệ tăng trưởng với màu sắc
   const renderGrowthRate = (rate) => {
     const isPositive = rate >= 0;
@@ -88,18 +82,13 @@ const Accounts = () => {
             <Typography.Title level={4}>User</Typography.Title>
             <Space direction="vertical" style={{ width: '100%' }}>
               <div>
-                <Typography.Text>Tuần trước: {registrationGrowth.monthlyGrowth?.[0]?.userCount || 0}</Typography.Text>
+                <Typography.Text>Tuần trước: {registrationGrowth.previousWeekUserCount || 0}</Typography.Text>
               </div>
               <div>
-                <Typography.Text>Tuần này: {registrationGrowth.monthlyGrowth?.[1]?.userCount || 0}</Typography.Text>
+                <Typography.Text>Tuần này: {registrationGrowth.currentWeekUserCount || 0}</Typography.Text>
               </div>
               <div>
-                <Typography.Text>Tỉ lệ: {renderGrowthRate(
-                  calculateGrowthRate(
-                    registrationGrowth.monthlyGrowth?.[1]?.userCount || 0,
-                    registrationGrowth.monthlyGrowth?.[0]?.userCount || 0
-                  )
-                )}</Typography.Text>
+                <Typography.Text>Tỉ lệ: {renderGrowthRate(registrationGrowth.userGrowthPercentage || 0)}</Typography.Text>
               </div>
             </Space>
           </Col>
@@ -107,18 +96,13 @@ const Accounts = () => {
             <Typography.Title level={4}>Partner</Typography.Title>
             <Space direction="vertical" style={{ width: '100%' }}>
               <div>
-                <Typography.Text>Tuần trước: {registrationGrowth.monthlyGrowth?.[0]?.partnerCount || 0}</Typography.Text>
+                <Typography.Text>Tuần trước: {registrationGrowth.previousWeekPartnerCount || 0}</Typography.Text>
               </div>
               <div>
-                <Typography.Text>Tuần này: {registrationGrowth.monthlyGrowth?.[1]?.partnerCount || 0}</Typography.Text>
+                <Typography.Text>Tuần này: {registrationGrowth.currentWeekPartnerCount || 0}</Typography.Text>
               </div>
               <div>
-                <Typography.Text>Tỉ lệ: {renderGrowthRate(
-                  calculateGrowthRate(
-                    registrationGrowth.monthlyGrowth?.[1]?.partnerCount || 0,
-                    registrationGrowth.monthlyGrowth?.[0]?.partnerCount || 0
-                  )
-                )}</Typography.Text>
+                <Typography.Text>Tỉ lệ: {renderGrowthRate(registrationGrowth.partnerGrowthPercentage || 0)}</Typography.Text>
               </div>
             </Space>
           </Col>
