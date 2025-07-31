@@ -125,7 +125,7 @@ const Products = () => {
         <Col span={12}>
           <Card>
             <Statistic
-              title="Tổng danh mục"
+              title="Tổng danh mục có sản phẩm"
               value={summary.totalCategories}
               loading={isLoadingSummary}
               valueStyle={{ color: '#722ed1' }}
