@@ -26,10 +26,12 @@ import "./BusinessPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUserRole } from "../../../store/slices/authSlice";
 import { fetchPremiumPackages } from "../../../store/slices/preniumPackageSlice";
+import { transactionDepositApi } from "../../../store/slices/transactionSlice";
 
 export default function BusinessPage() {
   const dispatch = useDispatch();
   const { data: premiumPackages, loading, error } = useSelector((state) => state.premiumPackages);
+  const { isLoading: transactionLoading, error: transactionError } = useSelector((state) => state.transaction);
   const userRole = useSelector(selectUserRole);
   const [openModal, setOpenModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -39,6 +41,13 @@ export default function BusinessPage() {
   useEffect(() => {
     dispatch(fetchPremiumPackages());
   }, [dispatch]);
+
+  // Xử lý lỗi giao dịch
+  useEffect(() => {
+    if (transactionError) {
+      alert(`Lỗi giao dịch: ${transactionError}`);
+    }
+  }, [transactionError]);
 
   const handleOpenModal = (pkg) => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -57,25 +66,79 @@ export default function BusinessPage() {
     setSelectedPackage(null);
   };
 
-  const handleConfirmUpgrade = () => {
-    if (userRole !== "USER") {
-      // Logic cho PARTNER hoặc ADMIN (nếu có)
+  const handleConfirmUpgrade = async () => {
+    if (!selectedPackage) return;
+
+    // Lấy partnerId từ localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+    const partnerId = currentUser.id;
+
+    if (!partnerId) {
+      alert('Vui lòng đăng nhập để thực hiện giao dịch!');
       handleCloseModal();
-      // Thêm logic nâng cấp gói nếu cần
+      return;
+    }
+
+    try {
+      // Chuẩn bị dữ liệu cho API
+      const transactionData = {
+        packageId: selectedPackage.id,
+        partnerId,
+        amount: selectedPackage.price,
+        description: `Thanh toán gói ${selectedPackage.name}`,
+        packageType: selectedPackage.name.toLowerCase(), // Ví dụ: "basic", "premium", "vip"
+      };
+
+      // Gọi API transactionDepositApi
+      const response = await dispatch(transactionDepositApi(transactionData)).unwrap();
+
+      // Lưu thông tin giao dịch vào localStorage (để sử dụng trong CheckoutSuccess)
+      localStorage.setItem('lastTransaction', JSON.stringify({
+        orderCode: response.orderCode,
+        amount: response.amount,
+        package: transactionData.packageType,
+        packageId: transactionData.packageId, // Lưu thêm packageId
+        method: 'payos',
+        transactionId: response.paymentLinkId,
+      }));
+
+      // Chuyển hướng đến checkoutUrl của PayOS
+      if (response.checkoutUrl) {
+        window.location.href = response.checkoutUrl;
+      } else {
+        alert('Không nhận được URL thanh toán từ PayOS!');
+      }
+
+      // Đóng Modal
+      handleCloseModal();
+    } catch (err) {
+      alert(`Lỗi khi thực hiện giao dịch: ${err.message || 'Vui lòng thử lại!'}`);
+      handleCloseModal();
     }
   };
 
   // Sắp xếp để gói giá cao nhất ở giữa
   let sortedPackages = [];
   if (premiumPackages && premiumPackages.length > 0) {
-    const maxIdx = premiumPackages.reduce((maxIdx, pkg, idx, arr) => pkg.price > arr[maxIdx].price ? idx : maxIdx, 0);
-    const maxPackage = premiumPackages[maxIdx];
-    const others = premiumPackages.filter((_, idx) => idx !== maxIdx);
-    if (others.length === 2) {
-      sortedPackages = [others[0], maxPackage, others[1]];
+    // Sắp xếp theo giá từ thấp đến cao
+    const sortedByPrice = [...premiumPackages].sort((a, b) => a.price - b.price);
+    
+    if (sortedByPrice.length === 3) {
+      // Với 3 gói: [thấp, cao, trung bình]
+      sortedPackages = [sortedByPrice[0], sortedByPrice[2], sortedByPrice[1]];
+    } else if (sortedByPrice.length === 2) {
+      // Với 2 gói: [thấp, cao]
+      sortedPackages = sortedByPrice;
     } else {
-      // fallback: max ở giữa
-      sortedPackages = [...others.slice(0, Math.floor(others.length/2)), maxPackage, ...others.slice(Math.floor(others.length/2))];
+      // Với nhiều hơn 3 gói: đặt gói cao nhất ở giữa
+      const maxPackage = sortedByPrice[sortedByPrice.length - 1];
+      const others = sortedByPrice.slice(0, -1);
+      const midIndex = Math.floor(others.length / 2);
+      sortedPackages = [
+        ...others.slice(0, midIndex),
+        maxPackage,
+        ...others.slice(midIndex)
+      ];
     }
   }
 
@@ -369,12 +432,30 @@ export default function BusinessPage() {
           Xác Nhận Nâng Cấp
         </DialogTitle>
         <DialogContent className="business-modal-content">
-          <Typography variant="body1">
-            Bạn có chắc chắn muốn nâng cấp lên gói{" "}
-            <strong>{selectedPackage?.name}</strong> với giá{" "}
-            <strong>{selectedPackage?.price.toLocaleString()} VNĐ</strong> cho{" "}
-            <strong>{selectedPackage?.duration} ngày</strong>?
-          </Typography>
+          {selectedPackage && (
+            <Box>
+              <Typography variant="h6" style={{ marginBottom: '16px' }}>
+                Thông tin gói nâng cấp
+              </Typography>
+              <Box style={{ marginBottom: '16px' }}>
+                <Typography variant="body1">
+                  <strong>Tên gói:</strong> {selectedPackage.name}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Giá:</strong> {selectedPackage.price.toLocaleString('vi-VN')}đ
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Thời hạn:</strong> {selectedPackage.duration} ngày
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Mô tả:</strong> {selectedPackage.description}
+                </Typography>
+              </Box>
+              <Typography variant="body2" style={{ color: '#666' }}>
+                Sau khi xác nhận, bạn sẽ được chuyển đến trang thanh toán để hoàn tất giao dịch.
+              </Typography>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions className="business-modal-actions">
           <Button
@@ -387,8 +468,9 @@ export default function BusinessPage() {
             onClick={handleConfirmUpgrade}
             variant="contained"
             className="business-modal-button business-modal-button-confirm"
+            disabled={transactionLoading}
           >
-            Xác Nhận
+            {transactionLoading ? "Đang xử lý..." : "Xác Nhận"}
           </Button>
         </DialogActions>
       </Dialog>
