@@ -91,6 +91,9 @@ const AvailablePackages = () => {
     }
   }, [transactionError]);
 
+  // Sắp xếp gói theo giá từ thấp đến cao
+  const sortedPackages = availablePackages ? [...availablePackages].sort((a, b) => a.price - b.price) : [];
+
   const columns = [
     {
       title: 'Tên gói',
@@ -162,7 +165,7 @@ const AvailablePackages = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={availablePackages}
+          dataSource={sortedPackages}
           pagination={false}
           scroll={{ x: true }}
           rowKey="id"
