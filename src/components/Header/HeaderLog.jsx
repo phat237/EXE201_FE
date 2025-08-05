@@ -87,9 +87,9 @@ export default function HeaderLog() {
               <SearchIcon />
             </IconButton>
 
-            <IconButton onClick={toggleTheme} aria-label="Toggle theme">
+            {/* <IconButton onClick={toggleTheme} aria-label="Toggle theme">
               {themeMode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
+            </IconButton> */}
 
             {/* Icon Thông báo */}
             <IconButton onClick={handleNotificationClick} aria-label="Notifications">
