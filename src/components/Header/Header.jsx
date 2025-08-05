@@ -59,10 +59,10 @@ export default function Header() {
             <IconButton onClick={toggleSearch} aria-label="Search">
               <SearchIcon />
             </IconButton>
-
+{/* 
             <IconButton onClick={toggleTheme} aria-label="Toggle theme">
               {themeMode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
+            </IconButton> */}
 
             <div className="auth-buttons">
               <Button variant="outlined" className="header-login">
